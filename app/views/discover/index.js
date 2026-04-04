@@ -1,7 +1,7 @@
 "use client"
 
 import NavBar from "./c-cpns/nav-bar"
-import {Suspence} from 'react'
+import {Suspense} from 'react'
 
 
 const Discover=()=>{
@@ -9,9 +9,9 @@ const Discover=()=>{
     return(
         <div>
             <NavBar/>
-            <Suspence fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>Loading...</div>}>
                 
-            </Suspence>
+            </Suspense>
         </div>
     )
 }

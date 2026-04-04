@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "daisyui"
+@plugin "daisyui";
 
 :root {
   --background: #ffffff;
@@ -11,6 +11,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-zj-blue:#005da1
+  --color-zj-sand:#fefcf5
+  --color-zj-earth:##e65100
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +25,6 @@
 }
 
 body {
-  /*更换背景色*/
+
   @apply bg-slate-50 text-slate-900;
 }
