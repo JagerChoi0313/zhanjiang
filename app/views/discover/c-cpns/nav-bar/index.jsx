@@ -1,13 +1,23 @@
 "use client";
 import { Anchor, Search } from "lucide-react";
-import {useState} from 'react' //用来记录被选中的标题
+import Link from 'next/link' //Link用来实现路由跳转
+import {usePathname} from 'next/navigation'//使用usePathname替代原来的activeTab状态
+
 
 
 const NavBar = () => {
-  const menuItems = ["首页", "经典名菜", "街头小吃", "文化故事"];
 
-  //定义初始选中的人，默认用户刚打开网页时聚焦的地方是首页
-  const [activeTab,setActiveTab]=useState("首页")
+  //他会自动获取当前浏览器的路径，比如 "/views/discover/children-views/famousDish"
+  const pathname=usePathname()
+
+  //定义菜单对象，包含名字和对应的路由路径
+  const menuItems = [
+    {name:"首页",path:"/views/discover/children-views/mainPage"},
+    {name:"经典名菜",path:"/views/discover/children-views/famousdish"},
+    {name:"街头小吃",path:"/views/discover/children-views/streetsnack"},
+    {name:"文化故事",path:"/views/discover/children-views/Culturestory"} 
+  ];
+
 
 
   return (
@@ -27,14 +37,16 @@ const NavBar = () => {
               学习重点：聚焦逻辑和路由跳转的实现*/}
       <div className="navbar-center hidden lg:flex">
 
+         {/*核心高亮逻辑：当前地址栏路径是否等于该项的path */}
          {/*把动作和样式连接起来,当用户点击其它标题时，导航栏要自动聚焦其标题,并且要实现页面跳转 */}
         <ul className="flex items-center gap-x-12 text-[17px] font-medium text-[#1a2a3a]/80">
+
 
           {/*menuItems是那个包含“首页” “经典名菜”等的数组*/}
           {menuItems.map((item)=>{
             //.map是遍历数组中的每个元素，他会把下面的<li>复印出四份来
             //这里的item就是当前复印的那个词
-            const isActive = activeTab === item; 
+            const isActive = pathname === item.path; 
             //activeTab就是当前选中的名字
             //item是当前复印的名字
             //如果相等，isActive就是true，如果不等就是false
@@ -42,20 +54,20 @@ const NavBar = () => {
 
             return(
               <li
-                key={item}
+                key={item.path}
                 className="group relative py-1 cursor-pointer"
-                //当鼠标点击这个标题时，监听器onClick会立刻执行setActiveTab，把当前这个item的名字告诉给react
-                //那这个时候activeTab就等于item了
-                onClick={()=>setActiveTab(item)}>
+               >
                   
-                  {/*动态文字颜色：${ isActive ? ... } 
-                     如果isActive为真：应用 text-[#a63d2d]（红土色）和 font-bold（加粗）
-                     否则：只应用 group-hover 效果，即只有鼠标滑过时才变色 */}
+                  {/*实用link实现跳转，并包裹文字和动画 */}
+                  <Link href={item.path}>
                   <span className={`transition-colors duration-300 ${
                   isActive ? "text-[#a63d2d] font-bold" : "group-hover:text-[#a63d2d]"
                 }`}>
-                  {item}
+                  {/*注意这里要写item.name了，因为现在item是个对象 */}
+                  {item.name}
                 </span>
+                  </Link>
+                  
                 
                 {/*动态下划线：动画的灵魂
                     其本质原理是控制下划线的宽度
