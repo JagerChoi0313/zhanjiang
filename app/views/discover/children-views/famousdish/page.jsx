@@ -1,4 +1,4 @@
-const famousdish=()=>{
+const FamousDish=()=>{
     return(
         <div>
 
@@ -6,4 +6,4 @@ const famousdish=()=>{
     )
 }
 
-export default famousdish
+export default FamousDish

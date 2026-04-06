@@ -12,10 +12,10 @@ const NavBar = () => {
 
   //定义菜单对象，包含名字和对应的路由路径
   const menuItems = [
-    {name:"首页",path:"/views/discover/children-views/mainPage"},
-    {name:"经典名菜",path:"/views/discover/children-views/famousdish"},
-    {name:"街头小吃",path:"/views/discover/children-views/streetsnack"},
-    {name:"文化故事",path:"/views/discover/children-views/Culturestory"} 
+    {name:"首页",path:"/"},
+    {name:"经典名菜",path:"/views/discover/children-views/FamousDish"},
+    {name:"街头小吃",path:"/views/discover/children-views/StreetSnack"},
+    {name:"文化故事",path:"/views/discover/children-views/CultureStory"} 
   ];
 
 

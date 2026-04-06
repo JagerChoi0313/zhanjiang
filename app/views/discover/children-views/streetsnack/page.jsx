@@ -1,7 +1,7 @@
-const streetsnack=()=>{
+const StreetSnack=()=>{
     return(<div>
 
     </div>)
 }
 
-export default streetsnack
+export default StreetSnack

@@ -1,4 +1,4 @@
-const Culturestory=()=>{
+const CultureStory=()=>{
     return(
         <div>
 
@@ -6,4 +6,4 @@ const Culturestory=()=>{
     )
 }
 
-export default Culturestory
+export default CultureStory
