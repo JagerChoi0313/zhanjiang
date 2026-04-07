@@ -1,4 +1,7 @@
 import LeftCarousel from "./leftArea/leftCarousel"
+import LeftRole from './leftArea/leftRole'
+import LeftMaster from './leftArea/leftMaster'
+import LeftCustomerComment from './leftArea/leftCustomerComment'
 
 const MainPage=()=>{
     return(
@@ -12,11 +15,30 @@ const MainPage=()=>{
       maxWidth: '1400px',   // 限制最大宽度，防止在大屏幕上无限拉伸
       margin: '0 auto'      // 居中
     }}>
+
+
       {/* 左侧区域：占 60% 左右 */}
       <div style={{ width: '50%',marginTop:'24px' }}>
         <LeftCarousel />
+
         {/* 这里之后放下方的小图区域 */}
+        {/*卡片展示区域，使用flex布局让三个卡片横向排列 */}
+        <div style={{
+          display:'flex',
+          width:'100%',
+          marginTop:'20px',
+          gap:'16px'
+        }}
+        >
+
+          <LeftRole/>
+          <LeftMaster/>
+          <LeftCustomerComment/>
+        </div>
+        
       </div>
+
+
 
       {/* 右侧区域：占 35% 左右 */}
       <div style={{ width: '35%' }}>
