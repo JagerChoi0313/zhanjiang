@@ -1,7 +1,14 @@
+// 虽然你在 JSX 中写了 <rightHotCard/>，但在 JavaScript/TypeScript 的编译逻辑中，
+// 组件名首字母必须大写，编译器才会把它识别为一个“自定义组件”并去调用你导入的变量。
+// 如果你使用的是小写（rightHotCard），编译器会认为这是一个原生的 HTML 标签
+// （比如像 <div> 或 <span> 一样的原生标签），因此它不会去寻找你导入的那个变量。
+// 既然没有被调用，ESLint 就判定这个导入是“未使用的”。
+
 import LeftCarousel from "./leftArea/leftCarousel"
 import LeftRole from './leftArea/leftRole'
 import LeftMaster from './leftArea/leftMaster'
 import LeftCustomerComment from './leftArea/leftCustomerComment'
+import RightHotCard from './rightArea/rightHot/rightHotCard'
 
 const MainPage=()=>{
     return(
@@ -41,9 +48,15 @@ const MainPage=()=>{
 
 
       {/* 右侧区域：占 35% 左右 */}
-      <div style={{ width: '35%' }}>
-        {/* 这里放“寻味湛江”文案和地图 */}
-        <div style={{ fontSize: '24px', fontWeight: 'bold' }}>寻味湛江...</div>
+      <div style={{ width: '45%' }}>
+        <div style={{
+          display: 'flex',
+          gap: '35px',
+          marginTop:'24px'
+        }}>
+        <RightHotCard/>
+        <RightHotCard/>
+        </div>
       </div>
     </div>
     );
