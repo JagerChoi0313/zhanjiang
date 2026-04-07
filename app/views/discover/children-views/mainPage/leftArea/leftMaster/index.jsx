@@ -48,6 +48,9 @@ const LeftMaster=()=>{
             alt="匠心传承"
             fill
             style={cardImageStyle}
+            //鼠标悬停有缩放效果
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           />
         </div>
       }

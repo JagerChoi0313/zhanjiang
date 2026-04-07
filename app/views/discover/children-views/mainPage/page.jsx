@@ -9,6 +9,7 @@ import LeftRole from './leftArea/leftRole'
 import LeftMaster from './leftArea/leftMaster'
 import LeftCustomerComment from './leftArea/leftCustomerComment'
 import RightHotCard from './rightArea/rightHot/rightHotCard'
+import RightTalkCard from './rightArea/rightTalk/rightTalkCard'
 
 const MainPage=()=>{
     return(
@@ -52,10 +53,11 @@ const MainPage=()=>{
         <div style={{
           display: 'flex',
           gap: '35px',
-          marginTop:'24px'
+          marginTop:'24px',
+          width:'100%'
         }}>
         <RightHotCard/>
-        <RightHotCard/>
+        <RightTalkCard/>
         </div>
       </div>
     </div>
