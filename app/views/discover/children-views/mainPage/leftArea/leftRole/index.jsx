@@ -44,7 +44,7 @@ const LeftRole=()=>{
       cover={
         <div style={ImageWrapperStyle}>
           <Image
-            src=""
+            src="/Image/Left1.png"
             alt="美食特色"
             fill
             style={cardImageStyle}

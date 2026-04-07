@@ -44,7 +44,7 @@ const LeftCustomerComment=()=>{
       cover={
         <div style={ImageWrapperStyle}>
           <Image
-            src=""
+            src="/Image/Left3.png"
             alt="美食特色"
             fill
             style={cardImageStyle}

@@ -44,8 +44,8 @@ const LeftMaster=()=>{
       cover={
         <div style={ImageWrapperStyle}>
           <Image
-            src=""
-            alt="美食特色"
+            src="/Image/Left2.png"
+            alt="匠心传承"
             fill
             style={cardImageStyle}
           />
