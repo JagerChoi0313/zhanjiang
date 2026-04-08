@@ -10,6 +10,7 @@ import LeftMaster from './leftArea/leftMaster'
 import LeftCustomerComment from './leftArea/leftCustomerComment'
 import RightHotCard from './rightArea/rightHot/rightHotCard'
 import RightTalkCard from './rightArea/rightTalk/rightTalkCard'
+import RightHotRanking from './rightArea/rightTalk/rigthTalkRanking'
 
 const MainPage=()=>{
     return(
@@ -54,10 +55,22 @@ const MainPage=()=>{
           display: 'flex',
           gap: '35px',
           marginTop:'24px',
-          width:'100%'
+          width:'100%',
         }}>
         <RightHotCard/>
         <RightTalkCard/>
+        </div>
+
+        {/*右侧下方:排行榜区域*/}
+        <div style={{
+          display:'flex',
+          gap:'35px',
+          width:'100%',
+        }}>
+         {/* 热门推荐榜单 */}
+          <div style={{ flex: 1 }}>
+            <RightHotRanking />
+          </div>
         </div>
       </div>
     </div>
