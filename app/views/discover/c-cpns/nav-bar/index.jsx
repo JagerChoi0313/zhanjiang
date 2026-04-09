@@ -2,6 +2,8 @@
 import { Anchor, Search } from "lucide-react";
 import Link from 'next/link' //Link用来实现路由跳转
 import {usePathname} from 'next/navigation'//使用usePathname替代原来的activeTab状态
+import {UserCircle} from 'lucide-react'
+
 
 
 
@@ -91,7 +93,7 @@ const NavBar = () => {
           <input 
             type="text" 
             placeholder="搜搜白切鸡..." 
-            className="input h-10 w-64 bg-[#1a2a3a]/5 rounded-full pl-11 text-sm border-none focus:ring-1 focus:ring-[#005da1]/20 transition-all placeholder:text-gray-400" 
+            className="input h-10 w-48 bg-[#1a2a3a]/5 rounded-full pl-11 text-sm border-none focus:ring-1 focus:ring-[#005da1]/20 transition-all placeholder:text-gray-400" 
           />
           <Search className="absolute left-4 top-3 w-4 h-4 text-gray-500" />
         </div>
@@ -100,6 +102,15 @@ const NavBar = () => {
         <button className="btn btn-sm h-10 bg-[#a63d2d] hover:bg-[#8e3326] border-none text-white rounded-full px-8 text-sm font-semibold shadow-md shadow-[#a63d2d]/20 transition-all hover:scale-105 active:scale-95">
           投稿
         </button>
+
+        {/*-------- 用户头像：登录注册页入口 -------- */}
+        <Link href="" className="group flex items-center justify-center">
+        {/*圆形带有悬浮动画的头像容器 */}
+        <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 transition-all group-hover:bg-[#fdfaf5] group-hover:border-[#a63d2d]/30 group-hover:shadow-md group-hover:scale-105 active:scale-95">
+        {/* 目前显示默认的“用户”图标，主色调改为你的深青色 */}
+            <UserCircle className="w-6 h-6 text-[#1a2a3a]/70 group-hover:text-[#a63d2d]" />
+        </div>
+        </Link>
       </div>
     </nav>
   );
