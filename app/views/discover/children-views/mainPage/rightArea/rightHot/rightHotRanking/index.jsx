@@ -134,6 +134,27 @@ const RightHotRanking = () => {
         </div>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#999' }}>TOP 4</div>
       </div>
+
+      {/*列表项5 */}
+      <div 
+        style={ItemStyle} 
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+      >
+        <div style={ImageWrapperStyle}>
+          <Image
+            src="/Image/Hot5.jpg" 
+            alt="白灼对虾"
+            fill
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '14px', fontWeight: '600' }}>白灼对虾</div>
+          <div style={{ fontSize: '11px', color: '#bbb' }}>1w 浏览 · 58 评论</div>
+        </div>
+        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#999' }}>TOP 5</div>
+      </div>
     </div>
   );
 };
