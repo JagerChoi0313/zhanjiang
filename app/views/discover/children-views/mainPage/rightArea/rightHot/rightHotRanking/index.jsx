@@ -46,7 +46,7 @@ const RightHotRanking = () => {
 
 
 
-      {/* 列表内容 - 每一行 */}
+      {/* 列表项1 */}
       <div 
         style={ItemStyle} 
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
@@ -54,15 +54,15 @@ const RightHotRanking = () => {
       >
         <div style={ImageWrapperStyle}>
           <Image
-            src="" 
-            alt="美食"
+            src="/Image/Hot1.png" 
+            alt="湛江白切鸡"
             fill
             style={{ objectFit: 'cover' }}
           />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '14px', fontWeight: '600' }}>湛江美食食谱</div>
-          <div style={{ fontSize: '11px', color: '#bbb' }}>1.2w 浏览 · 80 评论</div>
+          <div style={{ fontSize: '14px', fontWeight: '600' }}>湛江白切鸡</div>
+          <div style={{ fontSize: '11px', color: '#bbb' }}>9.9w 浏览 ·712 评论</div>
         </div>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#ff7a45' }}>TOP 1</div>
       </div>
@@ -77,18 +77,62 @@ const RightHotRanking = () => {
       >
         <div style={ImageWrapperStyle}>
           <Image
-            src="" 
-            alt="美食"
+            src="/Image/Hot2.png" 
+            alt="木叶夹"
             fill
             style={{ objectFit: 'cover' }}
           />
         </div>
         
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '14px', fontWeight: '600' }}>港城文化故事</div>
-          <div style={{ fontSize: '11px', color: '#bbb' }}>9.8k 浏览 · 45 评论</div>
+          <div style={{ fontSize: '14px', fontWeight: '600' }}>木叶夹</div>
+          <div style={{ fontSize: '11px', color: '#bbb' }}>6.7k 浏览 · 420 评论</div>
         </div>
         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#999' }}>TOP 2</div>
+      </div>
+
+
+      {/*列表项3 */}
+      <div 
+        style={ItemStyle} 
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+      >
+        <div style={ImageWrapperStyle}>
+          <Image
+            src="/Image/Hot3.png" 
+            alt="簸箕炊"
+            fill
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '14px', fontWeight: '600' }}>簸箕炊</div>
+          <div style={{ fontSize: '11px', color: '#bbb' }}>2.7w 浏览 · 200 评论</div>
+        </div>
+        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#999' }}>TOP 3</div>
+      </div>
+
+
+      {/*列表项4 */}
+      <div 
+        style={ItemStyle} 
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+      >
+        <div style={ImageWrapperStyle}>
+          <Image
+            src="/Image/Hot4.png" 
+            alt="沙虫粥"
+            fill
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '14px', fontWeight: '600' }}>沙虫粥</div>
+          <div style={{ fontSize: '11px', color: '#bbb' }}>1.2w 浏览 · 100 评论</div>
+        </div>
+        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#999' }}>TOP 4</div>
       </div>
     </div>
   );
