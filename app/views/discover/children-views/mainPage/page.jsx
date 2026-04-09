@@ -11,6 +11,7 @@ import LeftCustomerComment from './leftArea/leftCustomerComment'
 import RightHotCard from './rightArea/rightHot/rightHotCard'
 import RightTalkCard from './rightArea/rightTalk/rightTalkCard'
 import RightHotRanking from './rightArea/rightHot/rightHotRanking'
+import RightTalkRanking from './rightArea/rightTalk/rigthTalkRanking'
 
 const MainPage=()=>{
     return(
@@ -67,9 +68,10 @@ const MainPage=()=>{
           gap:'35px',
           width:'100%',
           marginTop: '20px',
+          alignItems: 'stretch',//  关键 ：让子容器高度互相拉齐
         }}>
          {/* 右侧下放热门推荐榜单 */}
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, display: 'flex' }}>
             <RightHotRanking />
           </div>
 
@@ -79,9 +81,10 @@ const MainPage=()=>{
             background: '#fff', 
             borderRadius: '16px', 
             boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            overflow: 'hidden'
+            overflow: 'hidden', 
+            display: 'flex'
           }}>
-            <RightHotRanking />
+            <RightTalkRanking />
         </div>
         </div>
       </div>
