@@ -1,11 +1,11 @@
-"use cilent"
+"use client"
 
 const RegisterPage=()=>{
     return (
-       <form>
+       <div>
         
-       </form>
+       </div>
     )
 }
 
-export default RegisterPage
+export default RegisterPage;

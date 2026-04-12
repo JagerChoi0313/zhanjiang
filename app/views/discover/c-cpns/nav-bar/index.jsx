@@ -34,7 +34,7 @@ const NavBar = () => {
     {
       key:'register',
       label:(
-        <Link href="" className="text-[15px] py-1 block text-[#a63d2d] font-medium">
+        <Link href="/views/Register" className="text-[15px] py-1 block text-[#a63d2d] font-medium">
           新用户注册
         </Link>
       ),
