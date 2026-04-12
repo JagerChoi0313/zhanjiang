@@ -2,9 +2,8 @@
 import { Anchor, Search } from "lucide-react";
 import Link from 'next/link' //Link用来实现路由跳转
 import {usePathname} from 'next/navigation'//使用usePathname替代原来的activeTab状态
-import {UserCircle} from 'lucide-react'
-
-
+import {UserCircle} from 'lucide-react';
+import {Dropdown} from 'antd';
 
 
 const NavBar = () => {
@@ -20,7 +19,27 @@ const NavBar = () => {
     {name:"文化故事",path:"/views/discover/children-views/CultureStory"} 
   ];
 
-
+  const items=[
+    {
+      key:'login',
+      label:(
+      <Link href="" className="text-[15px] py-1 block">
+          立即登录
+        </Link>
+      ),
+    },
+    {
+      type:'divider',
+    },
+    {
+      key:'register',
+      label:(
+        <Link href="" className="text-[15px] py-1 block text-[#a63d2d] font-medium">
+          新用户注册
+        </Link>
+      ),
+    },
+  ];
 
   return (
     // 1. 容器：背景换成淡淡的暖色调 #fdfaf5 (蚝壳白)，依然保留毛玻璃
@@ -104,13 +123,18 @@ const NavBar = () => {
         </button>
 
         {/*-------- 用户头像：登录注册页入口 -------- */}
-        <Link href="" className="group flex items-center justify-center">
-        {/*圆形带有悬浮动画的头像容器 */}
-        <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 transition-all group-hover:bg-[#fdfaf5] group-hover:border-[#a63d2d]/30 group-hover:shadow-md group-hover:scale-105 active:scale-95">
-        {/* 目前显示默认的“用户”图标，主色调改为你的深青色 */}
-            <UserCircle className="w-6 h-6 text-[#1a2a3a]/70 group-hover:text-[#a63d2d]" />
-        </div>
-        </Link>
+
+        <Dropdown 
+          menu={{items}}
+          trigger={['click']}
+          placement="bottomRight"
+          >
+          <div className="group shrink-0 cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 transition-all group-hover:border-[#a63d2d]/40 group-hover:bg-white group-hover:shadow-md">
+                  <UserCircle className="w-6 h-6 text-[#1a2a3a]/70 group-hover:text-[#a63d2d]" />
+            </div>
+          </div>
+        </Dropdown>
       </div>
     </nav>
   );
