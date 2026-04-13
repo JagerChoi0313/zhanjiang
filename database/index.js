@@ -5,8 +5,9 @@ import * as schema from './schema';
 
 //创建一个数据库连接池（Connection Pool）
 //这样网站在高并发下性能才会更好
+// mysql2 连接池期望的属性名是 uri 而不是 url
 const connection = mysql.createPool({
-    url:process.env.DATABASE_URL,
+    uri:process.env.DATABASE_URL,
 });
 
 //初始化drizzle实例

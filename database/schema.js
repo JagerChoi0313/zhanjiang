@@ -4,7 +4,7 @@ export const Users = mysqlTable("users",{
     id:serial("id").primaryKey(),
     nickname:varchar("nickname",{length:255}).notNull(),
     email:varchar("email",{length:255}).notNull().unique(),
-    createdAt:timestamp("create_at").defaultNow(),
+    createdAt:timestamp("createAt"),
 })
 
 

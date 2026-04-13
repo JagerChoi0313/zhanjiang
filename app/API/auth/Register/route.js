@@ -1,5 +1,5 @@
-import {db} from "@/database";
-import {Users} from "@/db/schema";
+import {db} from "../../../../database/index";
+import {Users} from "../../../../database/schema";
 import {NextResponse} from "next/server";
 
 export async function POST(request){
@@ -23,7 +23,7 @@ export async function POST(request){
     }catch(error){
         console.error("数据库操作失败：",error);
         return NextResponse.json(
-            {success:false,error:"该邮箱可能已被注册"},
+            {success:false,error:error.message},
             {status:500}
         );
     }
