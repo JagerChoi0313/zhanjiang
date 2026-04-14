@@ -6,12 +6,16 @@ export async function POST(request){
 
     try{
         //1.获取前端传过来的JSON数据
-        const {nickname,email}=await request.json();
+        const {nickname,email,password,phoneNumber,gender,age}=await request.json();
 
         //2.执行插入操作
         const result = await db.insert(Users).values({
             nickname:nickname,
             email:email,
+            password:password,
+            phoneNumber:phoneNumber,
+            gender:gender,
+            age:age
         });
 
         //返回成功响应

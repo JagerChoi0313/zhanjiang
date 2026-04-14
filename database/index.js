@@ -10,8 +10,10 @@ const connection = mysql.createPool({
     uri:process.env.DATABASE_URL,
 });
 
+
 //初始化drizzle实例
 export const db = drizzle(connection,{schema,mode:"default"});
+
 
 
 
