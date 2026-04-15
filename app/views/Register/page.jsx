@@ -99,7 +99,7 @@ const RegisterPage=()=>{
           </Button>
 
           <div className="text-center mt-4 text-gray-500">
-            已有账号？ <Link href="views/Login" className="text-[#a63d2d]">立即登录</Link>
+            已有账号？ <Link href="/views/Login" className="text-[#a63d2d]">立即登录</Link>
           </div>
         </Form>
       </Card>

@@ -23,7 +23,7 @@ const NavBar = () => {
     {
       key:'login',
       label:(
-      <Link href="" className="text-[15px] py-1 block">
+      <Link href="/views/Login" className="text-[15px] py-1 block">
           立即登录
         </Link>
       ),
