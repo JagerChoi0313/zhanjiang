@@ -2,91 +2,95 @@
 
 import React from 'react';
 import ChiKangCard from './ChiKangCard'
-// import XiaShangCard from './XiaShangCard'
-// import LiangJiangCard from './LiangJiangCard'
-// import SuiXiCard from './SuiXiCard'
-// import MaZhangCard from './MaZhangCard'
-// import WuChuangCard from './WuChuangCard'
-// import PoTouCard from './PoTouCard'
-// import XuWenCard from './XuWenCard'
+import XiaShangCard from './XiaShangCard'
+import LiangJiangCard from './LiangJiangCard'
+import SuiXiCard from './SuiXiCard'
+import MaZhangCard from './MaZhangCard'
+import WuChuangCard from './WuChuangCard'
+import PoTouCard from './PoTouCard'
+import XuWenCard from './XuWenCard'
+import LeiZhouCard from './LeiZhouCard'
 
 const FamousDish = () => {
   
   const cardMap = {
     1:ChiKangCard,
-    // 2:XiaShangCard,
-    // 3:LiangJiangCard,
-    // 4:SuiXiCard,
-    // 5:MaZhangCard,
-    // 6:WuChuangCard,
-    // 7:PoTouCard,
-    // 8:PoTouCard,
-    // 9:XuWenCard
+    2:XiaShangCard,
+    3:LiangJiangCard,
+    4:SuiXiCard,
+    5:MaZhangCard,
+    6:WuChuangCard,
+    7:PoTouCard,
+    8:LeiZhouCard,
+    9:XuWenCard
   };
 
   const pointsData = [
-    {
-      id: 1,
-      name: "赤坎区",
-      dot: { top: '58.5%', left: '50.2%' },
-      path: "M 50.2 58.5 Q 35 45 20 25", // 引导向左上
-      cardPos: { top: '20%', left: '10%' }
-    },
-    {
-      id: 2,
-      name: "霞山区",
-      dot: { top: '61%', left: '50.8%' },
-      path: "M 50.8 61 Q 65 45 80 25", // 引导向右上
-      cardPos: { top: '20%', right: '10%' }
-    },
-    {
-      id: 3,
-      name: "廉江市",
-      dot: { top: '48%', left: '47%' },
-      path: "M 47 48 Q 30 40 15 45", // 向左侧中上偏出
-      cardPos: { top: '42%', left: '5%' }
-    },
-    {
-      id: 4,
-      name: "遂溪县",
-      dot: { top: '54%', left: '46.5%' },
-      path: "M 46.5 54 Q 30 60 15 65", // 向左侧中下偏出
-      cardPos: { top: '62%', left: '5%' }
-    },
-    {
-      id: 5,
-      name: "麻章区",
-      dot: { top: '59%', left: '47.5%' },
-      path: "M 47.5 59 Q 35 80 30 85", // 向左下角弯曲
-      cardPos: { bottom: '10%', left: '15%' }
-    },
-    {
-      id: 6,
-      name: "吴川市",
-      dot: { top: '54.5%', left: '54.5%' },
-      path: "M 54.5 54.5 Q 75 40 85 45", // 向右侧中上偏出
-      cardPos: { top: '42%', right: '5%' }
-    },
-    {
-      id: 7,
-      name: "坡头区",
-      dot: { top: '60%', left: '53.5%' },
-      path: "M 53.5 60 Q 75 65 85 65", // 向右侧中下偏出
-      cardPos: { top: '62%', right: '5%' }
-    },
-    {
-      id: 8,
-      name: "雷州市",
-      dot: { top: '74%', left: '48%' },
-      path: "M 48 74 Q 65 85 75 85", // 向右下角偏出
-      cardPos: { bottom: '10%', right: '15%' }
-    },
+   // === 左侧梯队 (由北向南，外-内-外-内 阶梯交错排布) ===
+{
+  id: 3,
+  name: "廉江市",
+  dot: { top: '42%', left: '45%' },
+  path: "M 45 42 Q 30 35 18 25", // 指向 top:15% left:3% 的卡片中心
+  cardPos: { top: '15%', left: '3%' }
+},
+{
+  id: 4,
+  name: "遂溪县",
+  dot: { top: '49%', left: '43%' },
+  path: "M 43 49 Q 35 45 28 42", // 指向 top:35% left:9% 的卡片中心
+  cardPos: { top: '35%', left: '9%' }
+},
+{
+  id: 5,
+  name: "麻章区",
+  dot: { top: '54%', left: '48%' },
+  path: "M 48 54 Q 35 58 18 62", // 指向 top:55% left:3% 的卡片中心
+  cardPos: { top: '55%', left: '3%' }
+},
+{
+  id: 8,
+  name: "雷州市",
+  dot: { top: '68%', left: '48%' },
+  path: "M 48 68 Q 40 75 28 82", // 指向 top:75% left:9% 的卡片中心
+  cardPos: { top: '75%', left: '9%' }
+},
+
+// === 右侧梯队 (由北向南，外-内-外-内-外 阶梯交错排布) ===
+{
+  id: 6,
+  name: "吴川市",
+  dot: { top: '48%', left: '56%' },
+  path: "M 56 48 Q 65 30 82 20", // 指向 top:10% right:3% (约left:82%)
+  cardPos: { top: '10%', right: '3%' }
+},
+{
+  id: 1,
+  name: "赤坎区",
+  dot: { top: '51%', left: '50%' },
+  path: "M 50 51 Q 60 45 71 38", // 指向 top:30% right:9% (约left:71%)
+  cardPos: { top: '30%', right: '9%' }
+},
+{
+  id: 7,
+  name: "坡头区",
+  dot: { top: '53%', left: '53.5%' },
+  path: "M 53.5 53 Q 65 55 82 58", // 指向 top:50% right:3% (约left:82%)
+  cardPos: { top: '50%', right: '3%' }
+},
+{
+  id: 2,
+  name: "霞山区",
+  dot: { top: '55.5%', left: '51.5%' },
+  path: "M 51.5 55.5 Q 60 70 71 78", // 指向 top:70% right:9% (约left:71%)
+  cardPos: { top: '70%', right: '9%' }
+},
     {
       id: 9,
       name: "徐闻县",
-      dot: { top: '86%', left: '48.5%' },
-      path: "M 48.5 86 Q 48.5 95 40 95", // 向底部中心微调
-      cardPos: { bottom: '2%', left: '35%' }
+      dot: { top: '75%', left: '49%' }, // 真实位置：半岛最南端
+      path: "M 49 75 Q 60 85 49 90", 
+      cardPos: { top: '90%', right: '37%' } // 靠外侧压轴
     }
   ];
 
@@ -94,11 +98,13 @@ const FamousDish = () => {
     <div style={{ 
       position: 'relative', 
       width: '100%', 
-      height: '80vh', 
+      // --- 关键修复：增加容器高度并取消隐藏，确保底部卡片有位置放 ---
+      minHeight: '110vh', 
+      paddingBottom: '120px',
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 
-      overflow: 'hidden' 
+      overflow: 'visible'
     }}>
       
       {/* 1. 地图底图 */}
