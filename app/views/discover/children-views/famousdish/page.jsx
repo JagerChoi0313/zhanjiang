@@ -1,15 +1,16 @@
 "use client"
+import Image from 'next/image'
 
 import React from 'react';
-import ChiKangCard from './ChiKangCard'
-import XiaShangCard from './XiaShangCard'
-import LiangJiangCard from './LiangJiangCard'
-import SuiXiCard from './SuiXiCard'
-import MaZhangCard from './MaZhangCard'
-import WuChuangCard from './WuChuangCard'
-import PoTouCard from './PoTouCard'
-import XuWenCard from './XuWenCard'
-import LeiZhouCard from './LeiZhouCard'
+import ChiKangCard from './AreaCard/ChiKangCard'
+import XiaShangCard from './AreaCard/XiaShangCard'
+import LiangJiangCard from './AreaCard/LiangJiangCard'
+import SuiXiCard from './AreaCard/SuiXiCard'
+import MaZhangCard from './AreaCard/MaZhangCard'
+import WuChuangCard from './AreaCard/WuChuangCard'
+import PoTouCard from './AreaCard/PoTouCard'
+import XuWenCard from './AreaCard/XuWenCard'
+import LeiZhouCard from './AreaCard/LeiZhouCard'
 
 const FamousDish = () => {
   
@@ -108,11 +109,14 @@ const FamousDish = () => {
     }}>
       
       {/* 1. 地图底图 */}
-      <img 
-        src="/Image/Map.png" 
-        style={{ width: '360px', marginTop: '150px', zIndex: 1 }} 
-        alt="湛江地图" 
+      <div style={{ position: 'relative', width: '360px', height: '500px', marginTop: '150px' }}> 
+      <Image
+    src="/Image/Map.png"
+    alt="湛江地图"
+    fill // 自动撑满父容器
+    style={{ objectFit: 'contain', zIndex: 1 }} // 使用 contain 保证地图显示完整
       />
+    </div>
 
       {/* 2. SVG 曲线层 (一次性循环所有线条) */}
      <svg 
