@@ -15,7 +15,7 @@ const NavBar = () => {
   const menuItems = [
     {name:"首页",path:"/"},
     {name:"探店寻味",path:"/views/discover/children-views/FamousDish"},
-    {name:"文化故事",path:"/views/discover/children-views/CultureStory"},
+    {name:"味觉卡片",path:"/views/discover/children-views/TasteCard"},
     {name:"寻味路线",path:"/views/discover/children-views/FoodMap"} 
   ];
 
