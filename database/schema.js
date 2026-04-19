@@ -22,7 +22,7 @@ export const HotRecommend=mysqlTable("hot_recommend",{
     views:int("views").default(0),
 
     //权重分，可以手动设置，也可以根据算法计算，用于决定排名
-    rankScore:int("rank_score").default(0),
+    rank_score:int("rank_score").default(0),
 
     //区域字段，如“赤坎区，霞山区”
     district:varchar("district",{length:100}),
