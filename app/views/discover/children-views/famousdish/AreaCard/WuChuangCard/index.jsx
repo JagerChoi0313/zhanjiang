@@ -57,19 +57,19 @@ const WuChuangCard =()=>{
 
      const shopData=[
         {
-      shopName: "旺记食铺 WANG JI",
-      dishName: "招牌猪红 回味无穷",
-      image: "/Image/CK1.png" 
+      shopName: "阿六烂镬炒粉",
+      dishName: "大火翻炒，镬气升腾",
+      image: "/Image/WC1.png" 
     },
     {
-      shopName: "赤坎老街糖水",
-      dishName: "鸳鸯糊 SEASAME PASTE",
-      image: "/Image/CK2.png"
+      shopName: "梅录陈记白切鸡",
+      dishName: "色泽金黄、皮滑肉嫩",
+      image: "/Image/WC2.png"
     },
     {
-      shopName: "北桥鸭仔饭",
-      dishName: "正宗白切鸭 DUCK RICE",
-      image: "/Image/CK3.png"
+      shopName: "吴川港海鲜大排档",
+      dishName: "现浪生蚝 泥丁粥",
+      image: "/Image/WC3.png"
     }
     ]
 

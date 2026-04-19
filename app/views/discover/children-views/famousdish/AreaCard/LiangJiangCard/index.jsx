@@ -59,19 +59,19 @@ const cardImageStyle = {
 const LiangJiangCard = () => {
   const shopData = [
     {
-      shopName: "旺记食铺 WANG JI",
-      dishName: "招牌猪红 回味无穷",
-      image: "/Image/CK1.png"
+      shopName: "安铺鸡饭店",
+      dishName: "鸡有鸡味",
+      image: "/Image/LJ1.png"
     },
     {
-      shopName: "赤坎老街糖水",
-      dishName: "鸳鸯糊 SEASAME PASTE",
-      image: "/Image/CK2.png"
+      shopName: "何妈绿豆饼",
+      dishName: "一口绿豆醇香",
+      image: "/Image/LJ2.png"
     },
     {
-      shopName: "北桥鸭仔饭",
-      dishName: "正宗白切鸭 DUCK RICE",
-      image: "/Image/CK3.png"
+      shopName: "福记食府",
+      dishName: "廉江人的食堂",
+      image: "/Image/LJ3.png"
     }
   ];
 
