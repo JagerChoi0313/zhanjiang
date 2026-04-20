@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import {useEffect,useState} from 'react'
 
 // 1. 定义样式对象，确保与“热门推荐”视觉对齐
 const ContainerStyle = {
@@ -44,13 +45,34 @@ const ContentStyle = {
 };
 
 const RightTalkRanking = () => {
-  // 模拟数据，你可以根据需要修改
-  const talkData = [
-    { id: 1, name: '林小厨', comment: '湛江的白切鸡真的是一绝，皮爽肉滑！', avatar: '/Image/Talk1.png' },
-    { id: 2, name: '美食家阿强', comment: '赤坎老街那家牛腩粉，味道还是没变。', avatar: '/Image/Talk2.png' },
-    { id: 3, name: '逛吃湛江', comment: '生蚝非常肥美，蒜蓉配比刚刚好。', avatar: '/Image/Talk3.png' },
-    { id: 4, name: '粤西食客', comment: '好吃，爱吃', avatar: '/Image/Talk4.png' },
-  ];
+  
+  //2.定义状态，状态管理
+  const [talkData,setTalkData] = useState([]);
+  const [loading,setLoading] = useState(true);
+
+  //异步获取后端数据
+  useEffect(()=>{
+   const fetchData = async() =>{
+    try{
+        const response = await fetch('/API/TalkRanking')
+        const result = await response.json();
+        console.log("接口返回的数据：", result);
+
+        if(result.success){
+          setTalkData(result.data);
+        }
+    }catch(error){
+      console.error("获取榜单失败",error)
+    }finally{
+      setLoading(false)
+    }
+   };
+
+   fetchData();
+  },[])
+
+  // 4. 加载状态处理
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>加载中...</div>;
 
   return (
     <div style={ContainerStyle}>
@@ -61,44 +83,55 @@ const RightTalkRanking = () => {
       </div>
 
       {/* 互动列表 */}
-      {talkData.map((item) => (
-        <div 
-          key={item.id}
-          style={ItemStyle}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          {/* 用户头像 */}
-          <div style={AvatarStyle}>
-            <Image
-              src={item.avatar}
-              alt={item.name}
-              fill
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
+      {talkData.length > 0 ? (
+        talkData.map((item) => (
+          <div 
+            key={item.id}
+            style={ItemStyle}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            {/* 用户头像 - 使用数据库字段 avatar */}
+            <div style={AvatarStyle}>
+              <Image
+                src={item.avatar || '/Image/default-avatar.png'} // 增加兜底图
+                alt={item.user_name || 'User'}
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
 
-          {/* 右侧文本内容 */}
-          <div style={ContentStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#444' }}>{item.name}</span>
-              <span style={{ fontSize: '10px', color: '#faad14' }}>⭐⭐⭐⭐⭐</span>
-            </div>
-            <div style={{ 
-              fontSize: '12px', 
-              color: '#666', 
-              lineHeight: '1.5',
-              display: '-webkit-box',
-              WebkitLineClamp: 2, // ⭐ 关键：最多显示两行文字
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
-              {item.comment}
+            {/* 右侧文本内容 */}
+            <div style={ContentStyle}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* 字段修正：使用数据库中的 user_name */}
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#444' }}>
+                  {item.user_name}
+                </span>
+                {/* 根据数据库 rating 动态显示星星，如果没有则默认为5颗 */}
+                <span style={{ fontSize: '10px', color: '#faad14' }}>
+                  {"⭐".repeat(item.rating || 5)}{"⭐".repeat(5 - (item.rating || 5))}
+                </span>
+              </div>
+              <div style={{ 
+                fontSize: '12px', 
+                color: '#666', 
+                lineHeight: '1.5',
+                display: '-webkit-box',
+                WebkitLineClamp: 2, 
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {/* 字段修正：使用数据库中的 comment */}
+                {item.comment}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      ) : (
+        <div style={{ padding: '20px', textAlign: 'center', color: '#ccc' }}>暂无互动评论</div>
+      )}
     </div>
   );
 };

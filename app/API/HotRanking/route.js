@@ -1,8 +1,9 @@
+
 //处理Get请求，利用drizzle从MySql中读取数据
 
 import {db} from '../../../database/index'
 import {HotRecommend} from '../../../database/schema'
-import {desc} from "drizzle-orm"
+import {desc} from "drizzle-orm"        //这个是用来倒序的
 import {NextResponse} from "next/server"
 
 export async function GET(){

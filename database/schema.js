@@ -30,6 +30,15 @@ export const HotRecommend=mysqlTable("hot_recommend",{
     createAt:timestamp("create_at").defaultNow(),
 })
 
+export const TalkRanking = mysqlTable("talk_ranking",{
+    id:serial("id").primaryKey(),
+    user_name:varchar("user_name",{length:100}).notNull(),
+    comment:varchar("comment",{length:500}).notNull(),
+    avatar:varchar("avatar",{length:500}),
+    rating:int("rating").default(5),
+    create_at:timestamp("create_at").defaultNow(),
+})
+
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
