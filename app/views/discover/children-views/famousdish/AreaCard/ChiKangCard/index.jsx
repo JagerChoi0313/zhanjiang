@@ -59,13 +59,13 @@ const cardImageStyle = {
 const ChiKangCard = () => {
   const shopData = [
     {
-      shopName: "旺记食铺 WANG JI",
-      dishName: "招牌猪红 回味无穷",
+      shopName: "阿六鸭仔饭",
+      dishName: "人头攒动，蒸汽腾腾",
       image: "/Image/CK1.png"
     },
     {
-      shopName: "赤坎老街糖水",
-      dishName: "鸳鸯糊 SEASAME PASTE",
+      shopName: "老陈牛杂面",
+      dishName: "最纯粹的赤坎味道",
       image: "/Image/CK2.png"
     },
     {

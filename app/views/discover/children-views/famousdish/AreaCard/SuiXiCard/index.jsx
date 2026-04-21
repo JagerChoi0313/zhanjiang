@@ -58,19 +58,19 @@ const SuiXiCard =()=>{
 
     const shopData=[
         {
-      shopName: "旺记食铺 WANG JI",
-      dishName: "招牌猪红 回味无穷",
-      image: "/Image/CK1.png" 
+      shopName: "沙虫粥 · 北坡鱼丸",
+      dishName: "雪白的鱼丸",
+      image: "/Image/SX1.png" 
     },
     {
-      shopName: "赤坎老街糖水",
-      dishName: "鸳鸯糊 SEASAME PASTE",
-      image: "/Image/CK2.png"
+      shopName: "遂溪非遗簸箕炊",
+      dishName: "色泽金黄、皮滑肉嫩",
+      image: "/Image/SX2.png"
     },
     {
-      shopName: "北桥鸭仔饭",
-      dishName: "正宗白切鸭 DUCK RICE",
-      image: "/Image/CK3.png"
+      shopName: "金狮烧猪",
+      dishName: "非遗传承 · 金猪送福",
+      image: "/Image/SX3.png"
     }
     ]
 
