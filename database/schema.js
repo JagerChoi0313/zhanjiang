@@ -1,4 +1,5 @@
-import {mysqlTable,serial,varchar,timestamp,int} from 'drizzle-orm/mysql-core';
+import {mysqlTable, serial, varchar, timestamp, float, int} from 'drizzle-orm/mysql-core';
+import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
     id:serial("id").primaryKey(),
@@ -40,32 +41,53 @@ export const TalkRanking = mysqlTable("talk_ranking",{
 })
 
 
+// 1. 点位位置表 (父表)
 export const ExploreSpots = mysqlTable("explore_spots", {
-  // 自增 ID
   id: serial("id").primaryKey(),
   
-  // 区域标识，用于前端逻辑匹配
-  area_slug: varchar("area_slug", { length: 50 }).notNull(),
+  // 区域标识
+  areaSlug: varchar("area_slug", { length: 50 }).notNull(),
+  areaName: varchar("area_name", { length: 100 }).notNull(),
   
-  // 区域名称，用于界面显示
-  area_name: varchar("area_name", { length: 100 }).notNull(),
-  
-  // 核心 JSON 字段：存储对象数组 [{img, title, desc}]
-  // 这样每一张轮播图都能带上自己专属的文字
-  carousel_data: json("carousel_data").notNull(),
-  
-  // 坐标系统：使用 float 存储百分比数值，确保位置精准
-  dot_left: float("dot_left").notNull(),
-  dot_top: float("dot_top").notNull(),
-  card_left: float("card_left").notNull(),
-  card_top: float("card_top").notNull(),
+  // 坐标信息
+  dotLeft: float("dot_left").notNull(),
+  dotTop: float("dot_top").notNull(),
+  cardLeft: float("card_left").notNull(),
+  cardTop: float("card_top").notNull(),
   
   // 连接线路径
-  svg_path: varchar("svg_path", { length: 500 }),
+  svgPath: varchar("svg_path", { length: 500 }),
   
-  // 自动生成的时间戳
   createdAt: timestamp("create_at").defaultNow(),
 });
+
+// 2. 轮播内容表 (子表)
+export const ExploreCarousel = mysqlTable("explore_carousel", {
+  id: serial("id").primaryKey(),
+  
+  // 关联 ExploreSpots 表的 id
+  spotId: int("spot_id").notNull(),
+  
+  // 具体图文内容
+  imgUrl: varchar("img_url", { length: 500 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: varchar("description", { length: 500 }),
+  
+  // 排序字段
+  sortOrder: int("sort_order").default(0),
+});
+
+// 3. 定义表与表之间的关系 (可选，方便 Drizzle 进行 relational 查询)
+export const ExploreSpotsRelations = relations(ExploreSpots, ({ many }) => ({
+  carouselItems: many(ExploreCarousel),
+}));
+
+export const ExploreCarouselRelations = relations(ExploreCarousel, ({ one }) => ({
+  spot: one(ExploreSpots, {
+    fields: [ExploreCarousel.spotId],
+    references: [ExploreSpots.id],
+  }),
+}));
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
