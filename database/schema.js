@@ -39,31 +39,33 @@ export const TalkRanking = mysqlTable("talk_ranking",{
     create_at:timestamp("create_at").defaultNow(),
 })
 
-export const ExploreSpots = mysqlTable("explore_spots",{
-    id:serial("id").primaryKey(),
 
-    //区域标识，例如‘chikan’，‘’,用leizhou于前端匹配地图位置
-    area_slug:varchar("area_slug",{length:50}).notNull(),
-
-    //区域显示名称，例如‘赤坎区’，‘雷州市’
-    area_name:varchar("area_name",{length:100}),
-
-    //店名或美食标题
-    title:varchar("title",{length:255}).notNull(),
-
-    //简单描述和推荐语
-    description:varchar("description",{length:500}),
-
-    //轮播图片路径，存储为JSON数组，例如["/img/1.jpg", "/img/2.jpg"]
-    //在MySql中这会对应JSON格式
-    images:json("images"),
-
-    //坐标信息：方便以后通过后台直接调整卡片在地图上的位置，而不用改 CSS
-    position_x:int("position_x"),
-    position_y:int("position_y"),
-
-    create_at:timestamp("create_at").defaultNow
-})
+export const ExploreSpots = mysqlTable("explore_spots", {
+  // 自增 ID
+  id: serial("id").primaryKey(),
+  
+  // 区域标识，用于前端逻辑匹配
+  area_slug: varchar("area_slug", { length: 50 }).notNull(),
+  
+  // 区域名称，用于界面显示
+  area_name: varchar("area_name", { length: 100 }).notNull(),
+  
+  // 核心 JSON 字段：存储对象数组 [{img, title, desc}]
+  // 这样每一张轮播图都能带上自己专属的文字
+  carousel_data: json("carousel_data").notNull(),
+  
+  // 坐标系统：使用 float 存储百分比数值，确保位置精准
+  dot_left: float("dot_left").notNull(),
+  dot_top: float("dot_top").notNull(),
+  card_left: float("card_left").notNull(),
+  card_top: float("card_top").notNull(),
+  
+  // 连接线路径
+  svg_path: varchar("svg_path", { length: 500 }),
+  
+  // 自动生成的时间戳
+  createdAt: timestamp("create_at").defaultNow(),
+});
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
