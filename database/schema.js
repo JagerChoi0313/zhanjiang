@@ -89,6 +89,22 @@ export const ExploreCarouselRelations = relations(ExploreCarousel, ({ one }) => 
   }),
 }));
 
+
+export const FoodRanking = mysqlTable("food_ranking",{
+  id:serial('id').primaryKey,
+
+  //基础信息
+  name:varchar('name',{length:255}).notNull(),
+  slogan:varchar('slogan',{length:255}).notNull(),    //对应UI上的简短介绍
+  coverUrl:text('cover_url').notNull(),               //封面图片
+  
+  category:varchar('category',{length:100}).notNull(), //分类
+  sortOrder:int('sort_order').default(999),              // 排序权重，数字越小越靠前
+
+  //详情页预留字段
+  description:text('description'),
+  rating:decimal('rating',{precision:2,scale:1}).default('5.0')
+})
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
 // 我们不需要手动去 DataGrip 里敲 CREATE TABLE，让 Drizzle 帮我们干。
