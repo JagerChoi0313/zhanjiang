@@ -28,6 +28,10 @@ export const HotRecommend=mysqlTable("hot_recommend",{
     //区域字段，如“赤坎区，霞山区”
     district:varchar("district",{length:100}),
 
+    // 升级：为了“更多”页面的杂志感，我们增加这两个字段
+    slogan: varchar("slogan", { length: 255 }),         // 简短口号
+    category: varchar("category", { length: 100 }).default('全部'), // 分类标签
+
     createAt:timestamp("create_at").defaultNow(),
 })
 
@@ -77,6 +81,8 @@ export const ExploreCarousel = mysqlTable("explore_carousel", {
   sortOrder: int("sort_order").default(0),
 });
 
+
+
 // 3. 定义表与表之间的关系 (可选，方便 Drizzle 进行 relational 查询)
 export const ExploreSpotsRelations = relations(ExploreSpots, ({ many }) => ({
   carouselItems: many(ExploreCarousel),
@@ -90,21 +96,7 @@ export const ExploreCarouselRelations = relations(ExploreCarousel, ({ one }) => 
 }));
 
 
-export const FoodRanking = mysqlTable("food_ranking",{
-  id:serial('id').primaryKey,
 
-  //基础信息
-  name:varchar('name',{length:255}).notNull(),
-  slogan:varchar('slogan',{length:255}).notNull(),    //对应UI上的简短介绍
-  coverUrl:text('cover_url').notNull(),               //封面图片
-  
-  category:varchar('category',{length:100}).notNull(), //分类
-  sortOrder:int('sort_order').default(999),              // 排序权重，数字越小越靠前
-
-  //详情页预留字段
-  description:text('description'),
-  rating:decimal('rating',{precision:2,scale:1}).default('5.0')
-})
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
 // 我们不需要手动去 DataGrip 里敲 CREATE TABLE，让 Drizzle 帮我们干。
