@@ -1,4 +1,4 @@
-
+"use server"
 //处理Get请求，利用drizzle从MySql中读取数据
 
 import {db} from '../../../database/index'

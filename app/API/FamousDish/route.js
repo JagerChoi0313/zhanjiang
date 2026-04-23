@@ -1,3 +1,4 @@
+"use server"
 import {db} from '../../../database/index'
 import {ExploreSpots,ExploreCarousel} from '../../../database/schema'
 import {NextResponse} from 'next/server'

@@ -1,3 +1,5 @@
+"use server"
+
 import {db} from '../../../database/index'
 import {TalkRanking} from '../../../database/schema'
 import {desc} from 'drizzle-orm'        //这是用来倒序的
