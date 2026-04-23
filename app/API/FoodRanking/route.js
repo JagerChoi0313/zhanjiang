@@ -29,3 +29,5 @@ export async function getRankingData (category = "全部"){
         return {success:false,error:"Internet Servel Error"};
     }
 }
+
+
