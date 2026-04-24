@@ -13,7 +13,7 @@ export async function getRankingData (category = "全部"){
         // category = "全部"：给参数设一个默认值。如果前端没传分类，我们就默认给它展示“全部”。
         if(category==="全部"){
             //如果是全部，则直接按浏览量或权重排序
-            data = awaitdb.select()
+            data = await db.select()
                 .from(HotRecommend)
                 .orderBy(desc(HotRecommend.views));     //这里用views排序
         }else{
@@ -26,7 +26,7 @@ export async function getRankingData (category = "全部"){
             return {success:true,data};
     }catch(error){
         console.error("获取榜单数据失败:",error);
-        return {success:false,error:"Internet Servel Error"};
+        return {success:false,error:"Internal Servel Error"};
     }
 }
 
