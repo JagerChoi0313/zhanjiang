@@ -1,4 +1,4 @@
-import {mysqlTable, serial, varchar, timestamp, float, int} from 'drizzle-orm/mysql-core';
+import {mysqlTable, serial, varchar, timestamp, float, int,text} from 'drizzle-orm/mysql-core';
 import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
@@ -95,6 +95,15 @@ export const ExploreCarouselRelations = relations(ExploreCarousel, ({ one }) => 
   }),
 }));
 
+
+export const TasteCard = mysqlTable("taste_card", {
+  id: varchar('id', { length: 10 }).primaryKey(), // 补上了 ()
+  name: varchar('name', { length: 255 }).notNull(), // 补上了 ()
+  enName: varchar('en_name', { length: 100 }),
+  desc: text('desc'),
+  bgColor: varchar('bg_color', { length: 7 }),
+  imagePath: varchar('image_path', { length: 255 }).default('/images/food/default.png')
+});
 
 
 // 最激动人心的时刻：把表“推”进数据库
