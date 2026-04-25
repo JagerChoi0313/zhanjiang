@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import {useState,useEffect} from 'react'
+import Link from 'next/link'
 
 // 1. 定义样式对象，保持代码整洁
 const styles = {
@@ -85,7 +86,11 @@ const RightHotRanking = () => {
     <div style={styles.listContainer}>
       <div style={styles.header}>
         <span style={{ fontWeight: 'bold', fontSize: '14px' }}>热门推荐</span>
-        <span style={{ fontSize: '12px', color: '#999', cursor: 'pointer' }}>更多 &gt;</span>
+          <Link 
+        href="/views/FoodRanking"
+        style={{ fontSize: '12px', color: '#999', cursor: 'pointer' }}>
+          更多 &gt;
+          </Link>
       </div>
 
       {data.length > 0 ? (
