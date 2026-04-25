@@ -96,7 +96,7 @@ export const ExploreCarouselRelations = relations(ExploreCarousel, ({ one }) => 
 }));
 
 
-export const TasteCard = mysqlTable("taste_card", {
+export const TasteCardTable = mysqlTable("taste_card", {
   id: varchar('id', { length: 10 }).primaryKey(), // 补上了 ()
   name: varchar('name', { length: 255 }).notNull(), // 补上了 ()
   enName: varchar('en_name', { length: 100 }),
