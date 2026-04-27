@@ -8,7 +8,7 @@ const NavBar=()=>{
     const pathname = usePathname();//获取当前浏览器地址栏的路径
 
     const navItems = [
-        {id:'home',label:'首页',icon:'🏠',href:'/views/FoodCommunity'},
+        {id:'home',label:'首页',icon:'🏠',href:'/views/FoodCommunity/MainPage'},
         {id:'fav',label:'我的收藏',icon:'⭐',href:'/views/FoodCommunity/MyFavorites'},
         {id:'comment',label:'我的评论',icon:'💬',href:'/views/FoodCommunity/MyComments'},
         {id:'post',label:'我的帖子',icon:'📝',href:'/views/FoodCommunity/MyPost'},
@@ -30,8 +30,8 @@ const NavBar=()=>{
             <nav className="flex-1 space-y-2">
                 {navItems.map((item) => {
                     // 核心逻辑：判断当前路径是否与该项的 href 匹配
-                    const isActive = pathname === item.href;
-
+                   const isRootPath = pathname === '/views/FoodCommunity';
+                   const isActive = pathname === item.href || (isRootPath && item.id === 'home');
                     return (
                         <Link
                             key={item.id}

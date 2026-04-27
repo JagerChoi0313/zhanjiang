@@ -15,7 +15,7 @@ const FoodCommunityLayout=()=>{
             <main className="flex-1 min-h-screen">
                 <div className="p-8 text-gray-400">
                     {/* 先不放 children，放个提示语 */}
-                    这里是内容区域，等 layout 调好了我们再写 page.jsx
+                   
                 </div>
             </main>
         </div>
