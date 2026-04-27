@@ -2,23 +2,19 @@
 import React from 'react'
 import NavBar from './NavBar/index'
 
-const FoodCommunityLayout=()=>{
+const FoodCommunityLayout=({children})=>{
     return(
-        <div className="flex min-h-screen bg-[#F8F9FA]">
-            {/* 左侧：侧边栏容器 */}
-            {/* 注意：我加了 top-[64px] 和 h-calc，防止它被你的顶部导航挡住 */}
-            <aside className="top-0 h-screen w-64 flex-shrink-0 sticky top-[64px] h-[calc(100vh-64px)] border-r border-gray-100 overflow-y-auto bg-white">
-                <NavBar />
-            </aside>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#fbfbfd' }}>
+      {/* 左侧：固定导航栏 */}
+      <aside style={{ width: '260px', height: '100%', borderRight: '1px solid #f2f2f2', flexShrink: 0 }}>
+        <NavBar />
+      </aside>
 
-            {/* 右侧：临时占位区 */}
-            <main className="flex-1 min-h-screen">
-                <div className="p-8 text-gray-400">
-                    {/* 先不放 children，放个提示语 */}
-                   
-                </div>
-            </main>
-        </div>
+      {/* 右侧：主内容区，交给具体的 page 处理 */}
+      <main style={{ flex: 1, height: '100%', position: 'relative' }}>
+        {children}
+      </main>
+    </div>
     )
 }
 
