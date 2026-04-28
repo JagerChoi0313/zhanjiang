@@ -1,4 +1,4 @@
-import {mysqlTable, serial, varchar, timestamp, float, int,text} from 'drizzle-orm/mysql-core';
+import {mysqlTable, serial, varchar, timestamp, float, int,text,boolean} from 'drizzle-orm/mysql-core';
 import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
@@ -128,7 +128,8 @@ export const hotTopics = mysqlTable("hot_topics",{
   rank:int('rank'),   //排名序号
   isHot:boolean('ishot').default(false),  //判断是否带火苗标志
   createAt:timestamp('create_at').defaultNow(),
-  
+
+
 })
 
 // 最激动人心的时刻：把表“推”进数据库
