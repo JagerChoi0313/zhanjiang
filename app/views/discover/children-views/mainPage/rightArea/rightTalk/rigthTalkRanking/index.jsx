@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import {useEffect,useState} from 'react'
+import Link from 'next/link'
 
 // 1. 定义样式对象，确保与“热门推荐”视觉对齐
 const ContainerStyle = {
@@ -79,7 +80,11 @@ const RightTalkRanking = () => {
       {/* 头部区域 */}
       <div style={HeaderStyle}>
         <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>用户互动</span>
-        <span style={{ fontSize: '12px', color: '#999', cursor: 'pointer' }}>更多 &gt;</span>
+        <Link
+        href="/views/FoodCommunity" 
+        style={{ fontSize: '12px', color: '#999', cursor: 'pointer' }}>
+          更多 &gt;
+        </Link>
       </div>
 
       {/* 互动列表 */}
