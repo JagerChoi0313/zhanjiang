@@ -115,9 +115,11 @@ export const posts = mysqlTable("posts",{
   location:varchar('location',{length:100}),
   likes:int('likes').default(0),
   comments:int('comments').default(0),
-  createAt:timestamp('createat').defaultNow,
+  createAt:timestamp('create_at').defaultNow(),
 
-})
+});
+
+
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。

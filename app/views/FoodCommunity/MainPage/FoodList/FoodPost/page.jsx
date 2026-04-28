@@ -35,7 +35,9 @@ const FoodPost = ({ data }) => {
   return (
     <div style={styles.card}>
       <div style={styles.imgWrapper}>
-        <img src={data.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={data.coverImage} // 对应 schema.js 中的定义
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            alt="cover" />
       </div>
       <div style={styles.contentWrapper}>
         <div>
