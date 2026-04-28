@@ -105,6 +105,19 @@ export const TasteCardTable = mysqlTable("taste_card", {
   imagePath: varchar('image_path', { length: 255 }).default('/images/food/default.png')
 });
 
+export const posts = mysqlTable("posts",{
+  id:serial('id').primaryKey(),
+  username:varchar('username',{length:255}).notNull(),
+  avatar:text('avatar'),
+  title:varchar('title',{length:255}).notNull(),
+  description:text('description'),
+  coverImage:text('cover_image'),
+  location:varchar('location',{length:100}),
+  likes:int('likes').default(0),
+  comments:int('comments').default(0),
+  createAt:timestamp('createat').defaultNow,
+
+})
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。

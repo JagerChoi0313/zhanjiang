@@ -19,7 +19,7 @@ const MainPage = () => {
       flex: 1,
       height: '100%',
       overflowY: 'auto', 
-      padding: '0 48px', // 增加两侧间距，视觉更高级
+      padding: '0 20px 40px 20px', // 增加两侧间距，视觉更高级
       scrollbarWidth: 'none', // 隐藏 Firefox 滚动条
       msOverflowStyle: 'none', // 隐藏 IE 滚动条
     },

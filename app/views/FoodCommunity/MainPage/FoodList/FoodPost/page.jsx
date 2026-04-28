@@ -11,12 +11,12 @@ const FoodPost = ({ data }) => {
       backgroundColor: '#fff',
       padding: '20px',
       borderRadius: '20px',
-      marginBottom: '16px',
+      marginBottom: '-10px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
       transition: 'all 0.3s ease',
     },
     imgWrapper: {
-      width: '240px', // 固定宽度
+      width: '260px', // 固定宽度
       height: '160px',
       borderRadius: '12px',
       overflow: 'hidden',
