@@ -121,6 +121,17 @@ export const posts = mysqlTable("posts",{
 
 
 
+export const hotTopics = mysqlTable("hot_topics",{
+  id:serial('id').primaryKey(),
+  name:varchar('name',{length:255}).notNull(),  //话题名称
+  viewCourt:varchar('view_court',{length:50}).default(0),   // 阅读量，存字符串方便显示
+  rank:int('rank'),   //排名序号
+  isHot:boolean('ishot').default(false),  //判断是否带火苗标志
+  createAt:timestamp('create_at').defaultNow(),
+
+
+})
+
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
 // 我们不需要手动去 DataGrip 里敲 CREATE TABLE，让 Drizzle 帮我们干。
