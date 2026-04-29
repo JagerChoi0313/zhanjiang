@@ -24,7 +24,7 @@ const styles = {
     },
     more: {
       fontSize: '13px',
-      color: '#06c', // Apple 链接蓝色
+      color: '#999', 
       cursor: 'pointer',
     },
     list: {

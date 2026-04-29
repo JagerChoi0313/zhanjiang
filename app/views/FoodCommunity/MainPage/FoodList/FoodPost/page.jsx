@@ -49,7 +49,7 @@ const FoodPost = ({ data }) => {
           <p style={styles.desc}>{data.description}</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#86868b', fontSize: '13px' }}>
-          <span>📍 赤坎区</span>
+          <span>📍 {data.location}</span>
           <div style={{ display: 'flex', gap: '15px' }}>
             <span>🤍 {data.likes}</span>
             <span>💬 {data.comments}</span>
