@@ -11,7 +11,7 @@ export async function GET(request){
         const userId = 1;
 
         //获取分页参数
-        const [searchParams] = new URL(request.url);
+        const {searchParams} = new URL(request.url);
         const page = parseInt(searchParams.get("page")) || 1;  //默认第一页
         const pageSize = 4;
         const offset = (page-1) * pageSize;

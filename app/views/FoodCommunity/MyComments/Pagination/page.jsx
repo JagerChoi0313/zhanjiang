@@ -7,12 +7,12 @@ const Pagination=({currentPage,totalPages,onPageChange})=>{
     //如果总页数不多我们可以直接映射，如果多则直接加省略号表示
     //这里先实现一个能根据totalPages动态显示的逻辑
 
-    const pageNumebers=[];
+    const pageNumbers=[];
     for(let i=1;i<=totalPages;i++)
     {
         // 基础逻辑：显示前几页，如果页数过多建议只显示当前页附近的页码
         // 这里暂时展示全部页码，或者你可以根据需求限制只显示前 5 页
-        pageNumebers.push(i);
+        pageNumbers.push(i);
     }
 
     return(

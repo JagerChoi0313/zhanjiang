@@ -4,65 +4,61 @@ const CommentCard=({data})=>{
     ? new Date(data.createAt).toLocaleDateString().replace(/\//g, '-') 
     : '2026-04-28';
     return(
- // 关键修改 1：p-6 改为 p-5，mb-4 改为 mb-3，整体卡片变矮
-    <div className="relative flex p-4 lg:p-5 bg-white rounded-[20px] border border-gray-100 mb-3 shadow-sm items-start">
+// 1. 进一步缩小 padding (p-4 -> p-3)，移除不必要的 items-start 强制对齐
+    <div className="relative flex p-3 lg:p-3.5 bg-white rounded-xl border border-gray-100 shadow-sm items-center">
       
-      {/* 右上角三个点：稍微调整 top 的位置适应变矮的卡片 */}
-      <div className="absolute top-4 right-5 flex gap-[3px] cursor-pointer p-2">
-        <div className="w-[4px] h-[4px] bg-gray-300 rounded-full"></div>
-        <div className="w-[4px] h-[4px] bg-gray-300 rounded-full"></div>
-        <div className="w-[4px] h-[4px] bg-gray-300 rounded-full"></div>
-      </div>
-
-      {/* 左侧：封面图 - 稍微缩小尺寸 100px -> 85px */}
-      <div className="w-[85px] h-[85px] shrink-0 mt-1">
+      {/* 2. 缩小图片尺寸 (85px -> 75px) */}
+      <div className="w-[75px] h-[75px] shrink-0">
         <img 
           src={data.postCover || '/default-food.jpg'} 
-          className="w-full h-full object-cover rounded-xl" 
+          className="w-full h-full object-cover rounded-lg" 
           alt="cover" 
-          onError={(e) => { e.target.src = '/default-food.jpg' }} // 处理图片404
+          onError={(e) => { e.target.src = '/default-food.jpg' }} 
         />
       </div>
 
-      {/* 中间：文字内容区 - 压缩上下 margin (mt-3 改为 mt-2 等) */}
-      <div className="flex-1 ml-5 flex flex-col justify-start">
-        <h3 className="text-[15px] font-bold text-gray-900 leading-tight">{data.postTitle}</h3>
+      {/* 3. 中间内容区：压缩文字间距 */}
+      <div className="flex-1 ml-4 flex flex-col justify-center">
+        <h3 className="text-[14px] font-bold text-gray-900 leading-tight line-clamp-1">{data.postTitle}</h3>
         
-        <p className="text-[12px] text-gray-400 mt-1 line-clamp-1">{data.postDescription}</p>
+        {/* 这里让描述只占一行 */}
+        <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{data.postDescription}</p>
         
-        <p className="text-[14px] text-gray-700 mt-2 font-medium leading-snug">{data.content}</p>
+        {/* 评论内容限制为 1 行或 2 行，防止撑开卡片 */}
+        <p className="text-[13px] text-gray-700 mt-1.5 font-medium leading-snug line-clamp-1">{data.content}</p>
         
-        {/* 底部按钮组 */}
-        <div className="flex items-center gap-5 text-[12px] text-gray-400 mt-3">
+        {/* 底部按钮缩小 mt */}
+        <div className="flex items-center gap-4 text-[11px] text-gray-400 mt-2">
           <div className="flex items-center gap-1 cursor-pointer hover:text-orange-400">
-            <span className="text-[14px]">👍</span> 26
+            <span className="text-[12px]">👍</span> 26
           </div>
           <div className="flex items-center gap-1 cursor-pointer hover:text-orange-400">
-            <span className="text-[14px]">💬</span> 回复
+            <span className="text-[12px]">💬</span> 回复
           </div>
         </div>
       </div>
 
-      {/* 右侧：原帖引用区与日期 - 压缩内边距和字号 */}
-      <div className="w-[180px] ml-4 flex flex-col justify-between items-end">
-        
-        {/* 灰色背景卡片 - p-3 改为 p-2.5，移除 mt-6，使用较小的字号 */}
-        <div className="w-full bg-gray-50 p-2.5 rounded-xl mt-3">
-          <div className="text-[10px] text-gray-400 mb-1 leading-none font-bold">原帖内容</div>
-          <div className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed mb-1.5">
-            {data.postDescription}
-          </div>
-          <div className="text-[11px] text-[#A68A80] cursor-pointer font-medium hover:underline">
-            查看原帖 &gt;
-          </div>
+      {/* 4. 右侧原帖区：变窄一点并压缩内部 padding */}
+      <div className="w-[160px] ml-4 flex flex-col justify-between items-end">
+        {/* 三个点移动到这里 */}
+        <div className="flex gap-[2px] cursor-pointer p-1 mb-1">
+          <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
+          <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
+          <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
         </div>
 
-        {/* 日期对齐到最右下角 */}
-        <div className="text-[12px] text-gray-300 mt-2 pr-1">
+        <div className="w-full bg-gray-50/50 p-2 rounded-lg">
+          <div className="text-[9px] text-gray-400 mb-0.5 font-bold">原帖内容</div>
+          <div className="text-[11px] text-gray-500 line-clamp-1 leading-tight mb-1">
+            {data.postDescription}
+          </div>
+          <div className="text-[11px] text-[#A68A80] cursor-pointer font-medium">查看原帖 &gt;</div>
+        </div>
+
+        <div className="text-[11px] text-gray-300 mt-1">
           {dateStr}
         </div>
       </div>
-
     </div>
     )
 }
