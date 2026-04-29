@@ -12,6 +12,8 @@ export const Users = mysqlTable("users",{
     createdAt:timestamp("createAt").defaultNow(),
 })
 
+
+
 export const HotRecommend=mysqlTable("hot_recommend",{
     id:serial("id").primaryKey(),   //唯一主键
     title:varchar("title",{length:255}).notNull(),  //美食标题：如“湛江白切鸡”
@@ -129,7 +131,42 @@ export const hotTopics = mysqlTable("hot_topics",{
   isHot:boolean('ishot').default(false),  //判断是否带火苗标志
   createAt:timestamp('create_at').defaultNow(),
 
+})
 
+
+// 为什么不在 posts 表里加评论字段？
+// 在数据库设计中，有一个核心原则叫“规范化”。
+
+// 一对多关系：一个帖子可以有成千上万条评论。如果你把评论内容塞进 posts 表的一个字段里（比如用一个巨大的字符串或 JSON），你会发现：
+
+// 难以查询：如果你想找“某个人写过的所有评论”，你得遍历所有帖子去拆解那个巨大的字段，速度极慢。
+
+// 难以维护：修改一条评论会变得非常复杂。
+
+// 正确做法：让 comments 表主动去“指”它属于哪个帖子（通过 postId）。这样，当你想看某个帖子的所有评论时，只需要执行：
+// SELECT * FROM comments WHERE post_id = [当前帖子ID]。
+
+export const Comments = mysqlTable("comments",{
+  //评论唯一id
+  id:serial("id").primaryKey(),
+
+  //评论的具体文字内容
+  content:text("content").notNull(),
+  
+  //外键：关联到Users表的id
+  //注意：这里引用的是Users表
+  userId:int("user_id")
+    .notNull()
+    .references(()=>Users.id),
+
+  //外键：关联到posts表的id
+  //注意：这里引用的的是截图中的host表
+  postId:int("post_id")
+    .notNull()
+    .references(()=>posts.id),
+
+    //评论时间，对应评论日期
+    createAt:timestamp("created_at").defaultNow(),
 })
 
 // 最激动人心的时刻：把表“推”进数据库
