@@ -1,7 +1,7 @@
 "use client"
 import {useState,useEffect} from 'react'
 import CommentCard from "./CommentCard/page"
-
+import Pagination 
 
 const MyComments=()=>{
 
