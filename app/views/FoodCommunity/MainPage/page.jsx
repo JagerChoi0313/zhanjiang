@@ -24,17 +24,15 @@ const MainPage = () => {
       msOverflowStyle: 'none', // 隐藏 IE 滚动条
     },
     // 右侧固定区域
-    rightFixedPanel: {
-      width: '350px', // 增加宽度以匹配模板图
-      height: '100%',
-      padding: '24px',
-      borderLeft: '1px solid #f2f2f2',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '24px',
-      backgroundColor: '#fff',
-      overflowY: 'auto', // 如果榜单内容过多，允许其独立滚动
-    },
+  rightFixedPanel: {
+  width: '350px',
+  height: '100%',
+  padding: '24px',
+  borderLeft: '1px solid #f2f2f2',
+  backgroundColor: '#fff',
+  
+  msOverflowStyle: 'none', 
+},
     // 搜索栏容器
     headerSection: {
       position: 'sticky',
@@ -116,9 +114,17 @@ const MainPage = () => {
 
       {/* 2. 右侧：固定榜单（不随中间滚动） */}
       <aside style={styles.rightFixedPanel}>
-        <HotTopicsPannel />
-        <Promotion />
-        <ActiveUserPannel />
+      <div style={{ marginBottom: '16px' }}>
+    <HotTopicsPannel />
+  </div>
+  
+  <div style={{ marginBottom: '16px' }}>
+    <Promotion />
+  </div>
+  
+  <div>
+    <ActiveUserPannel />
+  </div>
       </aside>
     </div>
   );
