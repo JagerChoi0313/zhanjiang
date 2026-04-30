@@ -70,3 +70,5 @@ const CommentCard=({data})=>{
 }
 
 export default CommentCard;
+
+//原来面试最大的问题是实习时间
