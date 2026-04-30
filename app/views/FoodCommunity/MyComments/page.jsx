@@ -2,6 +2,7 @@
 import {useState,useEffect} from 'react'
 import CommentCard from "./CommentCard/page"
 import Pagination from './Pagination/page'
+import CommentFilter from './CommentFilter/page'
 
 const MyComments=()=>{
 
@@ -41,28 +42,29 @@ const MyComments=()=>{
     if (loading) return <div className="p-5 text-gray-400 text-center">加载中...</div>;
 
     return(
- // 1. 去掉固定高度限制，让内容自然排列
-    <div className="flex-1 bg-[#F9F9F9] p-6 pb-10">
+// 去掉 overflow-hidden 产生的奇怪行为，确保一屏显示
+    <div className="flex-1 bg-[#F9F9F9] p-6 lg:px-7 lg:py-6 flex flex-col h-full overflow-hidden">
         
-        {/* 2. 压缩标题下方的 margin (mb-7 -> mb-4) */}
-        <h1 className="text-[20px] font-bold text-gray-900 mb-4">我的评论</h1>
+        {/* 压缩标题间距 */}
+        <h1 className="text-[19px] font-bold text-gray-900 mb-4 shrink-0">我的评论</h1>
 
-        {/* 3. 压缩列表间距 (gap-4 -> gap-2) */}
-        <div className="flex flex-col gap-2.5"> 
-            {commentList.map((item) => (
+        <CommentFilter />
+
+        {/* 关键修正：这里不需要自定义滚动条，gap-3 配合上方卡片的瘦身，刚好放下 4 条 */}
+        <div className="flex flex-col gap-3 shrink-0"> 
+            {commentList.slice(0, 4).map((item) => (
                 <CommentCard key={item.commentId} data={item} />
             ))}
         </div>
 
-        {/* 4. 分页组件：稍微调小 mt */}
+        {/* 分页组件：mt-auto 确保它吸在底部，py-4 保持间距 */}
         {totalPages > 1 && (
-            <div className="flex justify-center mt-5 py-2 select-none">
+            <div className="flex justify-center mt-auto py-4 select-none shrink-0">
                 <Pagination 
                     currentPage={currentPage} 
                     totalPages={totalPages} 
                     onPageChange={(page) => {
                         setCurrentPage(page);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     }} 
                 />
             </div>
