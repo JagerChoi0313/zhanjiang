@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
 
+
 const NavBar=()=>{
 
     //模拟当前选中的菜单
@@ -22,7 +23,9 @@ const NavBar=()=>{
                     <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                         <span className="text-orange-600">🍲</span>
                     </div>
-                    <span className="text-xl font-bold tracking-tight text-gray-800">Zhanjiang·Food</span>
+                    <Link  href="/" className="text-xl font-bold tracking-tight text-gray-800">
+                        Zhanjiang·Food
+                    </Link>
                 </div>
             </div>
 

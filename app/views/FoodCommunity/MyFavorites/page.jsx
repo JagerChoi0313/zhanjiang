@@ -1,7 +1,7 @@
 const MyFavorite=()=>{
     return(
         <div>
-
+            
         </div>
     )
 }

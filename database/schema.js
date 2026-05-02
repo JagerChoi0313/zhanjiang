@@ -169,6 +169,13 @@ export const Comments = mysqlTable("comments",{
     createAt:timestamp("created_at").defaultNow(),
 })
 
+export const Favorites = mysqlTable("favorites",{
+  id:serial("id").primaryKey(),
+  userId:int('user_id').notNull(),    //关联用户
+  postId:int('post_id').notNull(),    //关联被收藏的帖子
+  createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
+})
+
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
 // 我们不需要手动去 DataGrip 里敲 CREATE TABLE，让 Drizzle 帮我们干。
