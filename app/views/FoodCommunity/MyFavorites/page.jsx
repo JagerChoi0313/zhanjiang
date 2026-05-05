@@ -38,7 +38,7 @@ export default function MyFavorites() {
 // 使用 min-h-screen 确保背景铺满，pb-20 确保底部导航不被遮挡
     <div className="w-full min-h-screen bg-[#FAFAFA] py-6 px-10 pb-20">
       {/* 标题 - 稍微调小一点 */}
-      <h1 className="text-[20px] font-bold text-gray-900 mb-5">我的收藏集</h1>
+      <h1 className="text-[20px] font-bold text-gray-900 mb-5">我的收藏</h1>
 
       <FavoriteFilter />
 
