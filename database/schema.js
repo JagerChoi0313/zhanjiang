@@ -112,6 +112,9 @@ export const posts = mysqlTable("posts",{
   userId:int('user_id').notNull(),
   username:varchar('username',{length:255}).notNull(),
   avatar:text('avatar'),
+  excerpt: varchar('excerpt', { length: 500 }), // 帖子摘要（用于列表展示）
+  category: varchar('category', { length: 50 }), // 帖子分类（探店/菜谱/攻略
+  isHot: boolean('is_hot').default(false), // 是否为热门推荐（修正后的命名）
   title:varchar('title',{length:255}).notNull(),
   description:text('description'),
   coverImage:text('cover_image'),
