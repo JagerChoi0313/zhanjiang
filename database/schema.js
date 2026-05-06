@@ -2,8 +2,9 @@ import {mysqlTable, serial, varchar, timestamp, float, int,text,boolean} from 'd
 import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
-    id:serial("id").primaryKey(),
-    nickname:varchar("nickname",{length:255}).notNull(),
+    userId: serial("user_id").primaryKey(), // 对应数据库里改名后的 user_id
+    nickname: varchar("nickname", { length: 255 }).notNull(),
+    avatar: text("avatar"),
     email:varchar("email",{length:255}).notNull().unique(),
     password:varchar("password",{length:255}).notNull(),
     phoneNumber: varchar("phoneNumber", { length: 20 }),
@@ -108,20 +109,20 @@ export const TasteCardTable = mysqlTable("taste_card", {
 });
 
 export const posts = mysqlTable("posts",{
-  id:serial('id').primaryKey(),
-  userId:int('user_id').notNull(),
-  username:varchar('username',{length:255}).notNull(),
-  avatar:text('avatar'),
-  excerpt: varchar('excerpt', { length: 500 }), // 帖子摘要（用于列表展示）
-  category: varchar('category', { length: 50 }), // 帖子分类（探店/菜谱/攻略
-  isHot: boolean('is_hot').default(false), // 是否为热门推荐（修正后的命名）
-  title:varchar('title',{length:255}).notNull(),
-  description:text('description'),
-  coverImage:text('cover_image'),
-  location:varchar('location',{length:100}),
-  likes:int('likes').default(0),
-  comments:int('comments').default(0),
-  createAt:timestamp('create_at').defaultNow(),
+  id: serial("id").primaryKey(), // 帖子的自增 ID 保持不变
+  userId: int("user_id").notNull(), // 核心：对应改名后的 user_id 字段
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  excerpt: varchar("excerpt", { length: 500 }),
+  coverImage: text("cover_image"),
+  // images 建议在 Drizzle 中用 text 存储，代码逻辑里进行 JSON.parse
+  images: text("images"), 
+  category: varchar("category", { length: 50 }),
+  location: varchar("location", { length: 100 }),
+  likes: int("likes").default(0),
+  comments: int("comments").default(0),
+  isHot: boolean("is_hot").default(false), // 修正为下划线对应关系，防止报错
+  createdAt: timestamp("create_at").defaultNow(),
 
 });
 
@@ -161,7 +162,7 @@ export const Comments = mysqlTable("comments",{
   //注意：这里引用的是Users表
   userId:int("user_id")
     .notNull()
-    .references(()=>Users.id),
+    .references(()=>Users.userId),
 
   //外键：关联到posts表的id
   //注意：这里引用的的是截图中的host表
@@ -180,6 +181,19 @@ export const Favorites = mysqlTable("favorites",{
   createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
 })
 
+
+// 定义 Posts 表与其他表的关系
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(Users, {
+    fields: [posts.userId],    // Posts 表里的 user_id
+    references: [Users.userId], // 关联到 Users 表里的 user_id
+  }),
+}));
+
+// 同时也建议给 Users 表加上反向关联
+export const usersRelations = relations(Users, ({ many }) => ({
+  posts: many(posts), // 一个用户可以发多条帖子
+}));
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。

@@ -13,7 +13,7 @@ export async function GET(request){
         .select()
         .from(posts)
         .where(eq(posts.userId,targetUserId))
-        .orderBy(desc(posts.createAt))
+        .orderBy(desc(posts.createdAt))
 
         return NextResponse.json({
             success:true,
