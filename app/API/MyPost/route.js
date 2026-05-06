@@ -1,7 +1,7 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {eq,desc} from 'drizzle-orm'
-import NextResponse from 'next/server'
+import {NextResponse} from 'next/server'
 
 export async function GET(request){
     try{
@@ -11,13 +11,17 @@ export async function GET(request){
         // 执行查询逻辑
         const myPosts = await db
         .select()
-        .From(posts)
+        .from(posts)
         .where(eq(posts.userId,targetUserId))
         .orderBy(desc(posts.createAt))
 
         return NextResponse.json({
             success:true,
-            data:myPosts
+            data:myPosts,
+            pagination: {
+                totalPages: 1, 
+                currentPage: 1
+            }
         },{status:200})
 
     }catch(error){
