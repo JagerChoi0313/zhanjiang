@@ -176,3 +176,5 @@ const MediaUploader=({images,setImages})=>{
     </div>
     )
 }
+
+export default MediaUploader
