@@ -99,10 +99,10 @@ const MediaUploader=({images,setImages})=>{
     }
     }
     return(
-    <div style={{background:'#ffffff', border:'1px solid #eee9e3', borderRadius:8, boxShadow:'0 10px 26px rgba(70, 54, 38, 0.04)', padding:'18px 22px'}}>
+    <div style={{flex:'1 1 auto', minHeight:210, boxSizing:'border-box', background:'#ffffff', border:'1px solid #eee9e3', borderRadius:8, boxShadow:'0 10px 26px rgba(70, 54, 38, 0.04)', padding:'14px 22px', display:'flex', flexDirection:'column'}}>
       
       {/* 头部标题 */}
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:11}}>
         <h3 style={{margin:0, fontSize:13, fontWeight:700, color:'#111827'}}>
           图片/视频 <span style={{fontWeight:500, color:'#8f96a3'}}>添加图片让你的帖子更生动哦~</span>
         </h3>
@@ -110,11 +110,11 @@ const MediaUploader=({images,setImages})=>{
       </div>
 
       {/* 媒体展示区 */}
-      <div style={{display:'grid', gridTemplateColumns:previewList.length ? 'repeat(3, 1fr)' : '1fr', gap:12}}>
+      <div style={{flex:1, minHeight:0, display:'grid', gridTemplateColumns:previewList.length ? 'repeat(3, 1fr)' : '1fr', gap:10}}>
         
         {/* 已选择图片的预览卡片 */}
         {previewList.map((item) => (
-          <div key={item.id} style={{position:'relative', aspectRatio:'4 / 3', overflow:'hidden', borderRadius:6, border:'1px solid #eee9e3', background:'#f7f5f2'}}>
+          <div key={item.id} style={{position:'relative', height:'100%', overflow:'hidden', borderRadius:6, border:'1px solid #eee9e3', background:'#f7f5f2'}}>
             {/* 真实图片 */}
             <img 
               src={item.localUrl} 
@@ -150,11 +150,11 @@ const MediaUploader=({images,setImages})=>{
         {previewList.length < 9 && (
           <button 
             onClick={() => fileInputRef.current.click()}
-            style={{height:190, border:'1px dashed #ded8d0', borderRadius:6, background:'#fbfaf8', color:'#8f8880', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}
+            style={{height:'100%', border:'1px dashed #ded8d0', borderRadius:6, background:'#fbfaf8', color:'#8f8880', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}
           >
-            <span style={{fontSize:34, lineHeight:'34px', color:'#a5a09a', marginBottom:10}}>+</span>
+            <span style={{fontSize:30, lineHeight:'30px', color:'#a5a09a', marginBottom:6}}>+</span>
             <span style={{fontSize:13, fontWeight:700}}>上传图片/视频</span>
-            <span style={{fontSize:11, color:'#b8b2ab', marginTop:6}}>支持 jpg、png，单张不超过 5MB</span>
+            <span style={{fontSize:11, color:'#b8b2ab', marginTop:4}}>支持 jpg、png，单张不超过 5MB</span>
           </button>
         )}
       </div>

@@ -60,22 +60,23 @@ const PostFunction=()=>{
         }
     }
     return(
-    <div style={{minHeight:'100vh', background:'#f7f5f2', color:'#1f2937', paddingBottom:48}}>
+    <div style={{height:'100vh', overflow:'hidden', background:'#f7f5f2', color:'#1f2937'}}>
       {/* 顶部导航与发布动作 */}
       <ActionHeader isReady={isReady} onPublish={handlePublish} />
 
-      <main style={{maxWidth:1180, margin:'0 auto', padding:'22px 18px'}}>
+      <main style={{height:'calc(100vh - 46px)', maxWidth:1180, margin:'0 auto', padding:'14px 18px 12px', boxSizing:'border-box'}}>
         <div
           style={{
             display:'grid',
-            gridTemplateColumns:'minmax(0, 1fr) 322px',
-            gap:22,
-            alignItems:'start'
+            gridTemplateColumns:'minmax(0, 1fr) 320px',
+            gap:18,
+            alignItems:'stretch',
+            height:'100%'
           }}
         >
           
           {/* 左侧：创作核心区 (编辑器 + 媒体上传) */}
-          <div style={{minWidth:0, display:'flex', flexDirection:'column', gap:14}}>
+          <div style={{minWidth:0, height:'100%', display:'flex', flexDirection:'column', gap:12}}>
             <EditorSection 
               title={title} 
               setTitle={setTitle} 
@@ -90,7 +91,7 @@ const PostFunction=()=>{
           </div>
 
           {/* 右侧：配置卡片区 (分类 + 地区) */}
-          <aside style={{position:'sticky', top:64}}>
+          <aside style={{height:'100%'}}>
             <PostConfig 
               category={category} 
               setCategory={setCategory} 

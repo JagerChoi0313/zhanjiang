@@ -11,7 +11,7 @@ import {useRouter} from 'next/navigation'
 const ActionHeader =({isReady = false,onPublish})=>{
     const router = useRouter();
     return(
-    <header style={{height:50, borderBottom:'1px solid #eee9e3', background:'rgba(255,255,255,.92)', position:'sticky', top:0, zIndex:50, backdropFilter:'blur(12px)'}}>
+    <header style={{height:46, borderBottom:'1px solid #eee9e3', background:'rgba(255,255,255,.94)', zIndex:50, backdropFilter:'blur(12px)'}}>
       <div style={{maxWidth:1180, height:'100%', margin:'0 auto', padding:'0 18px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'relative'}}>
         
         {/* 左侧：返回按钮 */}
@@ -38,7 +38,7 @@ const ActionHeader =({isReady = false,onPublish})=>{
         </h1>
 
         {/* 右侧：动作按钮组 */}
-        <div style={{display:'flex', alignItems:'center', gap:10}}>
+        <div style={{display:'flex', alignItems:'center', gap:9}}>
           <button 
             style={{border:0, background:'transparent', color:'#4b5563', fontSize:12, fontWeight:600, cursor:'pointer'}}
           >
@@ -51,7 +51,7 @@ const ActionHeader =({isReady = false,onPublish})=>{
             style={{
               border:0,
               borderRadius:999,
-              padding:'7px 18px',
+              padding:'6px 17px',
               fontSize:12,
               fontWeight:700,
               color:isReady ? '#ffffff' : '#9ca3af',

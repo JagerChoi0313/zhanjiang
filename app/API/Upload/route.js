@@ -41,12 +41,12 @@ export async function POST(request){
 
         //返回前端可直接访问的URL
         //因为Next.js默认将public映射到根，所以不需要加“public”
-        const fileUrl = `/uploads/${fileName}`;
+        const fileUrl = `/upload/${fileName}`;
 
         console.log(`文件已保存至：${path}`)
 
         return NextResponse.json({
-            success:false,
+            success:true,
             url:fileUrl     //前端拿到这个后，再去提交给/API/Post接口
         })
 

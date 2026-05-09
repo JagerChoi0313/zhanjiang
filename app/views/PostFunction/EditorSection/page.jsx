@@ -32,11 +32,11 @@ const EditorSection=({title,setTitle,description,setDescription})=>{
   ];
 
     return(
- <div style={{display:'flex', flexDirection:'column', gap:14}}>
+ <div style={{display:'flex', flexDirection:'column', gap:12}}>
       
       {/* 标题输入区 */}
-      <div style={{...cardStyle, position:'relative', padding:'18px 22px 24px'}}>
-        <label style={{display:'block', marginBottom:10, fontSize:13, fontWeight:700, color:'#111827'}}>标题 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
+      <div style={{...cardStyle, position:'relative', height:88, boxSizing:'border-box', padding:'15px 22px'}}>
+        <label style={{display:'block', marginBottom:9, fontSize:13, fontWeight:700, color:'#111827'}}>标题 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
         <input
           type="text"
           value={title}
@@ -50,11 +50,11 @@ const EditorSection=({title,setTitle,description,setDescription})=>{
       </div>
 
       {/* 内容编辑区 */}
-      <div style={{...cardStyle, overflow:'hidden'}}>
+      <div style={{...cardStyle, height:338, overflow:'hidden', display:'flex', flexDirection:'column'}}>
         
         {/* 假工具栏 */}
-        <div style={{height:44, padding:'0 18px', borderBottom:'1px solid #f0ece7', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <div style={{display:'flex', alignItems:'center', gap:16}}>
+        <div style={{height:40, flex:'0 0 40px', padding:'0 18px', borderBottom:'1px solid #f0ece7', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <div style={{display:'flex', alignItems:'center', gap:15}}>
             {mockTools.map((tool, index) => (
               <button 
                 key={index} 
@@ -75,13 +75,13 @@ const EditorSection=({title,setTitle,description,setDescription})=>{
         </div>
 
         {/* 纯文字输入区 */}
-        <div style={{position:'relative', padding:'18px 22px 20px'}}>
-          <label style={{display:'block', marginBottom:12, fontSize:13, fontWeight:700, color:'#111827'}}>内容 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
+        <div style={{position:'relative', flex:1, minHeight:0, padding:'17px 22px 14px', boxSizing:'border-box', display:'flex', flexDirection:'column'}}>
+          <label style={{display:'block', marginBottom:10, fontSize:13, fontWeight:700, color:'#111827'}}>内容 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 5000))}
             placeholder="分享你的美食体验、做法心得、探店经历..."
-            style={{width:'100%', minHeight:230, resize:'none', border:0, outline:'none', padding:0, fontSize:14, lineHeight:'26px', color:'#374151', background:'transparent'}}
+            style={{width:'100%', flex:1, minHeight:0, resize:'none', border:0, outline:'none', padding:0, fontSize:14, lineHeight:'25px', color:'#374151', background:'transparent'}}
           />
           <div style={{textAlign:'right', fontSize:11, color:'#b8b2ab'}}>
             {description.length}/5000
