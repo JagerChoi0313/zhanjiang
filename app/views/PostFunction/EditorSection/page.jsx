@@ -9,6 +9,13 @@ import React from 'react'
  * @param {function} setDescription - 更新正文
  */
 
+const cardStyle = {
+  background:'#ffffff',
+  border:'1px solid #eee9e3',
+  borderRadius:8,
+  boxShadow:'0 10px 26px rgba(70, 54, 38, 0.04)'
+};
+
 const EditorSection=({title,setTitle,description,setDescription})=>{
 
     // 假工具栏图标数据
@@ -18,49 +25,49 @@ const EditorSection=({title,setTitle,description,setDescription})=>{
     { icon: "H", label: "标题" },
     { icon: "🔗", label: "链接" },
     { icon: "“", label: "引用" },
-    { icon: "🖼️", label: "图片" },
-    { icon: "🎥", label: "视频" },
-    { icon: "😊", label: "表情" },
+    { icon: "▣", label: "图片" },
+    { icon: "◉", label: "视频" },
+    { icon: "☺", label: "表情" },
     { icon: "@", label: "提及" },
   ];
 
     return(
- <div className="space-y-4">
+ <div style={{display:'flex', flexDirection:'column', gap:14}}>
       
       {/* 标题输入区 */}
-      <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative">
-        <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">标题 (必填)</label>
+      <div style={{...cardStyle, position:'relative', padding:'18px 22px 24px'}}>
+        <label style={{display:'block', marginBottom:10, fontSize:13, fontWeight:700, color:'#111827'}}>标题 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value.slice(0, 100))}
           placeholder="给你的帖子起一个吸引人的标题吧~"
-          className="w-full text-2xl font-bold text-gray-800 placeholder-gray-300 border-none focus:ring-0 p-0"
+          style={{width:'100%', border:0, outline:'none', padding:0, paddingRight:60, fontSize:14, color:'#1f2937', background:'transparent'}}
         />
-        <div className="absolute right-6 bottom-4 text-xs text-gray-300">
+        <div style={{position:'absolute', right:22, bottom:14, fontSize:11, color:'#b8b2ab'}}>
           {title.length}/100
         </div>
       </div>
 
       {/* 内容编辑区 */}
-      <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+      <div style={{...cardStyle, overflow:'hidden'}}>
         
         {/* 假工具栏 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 bg-gray-50/30">
-          <div className="flex items-center space-x-4">
+        <div style={{height:44, padding:'0 18px', borderBottom:'1px solid #f0ece7', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+          <div style={{display:'flex', alignItems:'center', gap:16}}>
             {mockTools.map((tool, index) => (
               <button 
                 key={index} 
-                className="text-gray-400 hover:text-gray-600 transition-colors"
                 title={tool.label}
                 onClick={(e) => e.preventDefault()}
+                style={{border:0, background:'transparent', color:'#5f6570', fontSize:12, fontWeight:700, cursor:'pointer', padding:0, minWidth:14}}
               >
-                <span className="text-sm font-medium">{tool.icon}</span>
+                <span>{tool.icon}</span>
               </button>
             ))}
           </div>
-          <button className="text-xs text-gray-400 hover:text-gray-600 flex items-center">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button style={{border:0, background:'transparent', color:'#6b7280', display:'inline-flex', alignItems:'center', gap:5, fontSize:12, cursor:'pointer'}}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             撤销
@@ -68,15 +75,15 @@ const EditorSection=({title,setTitle,description,setDescription})=>{
         </div>
 
         {/* 纯文字输入区 */}
-        <div className="p-6 relative">
-          <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">内容 (必填)</label>
+        <div style={{position:'relative', padding:'18px 22px 20px'}}>
+          <label style={{display:'block', marginBottom:12, fontSize:13, fontWeight:700, color:'#111827'}}>内容 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 5000))}
             placeholder="分享你的美食体验、做法心得、探店经历..."
-            className="w-full min-h-[300px] text-lg text-gray-700 leading-relaxed placeholder-gray-300 border-none focus:ring-0 p-0 resize-none"
+            style={{width:'100%', minHeight:230, resize:'none', border:0, outline:'none', padding:0, fontSize:14, lineHeight:'26px', color:'#374151', background:'transparent'}}
           />
-          <div className="text-right text-xs text-gray-300 mt-2">
+          <div style={{textAlign:'right', fontSize:11, color:'#b8b2ab'}}>
             {description.length}/5000
           </div>
         </div>
