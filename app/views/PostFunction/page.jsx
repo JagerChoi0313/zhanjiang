@@ -17,6 +17,7 @@ const PostFunction=()=>{
     const [category,setCategory] = useState('')
     const [location,setLocation] = useState('')
     const [images,setImages] = useState([])
+    const [coverImage,setCoverImage]=useState('')
 
     //逻辑判断，发布按钮是否可用
     const isReady = useMemo(()=>{
@@ -42,7 +43,7 @@ const PostFunction=()=>{
                     category,
                     location,
                     images,     //数组会在后端被JSON.stringify
-                    coverImage:images[0] || '', //默认第一张图为封面
+                    coverImage:coverImage || (images.length > 0 ? images[0] : '')
                 })
             });
 
@@ -95,8 +96,12 @@ const PostFunction=()=>{
             <PostConfig 
               category={category} 
               setCategory={setCategory} 
+
               location={location} 
               setLocation={setLocation} 
+
+              coverImage={coverImage}
+              setCoverImage={setCoverImage}
             />
           </aside>
 

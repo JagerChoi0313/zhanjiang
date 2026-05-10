@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import {useState,useRef} from 'react'
 
 /**
  * PostConfig - 发帖页面的右侧配置模块
@@ -19,7 +20,7 @@ const sideCard = {
   boxSizing:'border-box'
 };
 
-const PostConfig = ({category,setCategory,location,setLocation})=>{
+const PostConfig = ({category,setCategory,location,setLocation,coverImage,setCoverImage})=>{
 
     // 对应 UI 模板中的分类选项
   const categories = [
@@ -33,8 +34,40 @@ const PostConfig = ({category,setCategory,location,setLocation})=>{
     // 对应湛江的行政区划
   const areas = ['赤坎区', '霞山区', '坡头区', '麻章区', '遂溪县', '徐闻县', '廉江市', '雷州市', '吴川市'];
 
+  //封面图上传所需的状态和引用
+  const coverInputRef = useRef(null)
+  const [isUploading,setIsUploading] = useState(false)
+
+  //调用上传接口
+  const handleCoverUpload = async(e) =>{
+    const file = e.target.files[0]
+    if(!file) return
+
+    setIsUploading(true);
+    
+    // 构建需要发送的数据
+    const formData = new FormData();
+    formData.append('file', file);
+
+
+     try{
+    const res = await fetch('/API/Upload',{method:'POST',body:formData})
+    const data = await res.json();
+    if(data.success){
+      setCoverImage(data.url)
+    }else{
+      alert("封面上传失败")
+    }
+  }catch(error){
+    alert("网络错误，请稍后重试")
+  }finally{
+    setIsUploading(false)
+    e.target.value = '' //清空Input，允许重新选同一张图
+  }
+  }
+
     return(
- <div style={{height:'100%', display:'flex', flexDirection:'column', gap:9}}>
+<div style={{height:'100%', display:'flex', flexDirection:'column', gap:9}}>
       {/* 1. 分类选择 */}
       <div style={sideCard}>
         <h3 style={{margin:'0 0 10px', fontSize:13, fontWeight:700, color:'#111827'}}>
@@ -67,17 +100,43 @@ const PostConfig = ({category,setCategory,location,setLocation})=>{
         </div>
       </div>
 
-      {/* 2. 封面图(图二新增) */}
+      {/* 2. 封面图 */}
       <div style={sideCard}>
         <h3 style={{margin:'0 0 10px', fontSize:13, fontWeight:700, color:'#111827'}}>封面图</h3>
-        <div style={{height:96, border:'1px dashed #ded8d0', borderRadius:6, background:'#fbfaf8', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#8f8880'}}>
-          <span style={{fontSize:21, marginBottom:6}}>▧</span>
-          <span style={{fontSize:12, fontWeight:700}}>选择封面图</span>
-          <span style={{fontSize:10, color:'#b8b2ab', marginTop:4}}>建议尺寸 16:9，单张不超过 5MB</span>
+        
+        {/* 点击这个框框触发隐藏的 input */}
+        <div 
+          onClick={() => coverInputRef.current.click()} 
+          style={{
+            height:96, border:'1px dashed #ded8d0', borderRadius:6, background:'#fbfaf8', 
+            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', 
+            color:'#8f8880', cursor:'pointer', position:'relative', overflow:'hidden'
+          }}
+        >
+          {isUploading ? (
+            <span style={{fontSize:12, fontWeight:700, color:'#9a5f34'}}>上传中...</span>
+          ) : coverImage ? (
+            <img src={coverImage} alt="封面预览" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+          ) : (
+            <>
+              <span style={{fontSize:21, marginBottom:6}}>▧</span>
+              <span style={{fontSize:12, fontWeight:700}}>选择封面图</span>
+              <span style={{fontSize:10, color:'#b8b2ab', marginTop:4}}>建议尺寸 16:9，单张不超过 5MB</span>
+            </>
+          )}
         </div>
+        
+        {/* 隐藏的上传控件 */}
+        <input 
+          type="file" 
+          ref={coverInputRef} 
+          onChange={handleCoverUpload} 
+          accept="image/*" 
+          style={{display: 'none'}} 
+        />
       </div>
 
-      {/* 3. 发布设置 (图二新增) */}
+      {/* 3. 发布设置 */}
       <div style={sideCard}>
         <h3 style={{margin:'0 0 10px', fontSize:13, fontWeight:700, color:'#111827'}}>发布设置</h3>
         <div style={{display:'flex', flexDirection:'column', gap:8}}>
