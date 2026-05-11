@@ -118,9 +118,11 @@ const NavBar = () => {
         </div>
         
         {/* 投稿按钮：从冰冷的黑变成热情的红土色 #a63d2d */}
-        <button className="btn btn-sm h-10 bg-[#a63d2d] hover:bg-[#8e3326] border-none text-white rounded-full px-8 text-sm font-semibold shadow-md shadow-[#a63d2d]/20 transition-all hover:scale-105 active:scale-95">
+        <Link 
+        href="/views/PostFunction"
+        className="btn btn-sm h-10 bg-[#a63d2d] hover:bg-[#8e3326] border-none text-white rounded-full px-8 text-sm font-semibold shadow-md shadow-[#a63d2d]/20 transition-all hover:scale-105 active:scale-95">
           投稿
-        </button>
+        </Link>
 
         {/*-------- 用户头像：登录注册页入口 -------- */}
 

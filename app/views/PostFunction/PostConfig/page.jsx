@@ -67,7 +67,7 @@ const PostConfig = ({category,setCategory,location,setLocation,coverImage,setCov
   }
 
     return(
-<div style={{height:'100%', display:'flex', flexDirection:'column', gap:9}}>
+    <div style={{height:'100%', display:'flex', flexDirection:'column', gap:9}}>
       {/* 1. 分类选择 */}
       <div style={sideCard}>
         <h3 style={{margin:'0 0 10px', fontSize:13, fontWeight:700, color:'#111827'}}>

@@ -56,10 +56,12 @@ const NavBar=()=>{
 
                 {/* 3. 发帖投稿按钮 */}
                 <div className="pt-6 px-1">
-                    <button className="w-full py-4 bg-[#A6755D] text-white rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-orange-900/10 hover:bg-[#8e634f] transition-all active:scale-[0.98]">
+                    <Link 
+                    href = "/views/PostFunction"
+                    className="w-full py-4 bg-[#A6755D] text-white rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-orange-900/10 hover:bg-[#8e634f] transition-all active:scale-[0.98]">
                         <span>✏️</span>
                         <span className="font-medium">发帖投稿</span>
-                    </button>
+                    </Link>
                 </div>
             </nav>
 
