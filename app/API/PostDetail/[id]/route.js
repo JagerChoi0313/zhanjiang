@@ -5,9 +5,9 @@ import {NextResponse} from "next/server"
 
 export async function GET(request,{params}){
     try{
-        //1.从网址参数中提取帖子的动态ID
-        const postId = params.id;
-
+        //后端也需要await解开params
+        const {id:postId} = await params
+        
         //2.告诉drizzle去posts表里查：拿出id等于postId那行
         const result = await db.select()
             .from(posts)
