@@ -1,13 +1,15 @@
 import {db} from "../../../../database/index";
 import {Users} from "../../../../database/schema";
 import {NextResponse} from "next/server";
+import {eq} from 'drizzle-orm'
+
 
 export async function POST(request){
 
     try{
         //1.获取前端传过来的JSON数据
         // 这一步是把前端传来的“字符串”解构成具体的变量
-        const {nickname,email,password,phoneNumber,gender,age}=await request.json();
+        const {nickname,email,password,phoneNumber,gender,age,avatar}=await request.json();
 
         // 2. 执行插入操作（这是 Drizzle ORM 的语法）
         const result = await db.insert(Users).values({
@@ -16,7 +18,8 @@ export async function POST(request){
             password:password,
             phoneNumber:phoneNumber,
             gender:gender,
-            age:age
+            age:age,
+            avatar:avatar
         })
 
         // 3. 返回成功响应
