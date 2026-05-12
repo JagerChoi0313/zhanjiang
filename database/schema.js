@@ -110,7 +110,7 @@ export const TasteCardTable = mysqlTable("taste_card", {
 
 export const posts = mysqlTable("posts",{
   id: serial("id").primaryKey(), // 帖子的自增 ID 保持不变
-  userId: int("user_id").notNull(), // 核心：对应改名后的 user_id 字段
+  userId: int("user_id").notNull().references(()=>Users.userId,{onDelete:'cascade'}),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   excerpt: varchar("excerpt", { length: 500 }),
@@ -162,13 +162,13 @@ export const Comments = mysqlTable("comments",{
   //注意：这里引用的是Users表
   userId:int("user_id")
     .notNull()
-    .references(()=>Users.userId),
+    .references(()=>Users.userId,{onDelete:'cascade'}),
 
   //外键：关联到posts表的id
   //注意：这里引用的的是截图中的host表
   postId:int("post_id")
     .notNull()
-    .references(()=>posts.id),
+    .references(()=>posts.id,{onDelete:'cascade'}),
 
     //评论时间，对应评论日期
     createAt:timestamp("created_at").defaultNow(),
@@ -176,24 +176,59 @@ export const Comments = mysqlTable("comments",{
 
 export const Favorites = mysqlTable("favorites",{
   id:serial("id").primaryKey(),
-  userId:int('user_id').notNull(),    //关联用户
-  postId:int('post_id').notNull(),    //关联被收藏的帖子
+  userId:int('user_id')
+  .notNull()
+  .references(()=>Users.userId,{onDelete:'cascade'}),
+
+  postId:int('post_id')
+  .notNull()
+  .references(()=>posts.id,{onDelete:'cascade'}),
+
   createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
 })
 
 
 // 定义 Posts 表与其他表的关系
-export const postsRelations = relations(posts, ({ one }) => ({
+export const postsRelations = relations(posts, ({ one ,many}) => ({
   author: one(Users, {
     fields: [posts.userId],    // Posts 表里的 user_id
     references: [Users.userId], // 关联到 Users 表里的 user_id
   }),
+    comments:many(Comments),
+    favorites:many(Favorites)
 }));
 
 // 同时也建议给 Users 表加上反向关联
+// 用户的关系：1个用户可以有多个帖子、多个评论、多个收藏
 export const usersRelations = relations(Users, ({ many }) => ({
   posts: many(posts), // 一个用户可以发多条帖子
+  comments:many(Comments),
+  favorites:many(Favorites),
 }));
+
+//评论的关系：1条评论属于一个帖子，也属于一个作者
+export const commentsRelations = relations(Comments,({one})=>({
+  author:one(Users,{
+    fields: [Comments.userId],
+    references:[Users.userId]
+  }),
+  post:one(posts,{
+    fields:[Comments.postId],
+    references:[posts.id]
+  })
+}))
+
+//收藏关系：1条收藏记录对应一个帖子和1个用户
+export const favoritesRelation = relations(Favorites,({one})=>({
+  user:one(Users,{
+    fields:[Favorites.userId],
+    references:[Users.userId]
+  }),
+  post:one(posts,{
+    fields:[Favorites.postId],
+    references:[posts.id]
+  })
+}))
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
