@@ -19,23 +19,70 @@ const PostDetail=({params})=>{
     //轮播图索引
     const [currentImage,setCurrentImage] = useState(0);
 
+    //管理评论相关状态：
+    const [commentContent,setCommentContent] = useState("");//绑定输入框文字
+    const [isSubmitting,setIsSubmitting] = useState(false);//防止用户连续疯狂点击按钮
+
+    //假设当前操作的用户ID为20260001（后续接入真实JWT的状态）
+    const CURRENT_USER_ID = 20260001;
+
+    //抽取fetchPost为单独函数，方便后续发表评论后重新拉取数据刷新页面
+    const fetchPost = async()=>{
+        try{
+            const res = await fetch(`/API/PostDetail/${postId}`)
+            const data = await res.json();
+            if(data.success){
+                setPost(data.data)
+            }
+        }catch(error){
+            console.error("获取帖子失败",error)
+        }finally{
+            setLoading(false)
+        }
+    }
+
     //获取真实数据
     useEffect(()=>{
-        const fetchPost = async()=>{
-            try{
-                const res = await fetch(`/API/PostDetail/${postId}`)
-                const data = await res.json();
-                if(data.success){
-                    setPost(data.data)
-                }
-            }catch(error){
-                console.error("获取帖子失败",error)
-            }finally{
-                setLoading(false)
-            }
-        }
         fetchPost()
     },[postId])
+
+    //提交评论的核心逻辑
+    const handleCommentSubmit = async()=>{
+        if(!commentContent.trim()){
+            alert("写点什么再评论吧")
+            return;
+        }
+
+    setIsSubmitting(true)
+
+    try{
+        const res = await fetch(`/API/PostDetail/${postId}`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+                content:commentContent,
+                userId:CURRENT_USER_ID
+            })
+        })
+
+       const data = await res.json();
+       if(data.success){
+        //清空输入框
+        setCommentContent("")
+
+        //重新提取一次数据，让新评论再次显示在下方
+        await fetchPost();
+       }else{
+        alert(data.message || "评论失败")
+       }
+        
+    }catch(error){
+        console.error("提交评论错误：",error);
+        alert("网络错误，请稍后重试")
+    }finally{
+        setIsSubmitting(false)
+     }
+        };
     if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>加载中...</div>;
     if (!post) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>帖子不见啦</div>;
     
@@ -57,20 +104,25 @@ const PostDetail=({params})=>{
     }
 
     // 2. 修复时间格式化的拼写错误 (加上空格，修正方法名)
-    const formatDate = new Date(post.createAt).toLocaleString('zh-CN', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
+   const formatTime = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleString('zh-CN', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    };
     // 轮播图切换逻辑
     const nextImg = () => setCurrentImgIndex(prev => (prev + 1) % imagesArray.length);
     const prevImg = () => setCurrentImgIndex(prev => (prev - 1 + imagesArray.length) % imagesArray.length);
 
+    //获取评论列表数组（做个容错，如果后端没查到就是个空数组）
+    const CommentsList = post.comments && Array.isArray(post.comments)?post.comments : [];
+
     return(
- <div style={{ minHeight: '100vh', background: '#ffffff', color: '#111827', paddingBottom: 80, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-            {/* 1. 顶部导航 */}
+        <div style={{ minHeight: '100vh', background: '#ffffff', color: '#111827', paddingBottom: 80, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
             <header style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
                 <button onClick={() => router.back()} style={{ border: 0, background: 'transparent', color: '#374151', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '8px 0' }}>
                     <span style={{ fontSize: 20 }}>←</span> 返回
@@ -82,15 +134,13 @@ const PostDetail=({params})=>{
             </header>
 
             <main style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px' }}>
-                {/* 2. 主图轮播 (如果有图片) */}
+                {/* 图片轮播部分保持不变 */}
                 {imagesArray.length > 0 && (
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', background: '#f7f5f2', marginBottom: 24 }}>
                         <img src={imagesArray[currentImgIndex]} alt="美食图" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <div style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, padding: '4px 10px', borderRadius: 999, fontWeight: 500 }}>
                             {currentImgIndex + 1} / {imagesArray.length}
                         </div>
-                        
-                        {/* 只有一张图时不显示左右箭头 */}
                         {imagesArray.length > 1 && (
                             <>
                                 <button onClick={prevImg} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', left: 16 }}>‹</button>
@@ -100,7 +150,7 @@ const PostDetail=({params})=>{
                     </div>
                 )}
 
-                {/* 3. 标题与作者信息 */}
+                {/* 标题与作者信息 */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
                     <h1 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.4, margin: '0 0 16px 0', color: '#111827' }}>{post.title}</h1>
                     <button style={{ border: '1px solid #ef4444', color: '#ef4444', background: '#fff', padding: '6px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ 关注</button>
@@ -108,36 +158,36 @@ const PostDetail=({params})=>{
                 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        {/* 头像占位 */}
-                        <img src="/upload/default-avatar.png" alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} />
+                        {/* 动态读取作者头像，如果为空给个默认值 */}
+                        <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} />
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                                <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>湛江干饭王</span>
+                                {/* 动态读取作者昵称 */}
+                                <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{post.author?.nickname || "未知吃货"}</span>
                                 <span style={{ background: '#f4ece1', color: '#8c542f', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 600, marginLeft: 8 }}>LV4 美食达人</span>
                             </div>
                             <div style={{ fontSize: 12, color: '#9ca3af' }}>
-                                {formatDate} · 湛江市 {post.location}
+                                {formatTime(post.createAt)} · 湛江市 {post.location || ''}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 4. 正文与标签 */}
                 <div style={{ fontSize: 15, lineHeight: 1.8, color: '#374151', whiteSpace: 'pre-wrap', marginBottom: 24 }}>{post.description}</div>
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 32 }}>
-                    <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># {post.category}</span>
+                    {post.category && <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># {post.category}</span>}
                     <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># 湛江美食</span>
-                    <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># 探店打卡</span>
                 </div>
 
-                {/* 5. 互动数据条 */}
+                {/* 互动数据条 */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid #f3f4f6', borderBottom: '1px solid #f3f4f6', marginBottom: 32 }}>
                     <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        <span style={{ color: '#ef4444' }}>♥</span> {post.likes || '1.2k'}
+                        <span style={{ color: '#ef4444' }}>♥</span> {post.likes || 0}
                     </button>
                     <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        <span>💬</span> {post.comments || 86}
+                        {/* 这里的评论数直接从数组长度拿最准确 */}
+                        <span>💬</span> {CommentsList.length}
                     </button>
                     <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
                         <span>⭐</span> 收藏
@@ -147,40 +197,68 @@ const PostDetail=({params})=>{
                     </button>
                 </div>
 
-                {/* 6. 评论区 UI 骨架 */}
+                {/* ========================================== */}
+                {/* 评论区核心渲染区 */}
+                {/* ========================================== */}
                 <section style={{ paddingTop: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>评论 (86)</h3>
+                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>评论 ({CommentsList.length})</h3>
                         <span style={{ fontSize: 13, color: '#6b7280' }}>最新 ⌄</span>
                     </div>
                     
-                    {/* 发布评论框 */}
+                    {/* 互动输入框：绑定 state 和 onChange，提交绑定 onClick */}
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>J</div>
-                        <input type="text" placeholder="说点什么吧..." style={{ flex: 1, background: '#f9fafb', border: 0, borderRadius: 999, padding: '10px 16px', fontSize: 14, outline: 'none' }} />
-                        <button style={{ background: '#9a5f34', color: '#fff', border: 0, borderRadius: 999, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>评论</button>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>我</div>
+                        <input 
+                            type="text" 
+                            value={commentContent}
+                            onChange={(e) => setCommentContent(e.target.value)}
+                            placeholder="说点什么吧..." 
+                            style={{ flex: 1, background: '#f9fafb', border: 0, borderRadius: 999, padding: '10px 16px', fontSize: 14, outline: 'none' }} 
+                        />
+                        <button 
+                            onClick={handleCommentSubmit}
+                            disabled={isSubmitting} // 提交中禁用按钮
+                            style={{ background: isSubmitting ? '#ccc' : '#9a5f34', color: '#fff', border: 0, borderRadius: 999, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                        >
+                            {isSubmitting ? '发送中' : '评论'}
+                        </button>
                     </div>
 
-                    {/* 单条评论展示占位 */}
-                    <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                        <img src="/upload/default-avatar.png" alt="user" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: '#4b5563' }}>糖水研究所</span>
-                                <span style={{ background: '#fef3c7', color: '#d97706', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 600, marginLeft: 8 }}>LV5 美食达人</span>
-                            </div>
-                            <div style={{ fontSize: 14, color: '#111827', marginBottom: 8, lineHeight: 1.5 }}>
-                                看着就流口水了！改天去试试 🤤
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af' }}>
-                                <span>2026-04-29 14:45</span>
-                                <div style={{ display: 'flex', gap: 16 }}>
-                                    <span style={{ cursor: 'pointer' }}>回复</span>
-                                    <span style={{ cursor: 'pointer' }}>👍 18</span>
+                    {/* 动态渲染评论列表 */}
+                    {CommentsList.map((item) => (
+                        <div key={item.id} style={{ display: 'flex', gap: 12, marginTop: 24, borderBottom: '1px solid #f9fafb', paddingBottom: 16 }}>
+                            {/* 评论人头像 */}
+                            <img src={item.author?.avatar || "/upload/default-avatar.png"} alt="user" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                            
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#4b5563' }}>{item.author?.nickname || "匿名用户"}</span>
+                                </div>
+                                
+                                {/* 评论具体内容 */}
+                                <div style={{ fontSize: 14, color: '#111827', marginBottom: 8, lineHeight: 1.5 }}>
+                                    {item.content}
+                                </div>
+                                
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af' }}>
+                                    {/* 评论发表时间 */}
+                                    <span>{formatTime(item.createAt)}</span>
+                                    <div style={{ display: 'flex', gap: 16 }}>
+                                        <span style={{ cursor: 'pointer' }}>回复</span>
+                                        <span style={{ cursor: 'pointer' }}>👍 0</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    ))}
+
+                    {/* 空数据兜底 UI */}
+                    {CommentsList.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontSize: 14 }}>
+                            还没有人评论，快来抢沙发吧~
+                        </div>
+                    )}
                 </section>
             </main>
         </div>

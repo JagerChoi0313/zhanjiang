@@ -27,7 +27,7 @@ export async function GET(request,{params}){
                         author:true
                     },
                     //4,按时间倒序排列，最新的评论在上面
-                    orderBy:(Comments,{desc})=>[desc(comments.createAt)]
+                    orderBy:(Comments,{desc})=>[desc(Comments.createAt)]
                 }
             }
         })
@@ -35,7 +35,7 @@ export async function GET(request,{params}){
 
 
         //防御性判断：如果数据库里没有这个ID，返回404
-        if(result.length===0){
+        if(!result){
             return NextResponse.json({
                 success:false,
                 message:"未找到帖子"
@@ -45,7 +45,7 @@ export async function GET(request,{params}){
         //4,成功找到，返回这条帖子的完整数据对象
         return NextResponse.json({
             success:true,
-            data:result[0]
+            data:result
         })
     }catch(error){
         console.error("Fetch post detail error:",error);
