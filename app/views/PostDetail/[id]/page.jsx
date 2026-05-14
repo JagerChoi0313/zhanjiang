@@ -23,6 +23,10 @@ const PostDetail=({params})=>{
     const [commentContent,setCommentContent] = useState("");//绑定输入框文字
     const [isSubmitting,setIsSubmitting] = useState(false);//防止用户连续疯狂点击按钮
 
+    //管理收藏相关状态
+    const [isFavorited,setIsFavorited] = useState(false)    //记录当前的收藏状态
+    const [isFavoriteLoading,setIsFavoriteLoading] = useState(false)    //防止疯狂点击按钮
+
     //假设当前操作的用户ID为20260001（后续接入真实JWT的状态）
     const CURRENT_USER_ID = 20260001;
 
@@ -45,6 +49,35 @@ const PostDetail=({params})=>{
     useEffect(()=>{
         fetchPost()
     },[postId])
+
+    //处理点击收藏，取消收藏的逻辑
+    const handleFavorite = async()=>{
+        setIsFavoriteLoading(true);
+        try{
+            //访问收藏专属API
+            const res = await fetch(`/API/MyFavorites`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    postId:postId,
+                    userId:CURRENT_USER_ID
+                })
+            })
+            
+            const data = await res.json();
+
+            if(data.success){
+                //切换前端按钮收藏状态：
+                setIsFavorited(data.isFavorited);
+            }else{
+                alert(data.message)
+            }
+        }catch(error){
+            console.error("收藏请求失败：",error)
+        }finally{
+            setIsFavoriteLoading(false)
+        }
+    }
 
     //提交评论的核心逻辑
     const handleCommentSubmit = async()=>{
@@ -189,9 +222,20 @@ const PostDetail=({params})=>{
                         {/* 这里的评论数直接从数组长度拿最准确 */}
                         <span>💬</span> {CommentsList.length}
                     </button>
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        <span>⭐</span> 收藏
+
+                    {/* ========================================== */}
+                    {/* 【重点修改区】绑上了点击事件的动态收藏按钮 */}
+                    {/* ========================================== */}
+                    <button 
+                        onClick={handleFavorite}
+                        disabled={isFavoriteLoading}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, color: isFavorited ? '#eab308' : '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent', transition: 'color 0.2s' }}
+                    >
+                    {/* 👇 关键：换成了纯文本字符 ☆ 和 ★ */}
+                    <span style={{ fontSize: 16 }}>{isFavorited ? '★' : '☆'}</span> 
+                        {isFavorited ? '已收藏' : '收藏'}
                     </button>
+
                     <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
                         <span>⎋</span> 分享
                     </button>

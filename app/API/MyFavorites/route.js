@@ -67,7 +67,7 @@ export async function GET(request){
 
 
 //POST接口：处理帖子的“收藏/取消收藏”的功能
-export async function POST(rerquest){
+export async function POST(request){
     try{
         //解析前端传过来的帖子ID和用户“ID”
         const body = await request.json();
@@ -85,7 +85,7 @@ export async function POST(rerquest){
         //使用and（）必须同时满足：帖子Id匹配且用户Id匹配
         const existingFavorite = await db
             .select()
-            .from(Favorite)
+            .from(Favorites)
             .where(
                 and(
                     eq(Favorites.postId,parseInt(postId)),
