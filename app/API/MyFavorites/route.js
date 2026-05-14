@@ -2,12 +2,12 @@
 
 import {db} from '../../../database/index'
 import {Favorites,posts} from  '../../../database/schema'
-import {eq,desc,sql} from 'drizzle-orm'
+import {eq,desc,sql,and} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 
 export async function GET(request){
     try{
-        const userId = 1;     //这里的硬编码是目前的测试逻辑，代表“我在看谁的收藏”
+        const userId = 20260001;     //这里的硬编码是目前的测试逻辑，代表“我在看谁的收藏”
 
         // 解析 URL 里的参数，比如 /api/my-favorites?page=2
         const {searchParams} = new URL(request.url);    
@@ -62,5 +62,64 @@ export async function GET(request){
             success:false,
             message:"获取收藏列表失败",
         },{status:500})
+    }
+}
+
+
+//POST接口：处理帖子的“收藏/取消收藏”的功能
+export async function POST(rerquest){
+    try{
+        //解析前端传过来的帖子ID和用户“ID”
+        const body = await request.json();
+        const {postId,userId} = body;
+        
+        //基础防御：
+        if(!postId || !userId){
+            return NextResponse.json({
+                success:false,
+                message:"参数不完整"
+            },{status:400})
+        }
+
+        //去数据库里查一下看看有没有这个帖子
+        //使用and（）必须同时满足：帖子Id匹配且用户Id匹配
+        const existingFavorite = await db
+            .select()
+            .from(Favorite)
+            .where(
+                and(
+                    eq(Favorites.postId,parseInt(postId)),
+                    eq(Favorites.postId,parseInt(postId))
+                )
+            )
+
+            if(existingFavorite.length>0){
+                //2.如果查到了数据（说明已经收藏过了），这次点击就是取消收藏
+                await db.delete(Favorites)
+                        .where(eq(Favorites.id,existingFavorite[0].id))
+                return NextResponse.json({
+                    success:true,
+                    message:"已取消收藏",
+                    isFavorited:false   //告诉前端现在是未收藏状态
+                })
+            }else{
+                //如果还没查到数据（说明还没收藏），这次点击就是添加收藏
+                await db.insert(Favorites).values({
+                    postId:parseInt(postId),
+                    userId:parseInt(userId)
+                });
+
+                return NextResponse.json({
+                    success:true,
+                    message:"收藏成功",
+                    isFavorited:true
+                })
+            }
+    }catch(error){
+                console.error("Favorite action error:",error)
+                return NextResponse.json({
+                    succeess:false,
+                    message:"收藏操作失败"
+                },{status:500})
     }
 }

@@ -8,7 +8,7 @@ import {NextResponse} from 'next/server'
 export async function GET(request){
     try{
         //获取当前用户id（暂时硬编码为1进行测试，后续对接Auth）
-        const userId = 1;
+        const userId = 20260001;
 
         //获取分页参数
         const {searchParams} = new URL(request.url);
