@@ -22,12 +22,12 @@ const FoodMap = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSend = async (queryText) => {
-    const query = queryText || input;
-    if (!query || loading) return;
+    const query = queryText || input;   //判断用户是点击词条进来的（queryText），还是输入文字进来的（input）
+    if (!query || loading) return;      //如果什么都没输入，或者AI在思考就直接return
 
-    setMessages((prev) => [...prev, { role: 'user', text: query }]);
-    setInput('');
-    setLoading(true);
+    setMessages((prev) => [...prev, { role: 'user', text: query }]);//一有内容，立刻把你的话追加到聊天记录里面
+    setInput('');   //清空输入框
+    setLoading(true);     //亮起红灯，告诉页面去请求数据
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_DIFY_API_URL}/chat-messages`, {
@@ -35,7 +35,7 @@ const FoodMap = () => {
         headers: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DIFY_API_KEY}`,
           'Content-Type': 'application/json'
-        },
+        },    //fetch带着API密钥和用户问的问题，按照Dify的格式进行POST请求，敲开Dify的大门
         body: JSON.stringify({
           inputs: {},
           query: query,
@@ -52,7 +52,7 @@ const FoodMap = () => {
       }
 
       const data = await response.json();
-
+      //请求成功
       setMessages((prev) => [...prev, { role: 'assistant', text: data.answer }]);
 
       if (data.metadata?.suggested_questions) {
