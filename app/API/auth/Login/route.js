@@ -2,7 +2,7 @@ import {db} from '../../../../database/index'       //你的数据库连接实�
 import {Users} from '../../../../database/schema'   //你的数据库的表定义
 import {eq,and} from 'drizzle-orm'                  
 import {NextResponse} from "next/server"            //Next.js提供的响应式回复工具
-import {signToken} from "../../../lib/jwt"          //引入刚刚封装的jwt工具
+import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 
 export async function POST(request){        // 必须叫 POST，对应前端的 method:'POST'
 
@@ -26,7 +26,7 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
             const user = userList[0];//提取出当前匹配到的用户信息
 
             //准备塞进Token的数据包（payload）
-            const TokenPayload = {
+            const tokenPayload = {
                 userId:user.user_id,    //确认为你数据库表里的ID字段名
                 nickname:user.nickname,
                 avatar:user.avatar

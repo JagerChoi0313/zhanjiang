@@ -3,9 +3,12 @@ import {Form,Button,Card,Input,message,Checkbox} from 'antd'    //导入ant desi
 import {MailOutlined,LockOutlined} from '@ant-design/icons'
 import {useState} from 'react'
 import Link from 'next/link';
-
+import {useRouter} from 'next/navigation'
 
 const LoginPage=()=>{
+
+    const router = useRouter();
+
     const [form] = Form.useForm();
     const [loading,setLoading] = useState(false);
 
