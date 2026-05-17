@@ -45,11 +45,31 @@ const PostDetail=({params})=>{
         }
     }
 
+    
+
+    //去后端查询一下帖子的收藏状态
+    const CheckFavoriteStatus=async()=>{
+        try{
+            //注意看这里：URL后面加上了？postId=xxx
+            const res = await fetch(`/API/MyFavorites?postId=${postId}`)
+            const data = await res.json()
+
+            //如果后端返回了状态就更新到前端的星星上
+            if(data.isFavorited!==undefined){
+                setIsFavorited(data.isFavorited)
+            }
+
+        }catch(error){
+            console.error("获取收藏状态失败",error)
+        }
+    }
+
     //获取真实数据
     useEffect(()=>{
         fetchPost()
+        CheckFavoriteStatus()  // 页面加载时，除了拿帖子，顺便查一下星星该不该亮
     },[postId])
-
+    
     //处理点击收藏，取消收藏的逻辑
     const handleFavorite = async()=>{
         setIsFavoriteLoading(true);

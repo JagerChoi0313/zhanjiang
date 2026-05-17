@@ -5,12 +5,31 @@ import {Favorites,posts} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 
+
+//如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
 export async function GET(request){
     try{
         const userId = 20260001;     //这里的硬编码是目前的测试逻辑，代表“我在看谁的收藏”
 
         // 解析 URL 里的参数，比如 /api/my-favorites?page=2
-        const {searchParams} = new URL(request.url);    
+        const {searchParams} = new URL(request.url);  
+        
+        //判断是不是单篇帖子来查岗
+        const checkPostId = searchParams.get("postId")
+        if(checkPostId){
+            //如果传了PostId，就去查这个人有没有收藏过这篇帖子
+            const existingFavorite = await db
+            .select()
+            .from(Favorites)
+            .where(
+                and(
+                    eq(Favorites.postId,parseInt(checkPostId)),//parseInt:把一个字符串转换为一个整数
+                    eq(Favorites.userId,userId)
+                )
+            );
+            //查到了就是true，没查到就是false
+            return NextResponse.json({isFavorited:existingFavorite.length>0},{status:200})
+        }
         const page = parseInt(searchParams.get("page")) || 1;  // 如果没传 page，默认就是第 1 页
         const pageSize=4;   // 每页只显示 4 条
         const offset = (page-1)*pageSize;       // 计算跳过多少条。比如第2页，就跳过前4条。
