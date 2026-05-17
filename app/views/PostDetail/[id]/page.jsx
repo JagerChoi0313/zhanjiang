@@ -175,156 +175,724 @@ const PostDetail=({params})=>{
     const CommentsList = post.comments && Array.isArray(post.comments)?post.comments : [];
 
     return(
-        <div style={{ minHeight: '100vh', background: '#ffffff', color: '#111827', paddingBottom: 80, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-            <header style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
-                <button onClick={() => router.back()} style={{ border: 0, background: 'transparent', color: '#374151', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '8px 0' }}>
-                    <span style={{ fontSize: 20 }}>←</span> 返回
-                </button>
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <button style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #eee9e3', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', cursor: 'pointer', color: '#374151' }}>⎋</button> 
-                    <button style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid #eee9e3', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', cursor: 'pointer', color: '#374151' }}>⋯</button> 
-                </div>
-            </header>
+        <div className="post-detail-page">
+            <main className="detail-shell">
+                <article className="post-panel">
+                    <button className="back-btn" onClick={() => router.back()}>
+                        <span>←</span>
+                        返回
+                    </button>
 
-            <main style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px' }}>
-                {/* 图片轮播部分保持不变 */}
-                {imagesArray.length > 0 && (
-                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', background: '#f7f5f2', marginBottom: 24 }}>
-                        <img src={imagesArray[currentImgIndex]} alt="美食图" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, padding: '4px 10px', borderRadius: 999, fontWeight: 500 }}>
-                            {currentImgIndex + 1} / {imagesArray.length}
+                    {imagesArray.length > 0 && (
+                        <div className="image-stage">
+                            <img src={imagesArray[currentImgIndex]} alt="美食图" className="post-image" />
+                            <div className="image-count">{currentImgIndex + 1} / {imagesArray.length}</div>
+
+                            {imagesArray.length > 1 && (
+                                <>
+                                    <button className="image-nav image-nav-left" onClick={prevImg}>‹</button>
+                                    <button className="image-nav image-nav-right" onClick={nextImg}>›</button>
+                                    <div className="image-dots">
+                                        {imagesArray.map((_, index) => (
+                                            <span
+                                                key={index}
+                                                className={`image-dot ${index === currentImgIndex ? 'active' : ''}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        {imagesArray.length > 1 && (
-                            <>
-                                <button onClick={prevImg} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', left: 16 }}>‹</button>
-                                <button onClick={nextImg} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', right: 16 }}>›</button>
-                            </>
-                        )}
-                    </div>
-                )}
+                    )}
 
-                {/* 标题与作者信息 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-                    <h1 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.4, margin: '0 0 16px 0', color: '#111827' }}>{post.title}</h1>
-                    <button style={{ border: '1px solid #ef4444', color: '#ef4444', background: '#fff', padding: '6px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>+ 关注</button>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        {/* 动态读取作者头像，如果为空给个默认值 */}
-                        <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} />
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                                {/* 动态读取作者昵称 */}
-                                <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{post.author?.nickname || "未知吃货"}</span>
-                                <span style={{ background: '#f4ece1', color: '#8c542f', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 600, marginLeft: 8 }}>LV4 美食达人</span>
+                    <div className="post-body">
+                        <div className="post-scroll-area">
+                            <div className="title-row">
+                                <h1>{post.title}</h1>
                             </div>
-                            <div style={{ fontSize: 12, color: '#9ca3af' }}>
-                                {formatTime(post.createAt)} · 湛江市 {post.location || ''}
+
+                            <div className="author-row">
+                                <div className="author-card">
+                                    <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" className="author-avatar" />
+                                    <div className="author-meta">
+                                        <div className="author-name-line">
+                                            <span className="author-name">{post.author?.nickname || "未知吃货"}</span>
+                                            <span className="level-badge">LV4 美食达人</span>
+                                        </div>
+                                        <div className="post-time">{formatTime(post.createdAt || post.createAt)} · 湛江市 {post.location || ''}</div>
+                                    </div>
+                                </div>
+
+                                <button className="follow-btn">+ 关注</button>
+                            </div>
+
+                            <div className="description">{post.description}</div>
+
+                            <div className="tag-row">
+                                {post.category && <span># {post.category}</span>}
+                                <span># 湛江美食</span>
                             </div>
                         </div>
+
+                        <div className="stats-card">
+                            <div className="stat-item">
+                                <span className="stat-icon">◎</span>
+                                <strong>2.3k</strong>
+                                <small>浏览</small>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-icon">□</span>
+                                <strong>{CommentsList.length}</strong>
+                                <small>评论</small>
+                            </div>
+                            <button
+                                className={`stat-item favorite-stat ${isFavorited ? 'is-active' : ''}`}
+                                onClick={handleFavorite}
+                                disabled={isFavoriteLoading}
+                            >
+                                <span className="stat-icon">{isFavorited ? '★' : '☆'}</span>
+                                <small className="favorite-label">{isFavorited ? '已收藏' : '收藏'}</small>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </article>
 
-                <div style={{ fontSize: 15, lineHeight: 1.8, color: '#374151', whiteSpace: 'pre-wrap', marginBottom: 24 }}>{post.description}</div>
-                
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 32 }}>
-                    {post.category && <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># {post.category}</span>}
-                    <span style={{ background: '#f3f4f6', color: '#4b5563', fontSize: 13, padding: '6px 12px', borderRadius: 999 }}># 湛江美食</span>
-                </div>
-
-                {/* 互动数据条 */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid #f3f4f6', borderBottom: '1px solid #f3f4f6', marginBottom: 32 }}>
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        <span style={{ color: '#ef4444' }}>♥</span> {post.likes || 0}
-                    </button>
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        {/* 这里的评论数直接从数组长度拿最准确 */}
-                        <span>💬</span> {CommentsList.length}
-                    </button>
-
-                    {/* ========================================== */}
-                    {/* 【重点修改区】绑上了点击事件的动态收藏按钮 */}
-                    {/* ========================================== */}
-                    <button 
-                        onClick={handleFavorite}
-                        disabled={isFavoriteLoading}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, color: isFavorited ? '#eab308' : '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent', transition: 'color 0.2s' }}
-                    >
-                    {/* 👇 关键：换成了纯文本字符 ☆ 和 ★ */}
-                    <span style={{ fontSize: 16 }}>{isFavorited ? '★' : '☆'}</span> 
-                        {isFavorited ? '已收藏' : '收藏'}
-                    </button>
-
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 14, cursor: 'pointer', border: 0, background: 'transparent' }}>
-                        <span>⎋</span> 分享
-                    </button>
-                </div>
-
-                {/* ========================================== */}
-                {/* 评论区核心渲染区 */}
-                {/* ========================================== */}
-                <section style={{ paddingTop: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>评论 ({CommentsList.length})</h3>
-                        <span style={{ fontSize: 13, color: '#6b7280' }}>最新 ⌄</span>
+                <section className="comments-panel">
+                    <div className="comments-head">
+                        <h2>评论 ({CommentsList.length})</h2>
+                        <span>最新⌄</span>
                     </div>
-                    
-                    {/* 互动输入框：绑定 state 和 onChange，提交绑定 onClick */}
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>我</div>
-                        <input 
-                            type="text" 
-                            value={commentContent}
-                            onChange={(e) => setCommentContent(e.target.value)}
-                            placeholder="说点什么吧..." 
-                            style={{ flex: 1, background: '#f9fafb', border: 0, borderRadius: 999, padding: '10px 16px', fontSize: 14, outline: 'none' }} 
-                        />
-                        <button 
+
+                    <div className="comment-input-row">
+                        <div className="me-avatar">J</div>
+                        <div className="comment-input-wrap">
+                            <input
+                                type="text"
+                                value={commentContent}
+                                onChange={(e) => setCommentContent(e.target.value)}
+                                placeholder="说点什么吧..."
+                            />
+                            <span className="input-tool">☺</span>
+                            <span className="input-tool">▧</span>
+                        </div>
+                        <button
+                            className="publish-btn"
                             onClick={handleCommentSubmit}
-                            disabled={isSubmitting} // 提交中禁用按钮
-                            style={{ background: isSubmitting ? '#ccc' : '#9a5f34', color: '#fff', border: 0, borderRadius: 999, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                            disabled={isSubmitting}
                         >
-                            {isSubmitting ? '发送中' : '评论'}
+                            {isSubmitting ? '发送中' : '发布'}
                         </button>
                     </div>
 
-                    {/* 动态渲染评论列表 */}
-                    {CommentsList.map((item) => (
-                        <div key={item.id} style={{ display: 'flex', gap: 12, marginTop: 24, borderBottom: '1px solid #f9fafb', paddingBottom: 16 }}>
-                            {/* 评论人头像 */}
-                            <img src={item.author?.avatar || "/upload/default-avatar.png"} alt="user" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                            
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#4b5563' }}>{item.author?.nickname || "匿名用户"}</span>
-                                </div>
-                                
-                                {/* 评论具体内容 */}
-                                <div style={{ fontSize: 14, color: '#111827', marginBottom: 8, lineHeight: 1.5 }}>
-                                    {item.content}
-                                </div>
-                                
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#9ca3af' }}>
-                                    {/* 评论发表时间 */}
-                                    <span>{formatTime(item.createAt)}</span>
-                                    <div style={{ display: 'flex', gap: 16 }}>
-                                        <span style={{ cursor: 'pointer' }}>回复</span>
-                                        <span style={{ cursor: 'pointer' }}>👍 0</span>
+                    <div className="comment-list">
+                        {CommentsList.map((item) => (
+                            <div key={item.id} className="comment-item">
+                                <img src={item.author?.avatar || "/upload/default-avatar.png"} alt="user" className="comment-avatar" />
+                                <div className="comment-main">
+                                    <div className="comment-name-line">
+                                        <span className="comment-name">{item.author?.nickname || "匿名用户"}</span>
+                                        <span className="comment-level">LV3 美食爱好者</span>
+                                    </div>
+                                    <p>{item.content}</p>
+                                    <div className="comment-actions">
+                                        <span>{formatTime(item.createAt)}</span>
+                                        <div>
+                                            <span>□ 回复</span>
+                                            <span>♡ 0</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
 
-                    {/* 空数据兜底 UI */}
-                    {CommentsList.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af', fontSize: 14 }}>
-                            还没有人评论，快来抢沙发吧~
-                        </div>
-                    )}
+                        {CommentsList.length === 0 && (
+                            <div className="empty-comment">还没有人评论，快来抢沙发吧~</div>
+                        )}
+                    </div>
+
+                    {CommentsList.length > 0 && <div className="comment-end">没有更多了</div>}
                 </section>
             </main>
+
+            <style jsx>{`
+                .post-detail-page {
+                    height: 100vh;
+                    overflow: hidden;
+                    color: #171717;
+                    background:
+                        radial-gradient(circle at 12% 0%, rgba(184, 122, 72, 0.08), transparent 28%),
+                        linear-gradient(180deg, #fffaf6 0%, #ffffff 38%, #fbfbfb 100%);
+                    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                    padding: 18px 22px;
+                }
+
+                .back-btn {
+                    position: absolute;
+                    top: 14px;
+                    left: 14px;
+                    z-index: 5;
+                    height: 32px;
+                    min-width: 76px;
+                    border: 1px solid rgba(229, 224, 218, 0.9);
+                    border-radius: 999px;
+                    background: rgba(255, 255, 255, 0.9);
+                    color: #171717;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    font-size: 13px;
+                    cursor: pointer;
+                    box-shadow: 0 8px 18px rgba(20, 20, 20, 0.07);
+                }
+
+                .back-btn span {
+                    font-size: 15px;
+                    line-height: 1;
+                }
+
+                .detail-shell {
+                    max-width: 1500px;
+                    margin: 0 auto;
+                    height: calc(100vh - 36px);
+                    display: grid;
+                    grid-template-columns: minmax(0, 1.18fr) minmax(430px, 0.92fr);
+                    gap: 22px;
+                    align-items: stretch;
+                }
+
+                .post-panel,
+                .comments-panel {
+                    background: rgba(255, 255, 255, 0.92);
+                    border: 1px solid rgba(236, 232, 226, 0.9);
+                    border-radius: 8px;
+                    box-shadow: 0 18px 42px rgba(28, 24, 20, 0.07);
+                }
+
+                .post-panel {
+                    position: relative;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0;
+                }
+
+                .image-stage {
+                    flex: 0 0 auto;
+                    position: relative;
+                    margin: 14px 14px 0;
+                    height: clamp(360px, 48vh, 520px);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    background: #f3f0ec;
+                }
+
+                .post-image {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                }
+
+                .image-count {
+                    position: absolute;
+                    top: 14px;
+                    right: 14px;
+                    color: #fff;
+                    background: rgba(18, 18, 18, 0.58);
+                    border-radius: 999px;
+                    padding: 5px 11px;
+                    font-size: 13px;
+                    line-height: 1;
+                }
+
+                .image-nav {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 42px;
+                    height: 42px;
+                    border: 1px solid rgba(255, 255, 255, 0.68);
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.9);
+                    color: #272727;
+                    font-size: 30px;
+                    line-height: 1;
+                    cursor: pointer;
+                    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+                }
+
+                .image-nav-left {
+                    left: 16px;
+                }
+
+                .image-nav-right {
+                    right: 16px;
+                }
+
+                .image-dots {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 9px;
+                }
+
+                .image-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.72);
+                    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+                }
+
+                .image-dot.active {
+                    background: #a95722;
+                }
+
+                .post-body {
+                    min-height: 0;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 20px 32px 24px;
+                    overflow: hidden;
+                }
+
+                .post-scroll-area {
+                    min-height: 0;
+                    flex: 1;
+                    overflow-y: auto;
+                    padding-right: 6px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #ded8d0 transparent;
+                }
+
+                .title-row h1 {
+                    margin: 0 0 16px;
+                    font-size: 26px;
+                    line-height: 1.35;
+                    font-weight: 800;
+                    color: #161616;
+                }
+
+                .author-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    margin-bottom: 22px;
+                }
+
+                .author-card {
+                    min-width: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .author-avatar,
+                .comment-avatar {
+                    flex: 0 0 auto;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    background: #efe9e3;
+                }
+
+                .author-avatar {
+                    width: 34px;
+                    height: 34px;
+                }
+
+                .author-meta {
+                    min-width: 0;
+                }
+
+                .author-name-line,
+                .comment-name-line {
+                    display: flex;
+                    align-items: center;
+                    gap: 9px;
+                    flex-wrap: wrap;
+                }
+
+                .author-name,
+                .comment-name {
+                    font-weight: 800;
+                    color: #191919;
+                }
+
+                .author-name {
+                    font-size: 15px;
+                }
+
+                .level-badge,
+                .comment-level {
+                    border-radius: 5px;
+                    background: #fbede2;
+                    color: #a25724;
+                    font-size: 11px;
+                    font-weight: 800;
+                    padding: 3px 7px;
+                    line-height: 1;
+                }
+
+                .post-time {
+                    margin-top: 4px;
+                    color: #8c95a3;
+                    font-size: 13px;
+                }
+
+                .follow-btn {
+                    flex: 0 0 auto;
+                    min-width: 86px;
+                    height: 34px;
+                    border-radius: 999px;
+                    border: 1px solid #e35c47;
+                    color: #e24e3c;
+                    background: #fff;
+                    font-size: 14px;
+                    font-weight: 800;
+                    cursor: pointer;
+                }
+
+                .description {
+                    color: #222;
+                    font-size: 15px;
+                    line-height: 1.85;
+                    white-space: pre-wrap;
+                    margin-bottom: 20px;
+                }
+
+                .tag-row {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    margin-bottom: 22px;
+                }
+
+                .tag-row span {
+                    border-radius: 999px;
+                    background: #f4f5f6;
+                    color: #5f6772;
+                    padding: 7px 13px;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+
+                .stats-card {
+                    flex: 0 0 auto;
+                    margin-top: auto;
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    border: 1px solid #ebe7e2;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    background: #fff;
+                }
+
+                .stat-item {
+                    min-height: 68px;
+                    border: 0;
+                    border-right: 1px solid #ebe7e2;
+                    background: transparent;
+                    color: #1f2328;
+                    display: grid;
+                    place-items: center;
+                    align-content: center;
+                    gap: 3px;
+                    font: inherit;
+                }
+
+                .stat-item:last-child {
+                    border-right: 0;
+                }
+
+                .favorite-stat {
+                    cursor: pointer;
+                }
+
+                .favorite-stat.is-active .stat-icon,
+                .favorite-stat.is-active .favorite-label {
+                    color: #d99a1e;
+                }
+
+                .stat-icon {
+                    font-size: 22px;
+                    line-height: 1;
+                    color: #252525;
+                }
+
+                .stat-item strong {
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+
+                .stat-item small {
+                    color: #4e535b;
+                    font-size: 14px;
+                }
+
+                .comments-panel {
+                    min-height: 0;
+                    height: 100%;
+                    padding: 28px 30px 18px;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                .comments-head {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 26px;
+                    flex: 0 0 auto;
+                }
+
+                .comments-head h2 {
+                    margin: 0;
+                    font-size: 20px;
+                    line-height: 1.2;
+                    font-weight: 800;
+                }
+
+                .comments-head span {
+                    color: #6f7682;
+                    font-size: 14px;
+                }
+
+                .comment-input-row {
+                    display: grid;
+                    grid-template-columns: 38px minmax(0, 1fr) 90px;
+                    gap: 12px;
+                    align-items: center;
+                    margin-bottom: 26px;
+                    flex: 0 0 auto;
+                }
+
+                .me-avatar {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #57bc87, #31a56d);
+                    color: #fff;
+                    display: grid;
+                    place-items: center;
+                    font-size: 17px;
+                    font-weight: 700;
+                }
+
+                .comment-input-wrap {
+                    min-width: 0;
+                    height: 48px;
+                    border: 1px solid #e7e9ec;
+                    border-radius: 999px;
+                    background: #f7f8fa;
+                    display: flex;
+                    align-items: center;
+                    padding: 0 14px 0 19px;
+                    gap: 12px;
+                }
+
+                .comment-input-wrap input {
+                    min-width: 0;
+                    flex: 1;
+                    border: 0;
+                    outline: 0;
+                    background: transparent;
+                    color: #222;
+                    font-size: 15px;
+                }
+
+                .comment-input-wrap input::placeholder {
+                    color: #9aa2ac;
+                }
+
+                .input-tool {
+                    flex: 0 0 auto;
+                    color: #68717c;
+                    font-size: 20px;
+                    line-height: 1;
+                }
+
+                .publish-btn {
+                    height: 48px;
+                    border: 0;
+                    border-radius: 999px;
+                    background: #a85b25;
+                    color: #fff;
+                    font-size: 16px;
+                    font-weight: 800;
+                    cursor: pointer;
+                    box-shadow: 0 10px 20px rgba(168, 91, 37, 0.18);
+                }
+
+                .publish-btn:disabled {
+                    background: #c9c3bd;
+                    cursor: not-allowed;
+                    box-shadow: none;
+                }
+
+                .comment-list {
+                    min-height: 0;
+                    flex: 1;
+                    overflow-y: auto;
+                    padding-right: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #ded8d0 transparent;
+                }
+
+                .comment-item {
+                    display: flex;
+                    gap: 14px;
+                }
+
+                .comment-avatar {
+                    width: 38px;
+                    height: 38px;
+                }
+
+                .comment-main {
+                    min-width: 0;
+                    flex: 1;
+                }
+
+                .comment-main p {
+                    margin: 10px 0 12px;
+                    color: #242424;
+                    font-size: 15px;
+                    line-height: 1.7;
+                    word-break: break-word;
+                }
+
+                .comment-actions {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    color: #7f8794;
+                    font-size: 14px;
+                }
+
+                .comment-actions div {
+                    display: flex;
+                    gap: 22px;
+                    white-space: nowrap;
+                }
+
+                .empty-comment {
+                    padding: 72px 0;
+                    text-align: center;
+                    color: #9aa2ac;
+                    font-size: 14px;
+                }
+
+                .comment-end {
+                    flex: 0 0 auto;
+                    margin: 18px -30px 0;
+                    padding-top: 16px;
+                    border-top: 1px solid #eee9e3;
+                    color: #8b929d;
+                    text-align: center;
+                    font-size: 14px;
+                }
+
+                @media (max-width: 1120px) {
+                    .detail-shell {
+                        height: calc(100vh - 20px);
+                        grid-template-columns: 1fr;
+                        overflow-y: auto;
+                        align-items: start;
+                    }
+
+                    .comments-panel {
+                        height: min(620px, calc(100vh - 40px));
+                    }
+
+                    .image-stage {
+                        height: clamp(320px, 42vh, 460px);
+                    }
+                }
+
+                @media (max-width: 720px) {
+                    .post-detail-page {
+                        height: auto;
+                        min-height: 100vh;
+                        overflow: auto;
+                        padding: 10px 12px;
+                    }
+
+                    .detail-shell {
+                        height: auto;
+                        gap: 14px;
+                        overflow: visible;
+                    }
+
+                    .image-stage {
+                        margin: 10px 10px 0;
+                        height: 300px;
+                    }
+
+                    .post-body,
+                    .comments-panel {
+                        padding: 22px 18px;
+                        overflow: visible;
+                    }
+
+                    .post-body {
+                        display: block;
+                    }
+
+                    .post-scroll-area {
+                        overflow: visible;
+                        padding-right: 0;
+                    }
+
+                    .title-row h1 {
+                        font-size: 22px;
+                    }
+
+                    .author-row,
+                    .comment-actions {
+                        align-items: flex-start;
+                        flex-direction: column;
+                    }
+
+                    .stats-card {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .stat-item {
+                        min-height: 74px;
+                        border-right: 0;
+                        border-bottom: 1px solid #ebe7e2;
+                    }
+
+                    .stat-item:last-child {
+                        border-bottom: 0;
+                    }
+
+                    .comment-input-row {
+                        grid-template-columns: 38px minmax(0, 1fr);
+                    }
+
+                    .publish-btn {
+                        grid-column: 2;
+                        width: 100%;
+                    }
+
+                    .input-tool {
+                        display: none;
+                    }
+                }
+            `}</style>
         </div>
     )
 }
