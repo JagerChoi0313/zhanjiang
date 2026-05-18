@@ -25,7 +25,7 @@ const LoginPage=()=>{
             const data = await response.json();         //等待后端回信，并转成JSON格式
             if(data.success){
                 message.success('欢迎回来');            //成功提示
-                //成功后的逻辑，比如跳转
+                router.push("/views/Profile")
             }else{
                 message.error('账号密码错误');
             }
