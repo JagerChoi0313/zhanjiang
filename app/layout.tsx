@@ -34,7 +34,7 @@ export default function RootLayout({
 
   //判断当前路径是否包含FoodCommunity
   //如果是论坛页面，我们就不渲染那个NavBar
-  const isForumPage = pathname.includes("FoodCommunity") || pathname.includes("PostFunction") || pathname.includes("PostDetail");
+  const isForumPage = pathname.includes("FoodCommunity") || pathname.includes("PostFunction") || pathname.includes("PostDetail") || pathname.includes("Profile");
 
 
 

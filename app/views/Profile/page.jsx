@@ -16,7 +16,7 @@ const ProfilePage=()=>{
        const checkLoginStatus = async()=>{
 
         try{
-            const res = await fetch('/API/auth/Login')
+            const res = await fetch('/API/auth/Login', { credentials: 'include' })
             const data = await res.json();
 
             if(data.success){
@@ -36,7 +36,7 @@ const ProfilePage=()=>{
     //退出登录逻辑
     const handleLogout=async()=>{
         try{
-            const res = await fetch("/API/auth/Logout",{method:POST})
+            const res = await fetch("/API/auth/Logout",{method:"POST"})
             const data = await res.json()
 
             if(data.success){
@@ -83,88 +83,60 @@ const ProfilePage=()=>{
 
     
     return(
- <div className="min-h-screen bg-white text-gray-900 antialiased selection:bg-red-100">
-      {/* 顶部主体区域 */}
-      <div className="max-w-4xl mx-auto pt-20 pb-12 px-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between border-b border-gray-100 pb-10">
+ <div className="min-h-screen bg-[#f5f5f7] pt-28 pb-12 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto">
+        
+        <div className="bg-white rounded-3xl p-8 sm:p-10 flex flex-col items-center relative">
           
-          {/* 用户基础资料 */}
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-24 h-24 bg-gray-50 rounded-full overflow-hidden border border-gray-100 flex justify-center items-center shadow-inner">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.nickname} className="w-full h-full object-cover" />
-              ) : (
-                <UserOutlined className="text-4xl text-gray-300" />
-              )}
-            </div>
-            <div className="text-center md:text-left mt-4 md:mt-0">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{user.nickname}</h1>
-              <p className="text-gray-400 text-sm mt-1">湛江美食地图特邀食客</p>
-            </div>
-          </div>
-
-          {/* 退出登录按钮 */}
-          <div className="mt-6 md:mt-0">
+          {/* 右上角退出登录 */}
+          <div className="absolute top-6 right-6">
             <Button 
               type="text" 
               danger 
               icon={<LogoutOutlined />} 
               onClick={handleLogout}
-              className="flex items-center text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 px-4 py-2 transition-all font-medium"
+              className="text-gray-400 hover:text-red-500 rounded-lg"
             >
-              退出登录
+              退出
             </Button>
           </div>
 
-        </div>
+          {/* 头像与昵称 */}
+          <div className="w-24 h-24 bg-gray-50 rounded-full overflow-hidden mb-4 shadow-sm">
+            {user.avatar ? (
+              <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <UserOutlined className="text-4xl text-gray-300 w-full h-full flex items-center justify-center" />
+            )}
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-8">{user.nickname}</h1>
 
-        {/* 下方功能数据同步联动区域 */}
-        <div className="mt-10">
-          <Tabs
-            defaultActiveKey="posts"
-            className="custom-profile-tabs"
-            items={[
-              {
-                key: 'posts',
-                label: (
-                  <span className="flex items-center gap-2 px-1 text-base">
-                    <FileTextOutlined /> 我的帖子
-                  </span>
-                ),
-                children: (
-                  <div className="py-12 text-center text-gray-300 font-light tracking-wide">
-                    暂无发布的帖子，前往探店寻味分享你的美食故事吧。
-                  </div>
-                ),
-              },
-              {
-                key: 'comments',
-                label: (
-                  <span className="flex items-center gap-2 px-1 text-base">
-                    <MessageOutlined /> 我的评论
-                  </span>
-                ),
-                children: (
-                  <div className="py-12 text-center text-gray-300 font-light tracking-wide">
-                    写下的每一句赞美，都会留在这里。
-                  </div>
-                ),
-              },
-              {
-                key: 'collections',
-                label: (
-                  <span className="flex items-center gap-2 px-1 text-base">
-                    <StarOutlined /> 我的收藏
-                  </span>
-                ),
-                children: (
-                  <div className="py-12 text-center text-gray-300 font-light tracking-wide">
-                    珍藏的湛江风味，不迷路。
-                  </div>
-                ),
-              },
-            ]}
-          />
+          {/* 基础信息列表 (无分割线，依靠留白区分) */}
+          <div className="w-full max-w-md flex flex-col gap-6">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">用户 ID</span>
+              <span className="text-gray-900 font-medium">{user.userId}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">性别</span>
+              <span className="text-gray-900 font-medium">
+                {user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '保密'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">年龄</span>
+              <span className="text-gray-900 font-medium">{user.age ? `${user.age} 岁` : '未填写'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">联系电话</span>
+              <span className="text-gray-900 font-medium">{user.phoneNumber || '未填写'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">绑定邮箱</span>
+              <span className="text-gray-900 font-medium">{user.email}</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
