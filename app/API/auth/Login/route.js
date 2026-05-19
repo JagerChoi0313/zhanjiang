@@ -1,6 +1,6 @@
 import {db} from '../../../../database/index'       //你的数据库连接实例
-import {Users} from '../../../../database/schema'   //你的数据库的表定义
-import {eq,and} from 'drizzle-orm'                  
+import {Users,posts,Comments,Favorites} from '../../../../database/schema'   //你的数据库的表定义
+import {eq,and,count} from 'drizzle-orm'            
 import {NextResponse} from "next/server"            //Next.js提供的响应式回复工具
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {verifyToken} from "../../../../lib/jwt"     //解析token的工具
@@ -116,6 +116,12 @@ export async function GET(request){
 
         const currentUser = dbUserList[0];
 
+        const [postCountRes,commentCountRes,favoriteCountRes] = await Promise.all([
+            db.select({value:count()}).from(posts).where(eq(posts.userId,payload.userId)),
+            db.select({value:count()}).from(Comments).where(eq(Comments.userId,payload.userId)),
+            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,payload.userId))
+
+        ])
         //校验通过，返回解析出的用户信息（供前端渲染和个人主页）
         return NextResponse.json({
             success:true,
@@ -126,7 +132,12 @@ export async function GET(request){
                 gender: currentUser.gender,
                 age: currentUser.age,
                 phoneNumber: currentUser.phoneNumber,
-                email: currentUser.email
+                email: currentUser.email,
+                stats:{
+                    posts: postCountRes[0]?.value || 0,
+                    comments: commentCountRes[0]?.value ||0,
+                    favorites:favoriteCountRes[0]?.value || 0
+                }
             }
         })
 

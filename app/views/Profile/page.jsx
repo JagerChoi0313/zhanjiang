@@ -1,9 +1,42 @@
 "use client"
 import {useState,useEffect} from 'react'
-import { Spin, Button, message, Tabs } from 'antd';
-import { UserOutlined, FileTextOutlined, MessageOutlined, StarOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Spin, Button, message } from 'antd';
+import {
+  UserOutlined,
+  FileTextOutlined,
+  MessageOutlined,
+  StarOutlined,
+  LogoutOutlined,
+  CalendarOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  IdcardOutlined,
+  ManOutlined,
+  WomanOutlined
+} from '@ant-design/icons';
 import Link from "next/link"
 import {useRouter} from 'next/navigation'
+import styles from './profile.module.css'
+
+const InfoItem = ({ icon, label, value }) => (
+  <div className={styles.infoItem}>
+    <div className={styles.infoIcon}>{icon}</div>
+    <div className={styles.infoText}>
+      <p className={styles.infoLabel}>{label}</p>
+      <p className={styles.infoValue}>{value}</p>
+    </div>
+  </div>
+)
+
+const StatCard = ({ icon, value, label, tone }) => (
+  <div className={`${styles.statCard} ${styles[tone]}`}>
+    <div className={styles.statIcon}>{icon}</div>
+    <div>
+      <p className={styles.statValue}>{value}</p>
+      <p className={styles.statLabel}>{label}</p>
+    </div>
+  </div>
+)
 
 const ProfilePage=()=>{
     const router = useRouter()
@@ -81,62 +114,90 @@ const ProfilePage=()=>{
         )
     }
 
-    
+    const genderLabel = user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '保密'
+    const genderIcon = user.gender === 'female' ? <WomanOutlined /> : <ManOutlined />
+    const joinDate = user.createdAt || user.createTime || user.joinTime || user.registerTime
+    const displayJoinDate = joinDate ? String(joinDate).slice(0, 10) : '暂未记录'
+
     return(
- <div className="min-h-screen bg-[#f5f5f7] pt-28 pb-12 px-4 sm:px-6">
-      <div className="max-w-2xl mx-auto">
-        
-        <div className="bg-white rounded-3xl p-8 sm:p-10 flex flex-col items-center relative">
-          
-          {/* 右上角退出登录 */}
-          <div className="absolute top-6 right-6">
-            <Button 
-              type="text" 
-              danger 
-              icon={<LogoutOutlined />} 
+<div className={styles.profilePage}>
+      <div className={styles.profileShell}>
+        <div className={styles.profileCard}>
+          <div className={styles.topActions}>
+            <Button
+              danger
+              ghost
+              icon={<LogoutOutlined />}
               onClick={handleLogout}
-              className="text-gray-400 hover:text-red-500 rounded-lg"
+              className={styles.logoutButton}
             >
-              退出
+              退出登录
             </Button>
           </div>
 
-          {/* 头像与昵称 */}
-          <div className="w-24 h-24 bg-gray-50 rounded-full overflow-hidden mb-4 shadow-sm">
-            {user.avatar ? (
-              <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
-            ) : (
-              <UserOutlined className="text-4xl text-gray-300 w-full h-full flex items-center justify-center" />
-            )}
-          </div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-8">{user.nickname}</h1>
+          <section className={styles.hero}>
+            <div className={styles.avatarWrap}>
+              <div className={styles.avatarInner}>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="avatar"
+                    className={styles.avatarImg}
+                  />
+                ) : (
+                  <UserOutlined className={styles.avatarFallback} />
+                )}
+              </div>
+            </div>
 
-          {/* 基础信息列表 (无分割线，依靠留白区分) */}
-          <div className="w-full max-w-md flex flex-col gap-6">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">用户 ID</span>
-              <span className="text-gray-900 font-medium">{user.userId}</span>
+            <div className={styles.heroContent}>
+              <div className={styles.nameRow}>
+                <h1 className={styles.nickname}>{user.nickname}</h1>
+                <span className={styles.levelBadge}>
+                  湛江美食食客
+                </span>
+              </div>
+              <p className={styles.bio}>
+                爱生活，爱美食，记录湛江的一切味道。
+              </p>
+              <div className={styles.joinTime}>
+                <CalendarOutlined />
+                <span>加入时间：{displayJoinDate}</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">性别</span>
-              <span className="text-gray-900 font-medium">
-                {user.gender === 'male' ? '男' : user.gender === 'female' ? '女' : '保密'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">年龄</span>
-              <span className="text-gray-900 font-medium">{user.age ? `${user.age} 岁` : '未填写'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">联系电话</span>
-              <span className="text-gray-900 font-medium">{user.phoneNumber || '未填写'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">绑定邮箱</span>
-              <span className="text-gray-900 font-medium">{user.email}</span>
-            </div>
-          </div>
+          </section>
 
+          <section className={styles.statsGrid}>
+            <StatCard
+              icon={<FileTextOutlined />}
+              value={user.stats?.posts || 0}
+              label="我的帖子"
+              tone="postTone"
+            />
+            <StatCard
+              icon={<MessageOutlined />}
+              value={user.stats?.comments || 0}
+              label="我的评论"
+              tone="commentTone"
+            />
+            <StatCard
+              icon={<StarOutlined />}
+              value={user.stats?.favorites || 0}
+              label="我的收藏"
+              tone="favoriteTone"
+            />
+          </section>
+
+          <section className={styles.infoPanel}>
+            <h2 className={styles.panelTitle}>基本信息</h2>
+            <div className={styles.infoGrid}>
+              <InfoItem icon={<IdcardOutlined />} label="用户 ID" value={user.userId || '未填写'} />
+              <InfoItem icon={genderIcon} label="性别" value={genderLabel} />
+              <InfoItem icon={<CalendarOutlined />} label="年龄" value={user.age ? `${user.age} 岁` : '未填写'} />
+              <InfoItem icon={<PhoneOutlined />} label="联系电话" value={user.phoneNumber || '未填写'} />
+              <InfoItem icon={<MailOutlined />} label="绑定邮箱" value={user.email || '未填写'} />
+            </div>
+          </section>
         </div>
       </div>
     </div>
