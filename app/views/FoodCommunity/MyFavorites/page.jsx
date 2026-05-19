@@ -3,22 +3,37 @@ import React, { useEffect, useState } from 'react';
 import FavoriteFilter from './FavoriteFilter/page';
 import FavoriteCard from './FavoriteCard/page';
 import Pagination from './Pagination/page';
+import Link from "next/link"
 
 export default function MyFavorites() {
   const [favorites, setFavorites] = useState([]);
   const [pagination, setPagination] = useState({ totalPages: 12, currentPage: 1 }); // 默认给12页以匹配效果图
   const [loading, setLoading] = useState(true);
 
+  //用来判断用户是否合法登录
+  const [isAuthorized,setIsAuthorized] = useState(true)
+
   const fetchList = async (page) => {
     setLoading(true);
     try {
-      const res = await fetch(`/API/MyFavorites?userId=1&page=${page}`);
+      //如果后端返回401，说明没登录或者后端只认cookie里的token，只传page
+      const res = await fetch(`/API/MyFavorites?&page=${page}`);
       const result = await res.json();
+
+      //如果后端返回401，说明没登录或者Token已经过期了
+      if(res.status===401 || !result.success && result.message.include("登录")){
+        setIsAuthorized(false)
+        return;   //直接打断，不再往下执行
+      }
+
       if (result.success) {
+        setIsAuthorized(true);//确认身份合法
         setFavorites(result.data);
+
+
         if(result.pagination.totalPages > 0) {
            setPagination({
-             totalPages: result.pagination.totalPages,
+             totalPages: result.pagination.totalPage,
              currentPage: result.pagination.currentPage
            });
         }
@@ -33,6 +48,27 @@ export default function MyFavorites() {
   useEffect(() => {
     fetchList(pagination.currentPage);
   }, [pagination.currentPage]);
+
+  if (!isAuthorized) {
+    return (
+      <div className="w-full min-h-screen bg-[#FAFAFA] flex flex-col justify-center items-center py-6 px-10">
+        <div className="bg-white p-12 rounded-3xl flex flex-col items-center max-w-md w-full shadow-sm border border-gray-100">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex justify-center items-center mb-6 text-gray-300">
+             {/* 简单的 SVG 占位图标，保持极简 */}
+             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <h2 className="text-xl font-medium text-gray-900 mb-2">需要验证身份</h2>
+          <p className="text-gray-500 text-sm mb-8 text-center">登录后即可查看并管理你的专属美食收藏夹</p>
+          <Link 
+            href="/views/Login" 
+            className="w-full text-center py-3 bg-[#a63d2d] text-white rounded-xl font-medium active:scale-95 transition-transform hover:bg-[#8e3326]"
+          >
+            前往登录
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
 // 使用 min-h-screen 确保背景铺满，pb-20 确保底部导航不被遮挡

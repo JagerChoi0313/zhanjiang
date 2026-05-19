@@ -4,12 +4,30 @@ import {db} from '../../../database/index'
 import {Favorites,posts} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
+import {verifyToken} from '../../../lib/jwt' //引入解密工具
 
 
 //如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
 export async function GET(request){
     try{
-        const userId = 20260001;     //这里的硬编码是目前的测试逻辑，代表“我在看谁的收藏”
+        //1.核心鉴权：从Cookies中提取通行证并解密真实的身份
+        const token = request.cookies.get('auth_token')?.value
+        if(!token){
+            return NextResponse.json({
+                success:false,
+                message:"未登录，请先登录"
+            },{status:401})
+        }
+        
+        const payload = await verifyToken(token)
+        if(!payload){
+            return NextResponse.json({
+                success:false,
+                message:"登录已经失效，请重新登录"
+            },{status:401})
+        }
+
+        const userId = payload.userId   //获取真实的用户Id
 
         // 解析 URL 里的参数，比如 /api/my-favorites?page=2
         const {searchParams} = new URL(request.url);  
@@ -88,15 +106,36 @@ export async function GET(request){
 //POST接口：处理帖子的“收藏/取消收藏”的功能
 export async function POST(request){
     try{
-        //解析前端传过来的帖子ID和用户“ID”
-        const body = await request.json();
-        const {postId,userId} = body;
-        
-        //基础防御：
-        if(!postId || !userId){
+        //1.核心鉴权：绝对不信任前端传的userId，必须后端亲自解密
+        const token = request.cookies.get('auth_token') ?.value
+        if(!token){
             return NextResponse.json({
                 success:false,
-                message:"参数不完整"
+                message:"未登录，请先登录"
+            })
+        }
+
+        const payload = await verifyToken(token)
+
+        if(!payload){
+            return NextResponse.json({
+                success:false,
+                message:"登录已失效，请重新登录"
+            })
+        }
+
+        const userId = payload.userId;//提取真实ID
+
+
+        
+        const body = await request.json();
+        const {postId} = body;      //千万不要相信前端传过来userid
+        
+        //基础防御：
+        if(!postId){
+            return NextResponse.json({
+                success:false,
+                message:"参数不完整，缺少postid"
             },{status:400})
         }
 
@@ -108,7 +147,7 @@ export async function POST(request){
             .where(
                 and(
                     eq(Favorites.postId,parseInt(postId)),
-                    eq(Favorites.postId,parseInt(postId))
+                    eq(Favorites.userId,userId)
                 )
             )
 
@@ -125,7 +164,7 @@ export async function POST(request){
                 //如果还没查到数据（说明还没收藏），这次点击就是添加收藏
                 await db.insert(Favorites).values({
                     postId:parseInt(postId),
-                    userId:parseInt(userId)
+                    userId:userId   //直接解析后端传进来的真实ID
                 });
 
                 return NextResponse.json({
@@ -137,7 +176,7 @@ export async function POST(request){
     }catch(error){
                 console.error("Favorite action error:",error)
                 return NextResponse.json({
-                    succeess:false,
+                    success:false,
                     message:"收藏操作失败"
                 },{status:500})
     }
