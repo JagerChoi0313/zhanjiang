@@ -4,9 +4,31 @@ import Link from 'next/link' //Link用来实现路由跳转
 import {usePathname} from 'next/navigation'//使用usePathname替代原来的activeTab状态
 import {UserCircle} from 'lucide-react';
 import {Dropdown} from 'antd';
+import {useState,useEffect} from 'react'
 
 
 const NavBar = () => {
+
+  //准备一个状态来存放用户信息
+  const [user,setUser] = useState(null)
+
+  //组建挂载时去后端查身份
+  useEffect(()=>{
+    const checkAuthStatus=async()=>{
+      try{
+        const res = await fetch("/API/auth/Login")
+        const data = await res.json()
+
+        if(data.success){
+          setUser(data.user);//查验成功，存入用户的信息
+        }
+      }catch(error){
+        console.error("导航栏身份查验失败:",error)
+      }
+    }
+
+    checkAuthStatus()
+  },[])
 
   //他会自动获取当前浏览器的路径，比如 "/views/discover/children-views/famousDish"
   const pathname=usePathname()
@@ -126,17 +148,42 @@ const NavBar = () => {
 
         {/*-------- 用户头像：登录注册页入口 -------- */}
 
-        <Dropdown 
-          menu={{items}}
-          trigger={['click']}
-          placement="bottomRight"
+        {user ? (
+          // 状态 A：已登录 —— 渲染用户的真实头像，点击直达个人中心
+          <Link 
+            href="/views/Profile"
+            className="group shrink-0 cursor-pointer block"
           >
-          <div className="group shrink-0 cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 transition-all group-hover:border-[#a63d2d]/40 group-hover:bg-white group-hover:shadow-md">
-                  <UserCircle className="w-6 h-6 text-[#1a2a3a]/70 group-hover:text-[#a63d2d]" />
+            <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 overflow-hidden transition-all group-hover:border-[#a63d2d]/40 group-hover:shadow-md hover:scale-105 active:scale-95">
+              {user.avatar ? (
+                // 这里用 style 写死宽高，确保哪怕是 Base64 图像也能完美居中裁切
+                <img 
+                  src={user.avatar} 
+                  alt="avatar" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : (
+                // 如果用户没有头像，提取昵称的第一个字作为占位符
+                <span className="text-[#1a2a3a]/70 font-semibold text-sm group-hover:text-[#a63d2d]">
+                  {user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}
+                </span>
+              )}
             </div>
-          </div>
-        </Dropdown>
+          </Link>
+        ) : (
+          // 状态 B：未登录 —— 渲染你原有的 Ant Design 下拉菜单入口
+          <Dropdown 
+            menu={{ items }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <div className="group shrink-0 cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 transition-all group-hover:border-[#a63d2d]/40 group-hover:bg-white group-hover:shadow-md">
+                <UserCircle className="w-6 h-6 text-[#1a2a3a]/70 group-hover:text-[#a63d2d]" />
+              </div>
+            </div>
+          </Dropdown>
+        )}
       </div>
     </nav>
   );
