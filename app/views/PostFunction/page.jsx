@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import {useState,useMemo} from 'react'
+import {useState,useMemo,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
 
 // 导入刚才封装的四个组件
@@ -8,6 +8,7 @@ import ActionHeader from './ActionHeader/page';
 import EditorSection from './EditorSection/page';
 import MediaUploader from './MediaUploader/page';
 import PostConfig from './PostConfig/page';
+import Link from 'next/link'
 
 const PostFunction=()=>{
     const router = useRouter();
@@ -18,6 +19,33 @@ const PostFunction=()=>{
     const [location,setLocation] = useState('')
     const [images,setImages] = useState([])
     const [coverImage,setCoverImage]=useState('')
+
+    //身份查验状态
+    const [isAuthorized,setIsAuthorized] = useState(false)
+    const [authChecking,setAuthChecking] = useState(true)
+
+    //页面挂载时去检验是否有合法的token
+    useEffect(()=>{
+      const checkAuth = async()=>{
+        try{
+          const res = await fetch('/API/auth/Login');
+          const data = await res.json();
+
+          if(data.success){
+            setIsAuthorized(true)
+          }else{
+            setIsAuthorized(false)
+          }
+        }catch(error){
+            console.error("Auth check failed:",error)
+            setIsAuthorized(false)
+        }finally{
+          setAuthChecking(false)
+        }
+      }
+
+      checkAuth()
+    },[])
 
     //逻辑判断，发布按钮是否可用
     const isReady = useMemo(()=>{
@@ -47,6 +75,12 @@ const PostFunction=()=>{
                 })
             });
 
+            //双保险：如果用户在写文章时token刚好过期了，
+            if(response.status === 401){
+              alert("登录已失效，请重新登录后再发布")
+              router.push('/views/Login')
+            }
+
             const data = await response.json();
 
             if(data.success){
@@ -60,6 +94,38 @@ const PostFunction=()=>{
             alert("网络错误，请稍后重试")
         }
     }
+    
+    //身份核验加载中
+    if (authChecking) {
+        return (
+            <div style={{ height: '100vh', background: '#f7f5f2' }} className="flex justify-center items-center">
+                <span className="text-gray-400 text-sm animate-pulse font-light">正在核实创作者身份...</span>
+            </div>
+        );
+    }
+
+    //未登录时的视图
+    if (!isAuthorized) {
+        return (
+            <div style={{ height: '100vh', background: '#f7f5f2' }} className="flex flex-col justify-center items-center py-6 px-10">
+                <div className="bg-white p-12 rounded-3xl flex flex-col items-center max-w-md w-full shadow-sm border border-gray-100">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex justify-center items-center mb-6 text-gray-300">
+                        {/* 创作主题的 SVG 图标：羽毛笔与纸 */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    </div>
+                    <h2 className="text-xl font-medium text-gray-900 mb-2">需要验证身份</h2>
+                    <p className="text-gray-500 text-sm mb-8 text-center">登录后即可进入创作者中心，发布你的专属美食记录</p>
+                    <Link 
+                        href="/views/Login" 
+                        className="w-full text-center py-3 bg-[#a63d2d] text-white rounded-xl font-medium active:scale-95 transition-transform hover:bg-[#8e3326]"
+                    >
+                        前往登录
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return(
     <div style={{height:'100vh', overflow:'hidden', background:'#f7f5f2', color:'#1f2937'}}>
       {/* 顶部导航与发布动作 */}

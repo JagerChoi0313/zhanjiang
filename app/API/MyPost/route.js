@@ -44,7 +44,7 @@ export async function GET(request){
         const myPosts = await db
         .select()
         .from(posts)
-        .where(eq(posts.userId,targetUserId))
+        .where(eq(posts.userId,userId))
         .orderBy(desc(posts.createdAt))
         .limit(pageSize)
         .offset(offset)

@@ -2,6 +2,7 @@ import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {desc} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
+import {verifyToken} from '../../../lib/jwt'
 
 // GET请求，获取所有的帖子
 export async function GET(){
@@ -23,15 +24,35 @@ export async function GET(){
 
 export async function POST(request){
     try{
+        
+        //从cookies中提取通行证并解密身份
+        const token = request.cookies.get('auth_token')?.values
+        if(!token){
+            return NextResponse.json({
+                success:false,
+                message:"未登录，请先登录"
+            },{status:401})
+        }
+
+        const payload = await verifyToken(token)
+        
+        if(!payload){
+            return NextResponse.json({
+                success:false,
+                message:"登录失效，请重新登录"
+            },{status:401})
+        }
+
+        //提取出经过后端校验，绝无可能被前端篡改的用户ID
+        const userId = payload.userId;
+
         const body = await request.json();
-        //模拟当前登录用户
-        const MOCK_USER_ID = 20260001;
 
         //自动生成摘要：取描述的前100字
         const excerpt = body.description ? body.description.substring(0,100) : "";
 
         const result = await db.insert(posts).values({
-            userId:MOCK_USER_ID,
+            userId:userId,
             title:body.title,
             description:body.description,
             excerpt:excerpt,
