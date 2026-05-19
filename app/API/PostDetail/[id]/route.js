@@ -3,6 +3,7 @@ import {posts} from "../../../../database/schema"
 import {eq} from 'drizzle-orm'
 import {NextResponse} from "next/server"
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
+import {verifyToken} from "../../../../lib/jwt"
 
 
 //帖子详情以及包含所有评论
@@ -62,9 +63,29 @@ export async function POST(request,{params}){
     try{
         const {id:postId} = await params
 
+        const token = request.cookies.get('auth_token')?.value
+
+        if(!token){
+            return NextResponse.json({
+                success:false,
+                message:"未登录，请先登录后再发表评论"
+            },{status:401})
+        }
+
+        const payload = await verifyToken(token)
+
+        if(!payload){
+            return NextResponse({
+                success:false,
+                message:"登录失效，请重新登录"
+            },{status:401})
+        }
+
+        const userId = payload.userId
+
         //解析前端发来的JSON数据体
         const body = await request.json()
-        const {content,userId} = body;
+        const {content} = body; //坚决不结构前端传来的userId
 
         //基础防御：防空值提交
         if(!content || !content.trim()){
@@ -77,7 +98,7 @@ export async function POST(request,{params}){
         //执行插入数据库操作
         await db.insert(Comments).values({
             postId:parseInt(postId),
-            userId:parseInt(userId),
+            userId:userId,  //插入正确的Uerid
             content:content.trim()
         })
 
