@@ -4,11 +4,31 @@ import {db} from '../../../database/index'
 import {Comments,posts} from '../../../database/schema'
 import {eq,desc,sql} from 'drizzle-orm'     //额外引入sql用来计数
 import {NextResponse} from 'next/server'
+import {verifyToken} from "../../../lib/jwt"    //引入Token解密工具
 
 export async function GET(request){
     try{
         //获取当前用户id（暂时硬编码为1进行测试，后续对接Auth）
-        const userId = 20260001;
+        const token = request.cookies.get('auth_token')?.value
+        if(!token){
+            return NextResponse.json({
+                success:false,
+                message:"未登录，请先登录"
+            },{status:401})
+        }
+
+        const payload = await verifyToken(token)
+
+        if(!payload){
+            return NextResponse.json({
+                success:false,
+                message:"登录过期，请重新登录"
+            },{status:401})
+        }
+
+        //获取用户真实ID
+        const userId = payload.userId;
+
 
         //获取分页参数
         const {searchParams} = new URL(request.url);
@@ -31,6 +51,7 @@ export async function GET(request){
                 content:Comments.content,
                 createAt:Comments.createAt,
                 //抓取关联的帖子信息
+                postId:posts.id,    //补上postId，方便前端做路由跳转
                 postTitle:posts.title,
                 postCover:posts.coverImage,
                 postDescription:posts.description,//显示原帖摘要
