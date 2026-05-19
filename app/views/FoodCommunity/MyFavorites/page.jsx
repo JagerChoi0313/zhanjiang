@@ -7,7 +7,7 @@ import Link from "next/link"
 
 export default function MyFavorites() {
   const [favorites, setFavorites] = useState([]);
-  const [pagination, setPagination] = useState({ totalPages: 12, currentPage: 1 }); // 默认给12页以匹配效果图
+  const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1 }); 
   const [loading, setLoading] = useState(true);
 
   //用来判断用户是否合法登录
