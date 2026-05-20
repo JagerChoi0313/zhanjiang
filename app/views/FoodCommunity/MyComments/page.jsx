@@ -24,7 +24,7 @@ const MyComments=()=>{
             const result = await response.json();
 
             //拦截
-            if(response.status === 401 || (!result.success && result.message.include('登录'))){
+            if(response.status === 401 || (!result.success && result.message.includes('登录'))){
                 setIsAuthorized(false)
                 return;//直接打断，不再往下执行渲染列表
             }
@@ -84,7 +84,13 @@ const MyComments=()=>{
         {/* 关键修正：这里不需要自定义滚动条，gap-3 配合上方卡片的瘦身，刚好放下 4 条 */}
         <div className="flex flex-col gap-3 shrink-0"> 
             {commentList.slice(0, 4).map((item) => (
-                <CommentCard key={item.commentId} data={item} />
+                <Link
+                 href={`/views/PostDetail/${item.postId}`}
+                 key={item.commentId}
+                 className="block no-underline text-inherit active:scale-[0.99] transition-transform"
+                >
+                 <CommentCard data={item} />
+                </Link>
             ))}
         </div>
 

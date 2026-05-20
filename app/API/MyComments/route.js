@@ -1,10 +1,12 @@
 "use server"
 
 import {db} from '../../../database/index'
-import {Comments,posts} from '../../../database/schema'
+import {Comments,posts,Users} from '../../../database/schema'
 import {eq,desc,sql} from 'drizzle-orm'     //额外引入sql用来计数
 import {NextResponse} from 'next/server'
 import {verifyToken} from "../../../lib/jwt"    //引入Token解密工具
+
+
 
 export async function GET(request){
     try{
@@ -55,10 +57,22 @@ export async function GET(request){
                 postTitle:posts.title,
                 postCover:posts.coverImage,
                 postDescription:posts.description,//显示原帖摘要
+
+                //扁平化输出原作者的昵称和头像
+                username:Users.nickname,
+                avatar:Users.avatar,
+
+                //核心：使用独立的内联子查询实时数出该帖子的收藏总数和评论总数
+                //既保准了计数的绝对精准，又完美避开了groupBy的严格格式错误
+                favoriteCount:sql`(SELECT COUNT(*) FROM favorites WHERE favorites.post_id = ${posts.id})`.mapWith(Number),
+                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id})`.mapWith(Number)
+                
             })
 
             .from(Comments)
+            //核心链条：我的评论 =>对应的帖子 =>帖子的发布作者
             .innerJoin(posts,eq(Comments.postId,posts.id))  //核心关联逻辑
+            .leftJoin(Users,eq(posts.userId,Users.userId))
             .where(eq(Comments.userId,userId))
             .orderBy(desc(Comments.createAt))
             .limit(pageSize) // 限制返回数量

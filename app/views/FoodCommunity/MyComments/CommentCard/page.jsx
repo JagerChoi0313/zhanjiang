@@ -1,6 +1,6 @@
 const CommentCard=({data})=>{
 
-    const dateStr = data.createAt 
+   const dateStr = data.createAt 
     ? new Date(data.createAt).toLocaleDateString().replace(/\//g, '-') 
     : '2026-04-28';
     return(
@@ -32,12 +32,14 @@ const CommentCard=({data})=>{
         {/* 底部：互动数据与日期 */}
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-center gap-3 text-[11px] text-gray-400">
+            {/* 👇 仅在此处修改：大拇指换成收藏星星并绑定数量 */}
             <div className="flex items-center gap-1.5 cursor-pointer">
-              <span className="text-[13px]">👍</span> 26
+              <span className="text-[13px]">⭐</span> {data.favoriteCount || 0}
             </div>
             <div className="w-[1px] h-[10px] bg-gray-100"></div>
+            {/* 👇 仅在此处修改：将原先的文本“回复”换成真实的评论总数 */}
             <div className="flex items-center gap-1.5 cursor-pointer">
-              <span className="text-[13px]">💬</span> 回复
+              <span className="text-[13px]">💬</span> {data.commentCount || 0}
             </div>
           </div>
           <div className="text-[11px] text-gray-300 pr-2">
@@ -70,5 +72,3 @@ const CommentCard=({data})=>{
 }
 
 export default CommentCard;
-
-//原来面试最大的问题是实习时间
