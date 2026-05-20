@@ -3,14 +3,47 @@ import {posts} from '../../../database/schema'
 import {desc} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt'
+import {Comments,Favorites,Users} from "../../../database/schema"
+import {eq,sql} from "drizzle-orm"
+
 
 // GET请求，获取所有的帖子
 export async function GET(){
     try {
         const allPosts = await db
-        .select()
+        .select({
+            id:posts.id,
+            title:posts.title,
+            description:posts.description,
+            coverImage:posts.coverImage,
+            location:posts.location,
+            category:posts.category,
+            createdAt:posts.createdAt,
+
+            //关联出作者头像和昵称
+            author:{
+                nickname:Users.nickname,
+                avatar:Users.avatar
+            },
+
+            //利用SQL实时计算每条帖子的收藏总数和评论总数
+            //使用distinct确保在高并发时多表join时计数不会出现翻倍错误
+            favoriteCount:sql`count(distinct ${Favorites.id})`.mapWith(Number),
+            commentCount:sql`count(distinct ${Comments.id})`.mapWith(Number)
+        })
         .from(posts)
-        // 修正点：将 createAt 修改为 createdAt
+        //1.关联用户表，拿到发帖人的真实昵称和头像
+        .leftJoin(Users,eq(posts.userId,Users.userId))
+
+        //2.关联收藏表,方便count计算
+        .leftJoin(Favorites,eq(posts.id,Favorites.postId))
+
+        //3.关联评论表，方便count计算
+        .leftJoin(Comments,eq(posts.id,Comments.postId))
+
+        // 关键：只要用了 count() 这类聚合函数，必须按主表 id 进行分组隔离
+        .groupBy(posts.id, Users.nickname, Users.avatar)
+        //按时间倒序排列
         .orderBy(desc(posts.createdAt)) 
         
         return NextResponse.json(allPosts);

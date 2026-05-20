@@ -2,6 +2,7 @@
 import React from 'react';
 import {useState,useEffect} from 'react'
 import FoodPost from './FoodPost/page'; // 引入我们刚才写的卡片组件
+import Link from "next/link"
 
 const FoodList = () => {
    const [postData,setPostData] = useState([]);
@@ -53,7 +54,13 @@ if (loading) {
         {/* 2. 将 mockData 替换为 postData */}
         {postData.length > 0 ? (
           postData.map((item) => (
-            <FoodPost key={item.id} data={item} />
+            <Link
+            href={`/views/PostDetail/${item.id}`}
+            key={item.id}   //key必须移到最外层Link这里
+            style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+            >
+            <FoodPost data={item} />
+            </Link>
           ))
         ) : (
           <div style={styles.loadingText}>暂时还没有发现美食投稿哦</div>

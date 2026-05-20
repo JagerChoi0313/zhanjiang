@@ -32,27 +32,36 @@ const FoodPost = ({ data }) => {
     desc: { fontSize: '14px', color: '#666', lineHeight: '1.6', marginBottom: '12px' }
   };
 
+  const favoriteCount = data.favoriteCount || data.favorites || 0;
+  const commentCount = data.commentCount || (data.comments ? data.comments.length : 0) || 0;
+
   return (
-    <div style={styles.card}>
+ <div style={styles.card}>
       <div style={styles.imgWrapper}>
-        <img src={data.coverImage} // 对应 schema.js 中的定义
+        <img src={data.coverImage} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             alt="cover" />
       </div>
       <div style={styles.contentWrapper}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <img src={data.avatar} style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>{data.username}</span>
+            {/* 动态读取头像和作者名，加入兜底 */}
+            <img src={data.avatar || data.author?.avatar || "/upload/default-avatar.png"} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} alt="avatar" />
+            <span style={{ fontSize: '13px', fontWeight: '500' }}>{data.username || data.author?.nickname || "未知吃货"}</span>
           </div>
           <h3 style={styles.title}>{data.title}</h3>
           <p style={styles.desc}>{data.description}</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#86868b', fontSize: '13px' }}>
-          <span>📍 {data.location}</span>
+          <span>📍 {data.location || '湛江市'}</span>
           <div style={{ display: 'flex', gap: '15px' }}>
-            <span>🤍 {data.likes}</span>
-            <span>💬 {data.comments}</span>
+            {/* 👇 关键修改区：换成星星，绑定真实的数量 */}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              ⭐ {favoriteCount}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              💬 {commentCount}
+            </span>
           </div>
         </div>
       </div>
