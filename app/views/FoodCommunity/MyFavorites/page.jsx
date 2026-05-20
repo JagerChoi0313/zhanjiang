@@ -17,11 +17,11 @@ export default function MyFavorites() {
     setLoading(true);
     try {
       //如果后端返回401，说明没登录或者后端只认cookie里的token，只传page
-      const res = await fetch(`/API/MyFavorites?&page=${page}`);
+      const res = await fetch(`/API/MyFavorites?page=${page}`);
       const result = await res.json();
 
-      //如果后端返回401，说明没登录或者Token已经过期了
-      if(res.status===401 || !result.success && result.message.include("登录")){
+      // 👇 修复点：将 include 换成 includes，并增加 ? 安全链
+      if(res.status===401 || (!result.success && result.message?.includes("登录"))){
         setIsAuthorized(false)
         return;   //直接打断，不再往下执行
       }
@@ -30,10 +30,10 @@ export default function MyFavorites() {
         setIsAuthorized(true);//确认身份合法
         setFavorites(result.data);
 
-
-        if(result.pagination.totalPages > 0) {
+        // 防止 undefined 报错
+        if(result.pagination?.totalPages > 0) {
            setPagination({
-             totalPages: result.pagination.totalPage,
+             totalPages: result.pagination.totalPages || result.pagination.totalPage, // 兼容你后端的不同写法
              currentPage: result.pagination.currentPage
            });
         }
@@ -71,7 +71,7 @@ export default function MyFavorites() {
   }
 
   return (
-// 使用 min-h-screen 确保背景铺满，pb-20 确保底部导航不被遮挡
+    // 使用 min-h-screen 确保背景铺满，pb-20 确保底部导航不被遮挡
     <div className="w-full min-h-screen bg-[#FAFAFA] py-6 px-10 pb-20">
       {/* 标题 - 稍微调小一点 */}
       <h1 className="text-[20px] font-bold text-gray-900 mb-5">我的收藏</h1>
@@ -83,7 +83,14 @@ export default function MyFavorites() {
           <div className="flex justify-center items-center h-40 text-gray-400 text-sm font-light">加载中...</div>
         ) : favorites.length > 0 ? (
           favorites.map((item) => (
-            <FavoriteCard key={item.favoriteId} data={item} />
+            // 👇 核心升级：套上 Link，实现点击跳转！
+            <Link 
+                href={`/views/PostDetail/${item.postId}`} 
+                key={item.favoriteId} 
+                className="block no-underline text-inherit outline-none"
+            >
+                <FavoriteCard data={item} />
+            </Link>
           ))
         ) : (
           <div className="flex justify-center items-center h-40 text-gray-400 text-sm font-light">暂无收藏内容</div>

@@ -1,7 +1,6 @@
 "use server"
-
 import {db} from '../../../database/index'
-import {Favorites,posts} from  '../../../database/schema'
+import {Favorites,posts,Users,Comments} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt' //引入解密工具
@@ -72,10 +71,17 @@ export async function GET(request){
                 postCover:posts.coverImage,
                 postDescription:posts.description,
 
+                //补全原帖作者信息和互动数据
+                username:Users.nickname,
+                avatar:Users.avatar,
+                favoriteCount:sql`(SELECT COUNT(*) FROM favorites WHERE favorites.post_id= ${posts.id})`.mapWith(Number),
+                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id})`.mapWith(Number)
             })
 
             .from(Favorites)
             .innerJoin(posts,eq(Favorites.postId,posts.id))     // 【关键】：把收藏表里的 postId 对应到 posts 表的 id
+            //核心关联区：关联上Users表，确保查出是谁发的这篇帖子
+            .leftJoin(Users,eq(posts.userId,Users.userId))
             .where(eq(Favorites.userId,userId))
             .orderBy(desc(Favorites.createdAt))
             .limit(pageSize)
