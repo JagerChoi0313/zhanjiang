@@ -187,6 +187,40 @@ export const Favorites = mysqlTable("favorites",{
   createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
 })
 
+//核心逻辑：记录谁（followerId)关注了谁（followingId）
+export const Follows = mysqlTable("follows",{
+  id:serial("id").primaryKey(),
+
+  //关注者（主动点击关注的人）
+  followerId:int("follower_id")
+    .notNull()
+    .references(()=>Users.userId,{onDelete:"cascade"}),
+
+  //被关注者（被关注的食客）
+  followingId:int("following_id")
+    .notNull()
+    .references(()=>Users.userId,{onDelete:"cascade"}),
+
+  //关注的时间
+  createdAt:timestamp("created_at").defaultNow()
+    
+})
+
+//定义Follows表和Users表的关系
+export const followRelations = relations(Follows,({one})=>({
+  //关注主动关注的人
+  follower:one(Users,{
+    fields:[Follows.followerId],
+    references:[Users.userId],
+    relationName:"user_follower"
+  }),
+  //关联被关注的人
+  following:one(Users,{
+    fields:[Follows.followingId],
+    references:[Users.userId],
+    relationName:"user_following"
+  })
+}))
 
 // 定义 Posts 表与其他表的关系
 export const postsRelations = relations(posts, ({ one ,many}) => ({
@@ -229,6 +263,8 @@ export const favoritesRelation = relations(Favorites,({one})=>({
     references:[posts.id]
   })
 }))
+
+
 
 // 最激动人心的时刻：把表“推”进数据库
 // 现在你的代码里有 Users 表的定义，但 MySQL 数据库里还是空的。
