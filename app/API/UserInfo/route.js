@@ -29,7 +29,8 @@ export async function GET(request){
             nickname:Users.nickname,
             avatar:Users.avatar,
             gender:Users.gender,
-            createAt:Users.createdAt
+            createAt:Users.createdAt,
+            introduction: Users.introduction
         })
         .from(Users)
         .where(eq(Users.userId,parseId))

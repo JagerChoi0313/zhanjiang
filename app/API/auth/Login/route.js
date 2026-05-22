@@ -134,6 +134,7 @@ export async function GET(request){
                 age: currentUser.age,
                 phoneNumber: currentUser.phoneNumber,
                 email: currentUser.email,
+                introduction:currentUser.introduction,
                 stats:{
                     posts: postCountRes[0]?.value || 0,
                     comments: commentCountRes[0]?.value ||0,

@@ -96,20 +96,20 @@ const UserProfilePage=()=>{
   const pageStyle = {
     minHeight: 'calc(100vh - 80px)',
     boxSizing: 'border-box',
-    padding: '92px 24px 14px',
+    padding: '92px 24px 12px',
     color: '#0f172a',
     backgroundColor: '#f8f7f5',
     backgroundImage: 'radial-gradient(circle at 18% 0%, rgba(180, 83, 9, 0.08), transparent 32%), radial-gradient(circle at 86% 10%, rgba(37, 99, 235, 0.06), transparent 34%)'
   };
   const shellStyle = {
-    width: 'min(100%, 1280px)',
+    width: 'min(100%, 1220px)',
     margin: '0 auto'
   };
   const cardStyle = {
     position: 'relative',
     overflow: 'hidden',
     minHeight: 0,
-    padding: '24px 46px 24px',
+    padding: '24px 42px 24px',
     border: '1px solid rgba(226, 232, 240, 0.88)',
     borderRadius: 22,
     background: 'rgba(255, 255, 255, 0.96)',
@@ -117,8 +117,8 @@ const UserProfilePage=()=>{
   };
   const actionStyle = {
     position: 'absolute',
-    top: 38,
-    right: 46,
+    top: 26,
+    right: 42,
     zIndex: 2
   };
   const followButtonStyle = {
@@ -126,13 +126,13 @@ const UserProfilePage=()=>{
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 118,
-    height: 46,
-    padding: '0 28px',
+    height: 40,
+    padding: '0 24px',
     border: isFollowing ? '1px solid #e2e8f0' : '1px solid transparent',
     borderRadius: 999,
     background: isFollowing ? (isBtnHovered ? '#fff1f2' : '#f8fafc') : '#a63d2d',
     color: isFollowing ? (isBtnHovered ? '#dc2626' : '#64748b') : '#fff',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 800,
     cursor: followLoading ? 'not-allowed' : 'pointer',
     opacity: followLoading ? 0.72 : 1,
@@ -144,7 +144,7 @@ const UserProfilePage=()=>{
     gridTemplateColumns: '140px minmax(0, 1fr)',
     alignItems: 'center',
     columnGap: 38,
-    paddingRight: 180
+    paddingRight: 190
   };
   const avatarStyle = {
     width: 132,
@@ -162,13 +162,13 @@ const UserProfilePage=()=>{
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 16
+    marginBottom: 10
   };
   const statsRowStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: 18,
-    marginBottom: 18,
+    marginBottom: 12,
     color: '#475569',
     fontSize: 15,
     fontWeight: 700
@@ -177,13 +177,13 @@ const UserProfilePage=()=>{
     display: 'grid',
     gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: 24,
-    marginTop: 26
+    marginTop: 28
   };
   const introPanelStyle = {
-    marginTop: 22,
-    padding: '22px 34px 24px',
+    marginTop: 24,
+    padding: '22px 32px 24px',
     border: '1px solid #e2e8f0',
-    borderRadius: 16,
+    borderRadius: 14,
     background: '#fff'
   };
 
@@ -199,8 +199,8 @@ const UserProfilePage=()=>{
         minHeight: 92,
         display: 'flex',
         alignItems: 'center',
-        gap: 24,
-        padding: '18px 26px',
+        gap: 20,
+        padding: '16px 26px',
         borderRadius: 14,
         background
       },
@@ -252,14 +252,14 @@ const UserProfilePage=()=>{
 
             <div style={{ minWidth: 0 }}>
               <div style={nameRowStyle}>
-                <h1 style={{ margin: 0, color: '#0f172a', fontSize: 30, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0 }}>
+                <h1 style={{ margin: 0, color: '#0f172a', fontSize: 28, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0 }}>
                   {targetUser.nickname}
                 </h1>
                 <span style={{ display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 14px', borderRadius: 999, background: '#fff3e8', color: '#b45309', fontSize: 14, fontWeight: 800 }}>
                   {targetUser.level ? `LV${targetUser.level} 美食达人` : 'LV4 美食达人'}
                 </span>
               </div>
-              <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: 17, lineHeight: 1.7, fontWeight: 600 }}>
+              <p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 16, lineHeight: 1.7, fontWeight: 600 }}>
                 {targetUser.bio || "爱生活，爱美食，爱湛江的一切味道～"}
               </p>
 
@@ -288,7 +288,7 @@ const UserProfilePage=()=>{
                 <FileTextOutlined />
               </div>
               <div>
-                <p style={{ margin: 0, color: '#0f172a', fontSize: 30, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.posts || 0}</p>
+                <p style={{ margin: 0, color: '#0f172a', fontSize: 28, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.posts || 0}</p>
                 <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>他的帖子</p>
               </div>
             </div>
@@ -298,7 +298,7 @@ const UserProfilePage=()=>{
                 <MessageOutlined />
               </div>
               <div>
-                <p style={{ margin: 0, color: '#0f172a', fontSize: 30, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.comments || 0}</p>
+                <p style={{ margin: 0, color: '#0f172a', fontSize: 28, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.comments || 0}</p>
                 <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>他的评论</p>
               </div>
             </div>
@@ -308,28 +308,28 @@ const UserProfilePage=()=>{
                 <StarOutlined />
               </div>
               <div>
-                <p style={{ margin: 0, color: '#0f172a', fontSize: 30, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.favorites || 0}</p>
+                <p style={{ margin: 0, color: '#0f172a', fontSize: 28, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.favorites || 0}</p>
                 <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>获得收藏</p>
               </div>
             </div>
           </section>
 
-          <section style={introPanelStyle}>
-            <h2 style={{ margin: '0 0 22px', color: '#0f172a', fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>个人简介</h2>
-            <div style={{ marginBottom: 28, color: '#475569', fontSize: 15, lineHeight: 2 }}>
-              <p style={{ margin: '0 0 8px' }}>热爱美食，喜欢探索城市里的烟火气。</p>
-              <p style={{ margin: '0 0 8px' }}>用美食记录生活，用味道认识湛江！</p>
-              <p style={{ margin: 0 }}>一起发现更多好吃的吧～</p>
+         <section style={introPanelStyle}>
+            <h2 style={{ margin: '0 0 18px', color: '#0f172a', fontSize: 19, lineHeight: 1.2, fontWeight: 800 }}>个人简介</h2>
+            
+            {/* 👇 核心改动：加入 whiteSpace 保持排版，并动态渲染 targetUser.introduction */}
+            <div style={{ minHeight: 58, maxHeight: 96, overflow: 'hidden', marginBottom: 20, color: '#475569', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+              {targetUser.introduction || "这位食客很懒，还没有填写简介～"}
             </div>
             
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '9px 16px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 14px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
                 <CoffeeOutlined /> 美食探店爱好者
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '9px 16px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 14px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
                 <EnvironmentOutlined /> 湛江本地人
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '9px 16px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 14px', border: '1px solid #e5e7eb', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 14, fontWeight: 600 }}>
                 <CameraOutlined /> 记录生活
               </span>
             </div>

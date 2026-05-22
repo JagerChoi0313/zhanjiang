@@ -1,7 +1,7 @@
 .profilePage {
   min-height: calc(100vh - 80px);
   box-sizing: border-box;
-  padding: 104px 24px 24px;
+  padding: 92px 24px 12px;
   color: #0f172a;
   background:
     radial-gradient(circle at 18% 0%, rgba(180, 83, 9, 0.08), transparent 32%),
@@ -10,14 +10,14 @@
 }
 
 .profileShell {
-  width: min(100%, 1280px);
+  width: min(100%, 1220px);
   margin: 0 auto;
 }
 
 .profileCard {
   position: relative;
   overflow: hidden;
-  padding: 34px 46px 36px;
+  padding: 24px 42px 24px;
   border: 1px solid rgba(226, 232, 240, 0.88);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
@@ -26,14 +26,14 @@
 
 .topActions {
   position: absolute;
-  top: 34px;
-  right: 46px;
+  top: 26px;
+  right: 42px;
   z-index: 2;
 }
 
 .logoutButton {
-  height: 44px !important;
-  padding: 0 22px !important;
+  height: 40px !important;
+  padding: 0 20px !important;
   border: 1px solid #b45309 !important;
   border-radius: 999px !important;
   background: #fff !important;
@@ -49,16 +49,16 @@
 
 .hero {
   display: grid;
-  grid-template-columns: 172px minmax(0, 1fr);
+  grid-template-columns: 140px minmax(0, 1fr);
   align-items: center;
-  column-gap: 44px;
+  column-gap: 38px;
   padding-right: 210px;
 }
 
 .avatarWrap {
   position: relative;
-  width: 158px;
-  height: 158px;
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
   background: linear-gradient(135deg, #d8b28c, #f4e2cf);
   box-shadow: 0 18px 42px rgba(120, 53, 15, 0.18);
@@ -84,7 +84,7 @@
 
 .avatarFallback {
   color: #cbd5e1;
-  font-size: 58px;
+  font-size: 48px;
 }
 
 .avatarBadge {
@@ -92,15 +92,15 @@
   right: 2px;
   bottom: 4px;
   display: flex;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
-  border: 5px solid #fff;
+  border: 4px solid #fff;
   border-radius: 50%;
   background: #fff;
   color: #4b5563;
-  font-size: 18px;
+  font-size: 16px;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.13);
 }
 
@@ -113,13 +113,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .nickname {
   margin: 0;
   color: #0f172a;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1.15;
   font-weight: 800;
   letter-spacing: 0;
@@ -138,7 +138,7 @@
 }
 
 .heroBio {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   color: #64748b;
   font-size: 16px;
   line-height: 1.7;
@@ -149,7 +149,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .followItem {
@@ -192,16 +192,16 @@
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  margin-top: 42px;
+  gap: 24px;
+  margin-top: 28px;
 }
 
 .statCard {
   display: flex;
-  min-height: 108px;
+  min-height: 88px;
   align-items: center;
-  gap: 24px;
-  padding: 22px 28px;
+  gap: 20px;
+  padding: 16px 26px;
   border-radius: 14px;
 }
 
@@ -219,13 +219,13 @@
 
 .statIcon {
   display: flex;
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 25px;
+  font-size: 22px;
 }
 
 .postTone .statIcon {
@@ -246,7 +246,7 @@
 .statValue {
   margin: 0;
   color: #0f172a;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
   font-weight: 800;
 }
@@ -262,14 +262,14 @@
 .splitLayout {
   display: grid;
   grid-template-columns: 0.96fr 1.04fr;
-  gap: 34px;
-  margin-top: 34px;
+  gap: 28px;
+  margin-top: 24px;
 }
 
 .introPanel,
 .infoPanel {
-  min-height: 250px;
-  padding: 28px 30px;
+  min-height: 212px;
+  padding: 22px 28px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #fff;
@@ -280,7 +280,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .panelHeader .panelTitle {
@@ -288,16 +288,16 @@
 }
 
 .panelTitle {
-  margin: 0 0 24px;
+  margin: 0 0 18px;
   color: #0f172a;
-  font-size: 20px;
+  font-size: 19px;
   line-height: 1.2;
   font-weight: 800;
 }
 
 .editButton {
-  height: 38px !important;
-  padding: 0 18px !important;
+  height: 34px !important;
+  padding: 0 16px !important;
   border: 1px solid #b45309 !important;
   border-radius: 999px !important;
   color: #b45309 !important;
@@ -311,25 +311,25 @@
 }
 
 .introText {
-  min-height: 94px;
-  margin-bottom: 26px;
+  min-height: 62px;
+  margin-bottom: 20px;
   white-space: pre-wrap;
   color: #475569;
   font-size: 15px;
-  line-height: 2;
+  line-height: 1.8;
 }
 
 .tagGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 9px 16px;
+  padding: 8px 14px;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #f8fafc;
@@ -371,7 +371,7 @@
   grid-template-columns: minmax(100px, 0.38fr) minmax(0, 1fr);
   align-items: center;
   min-width: 0;
-  min-height: 42px;
+  min-height: 36px;
 }
 
 .infoLabel {
