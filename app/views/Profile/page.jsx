@@ -160,6 +160,20 @@ const ProfilePage=()=>{
               <p className={styles.bio}>
                 爱生活，爱美食，记录湛江的一切味道。
               </p>
+
+                {/* ===== 仅新增：关注与粉丝关系行 ===== */}
+              <div className={styles.followInfoRow}>
+                <div className={styles.followItem}>
+                  <span className={styles.followLabel}>关注</span>
+                  <span className={styles.followNum}>{user.stats?.followingCount || 0}</span>
+                </div>
+                <span className={styles.followDivider}>|</span>
+                <div className={styles.followItem}>
+                  <span className={styles.followLabel}>粉丝</span>
+                  <span className={styles.followNum}>{user.stats?.followerCount || 0}</span>
+                </div>
+              </div>
+
               <div className={styles.joinTime}>
                 <CalendarOutlined />
                 <span>加入时间：{displayJoinDate}</span>
