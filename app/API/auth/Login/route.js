@@ -1,5 +1,5 @@
 import {db} from '../../../../database/index'       //你的数据库连接实例
-import {Users,posts,Comments,Favorites} from '../../../../database/schema'   //你的数据库的表定义
+import {Users,posts,Comments,Favorites,Follows} from '../../../../database/schema'   //你的数据库的表定义
 import {eq,and,count} from 'drizzle-orm'            
 import {NextResponse} from "next/server"            //Next.js提供的响应式回复工具
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
@@ -116,11 +116,12 @@ export async function GET(request){
 
         const currentUser = dbUserList[0];
 
-        const [postCountRes,commentCountRes,favoriteCountRes] = await Promise.all([
+        const [postCountRes,commentCountRes,favoriteCountRes,followingCountRes,followerCountRes] = await Promise.all([
             db.select({value:count()}).from(posts).where(eq(posts.userId,payload.userId)),
             db.select({value:count()}).from(Comments).where(eq(Comments.userId,payload.userId)),
-            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,payload.userId))
-
+            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,payload.userId)),
+            db.select({value:count()}).from(Follows).where(eq(Follows.followerId,payload.userId)), // 计算我关注了多少人
+            db.select({value:count()}).from(Follows).where(eq(Follows.followingId,payload.userId))  // 计算有多少人关注了我
         ])
         //校验通过，返回解析出的用户信息（供前端渲染和个人主页）
         return NextResponse.json({
@@ -136,7 +137,9 @@ export async function GET(request){
                 stats:{
                     posts: postCountRes[0]?.value || 0,
                     comments: commentCountRes[0]?.value ||0,
-                    favorites:favoriteCountRes[0]?.value || 0
+                    favorites:favoriteCountRes[0]?.value || 0,
+                    followingCount: followingCountRes[0]?.value || 0, 
+                    followerCount: followerCountRes[0]?.value || 0    
                 }
             }
         })
