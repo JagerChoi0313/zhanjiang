@@ -1,11 +1,12 @@
 .profilePage {
   min-height: calc(100vh - 80px);
-  padding: 92px 24px 14px;
+  box-sizing: border-box;
+  padding: 104px 24px 24px;
+  color: #0f172a;
   background:
     radial-gradient(circle at 18% 0%, rgba(180, 83, 9, 0.08), transparent 32%),
     radial-gradient(circle at 86% 10%, rgba(37, 99, 235, 0.06), transparent 34%),
     #f8f7f5;
-  color: #0f172a;
 }
 
 .profileShell {
@@ -16,8 +17,7 @@
 .profileCard {
   position: relative;
   overflow: hidden;
-  min-height: 610px;
-  padding: 34px 48px 28px;
+  padding: 34px 46px 36px;
   border: 1px solid rgba(226, 232, 240, 0.88);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
@@ -26,16 +26,17 @@
 
 .topActions {
   position: absolute;
-  top: 38px;
-  right: 48px;
+  top: 34px;
+  right: 46px;
   z-index: 2;
 }
 
 .logoutButton {
   height: 44px !important;
   padding: 0 22px !important;
-  border-color: #b45309 !important;
+  border: 1px solid #b45309 !important;
   border-radius: 999px !important;
+  background: #fff !important;
   color: #b45309 !important;
   font-size: 14px !important;
   font-weight: 700 !important;
@@ -48,16 +49,16 @@
 
 .hero {
   display: grid;
-  grid-template-columns: 168px 1fr;
+  grid-template-columns: 172px minmax(0, 1fr);
   align-items: center;
   column-gap: 44px;
-  padding-right: 190px;
+  padding-right: 210px;
 }
 
 .avatarWrap {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 158px;
+  height: 158px;
   border-radius: 50%;
   background: linear-gradient(135deg, #d8b28c, #f4e2cf);
   box-shadow: 0 18px 42px rgba(120, 53, 15, 0.18);
@@ -83,7 +84,24 @@
 
 .avatarFallback {
   color: #cbd5e1;
-  font-size: 60px;
+  font-size: 58px;
+}
+
+.avatarBadge {
+  position: absolute;
+  right: 2px;
+  bottom: 4px;
+  display: flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  color: #4b5563;
+  font-size: 18px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.13);
 }
 
 .heroContent {
@@ -95,7 +113,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;
-  margin-bottom: 12px; /* 微调间距，让排版更紧凑 */
+  margin-bottom: 14px;
 }
 
 .nickname {
@@ -109,8 +127,8 @@
 
 .levelBadge {
   display: inline-flex;
-  align-items: center;
   height: 30px;
+  align-items: center;
   padding: 0 14px;
   border-radius: 999px;
   background: #fff3e8;
@@ -119,53 +137,43 @@
   font-weight: 800;
 }
 
-.bio {
-  margin: 0 0 16px; /* 缩小底部间距，为关注行腾出空间 */
+.heroBio {
+  margin: 0 0 16px;
   color: #64748b;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.7;
   font-weight: 600;
 }
 
-/* ================= 新增/找回的关注区域样式 ================= */
 .followInfoRow {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
   margin-bottom: 16px;
 }
 
 .followItem {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.followItem:hover {
-  opacity: 0.7;
+  gap: 7px;
 }
 
 .followLabel {
-  color: #64748b; /* 和个性签名保持一致的低调灰色 */
+  color: #64748b;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .followNum {
-  color: #0f172a; /* 和标题一致的强调色 */
+  color: #0f172a;
   font-size: 18px;
   font-weight: 800;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .followDivider {
   color: #cbd5e1;
-  font-size: 14px;
-  margin: 0 4px;
+  font-size: 15px;
 }
-/* ======================================================= */
 
 .joinTime {
   display: flex;
@@ -185,7 +193,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
-  margin-top: 38px;
+  margin-top: 42px;
 }
 
 .statCard {
@@ -251,12 +259,32 @@
   font-weight: 600;
 }
 
+.splitLayout {
+  display: grid;
+  grid-template-columns: 0.96fr 1.04fr;
+  gap: 34px;
+  margin-top: 34px;
+}
+
+.introPanel,
 .infoPanel {
-  margin-top: 28px;
-  padding: 24px 32px 28px;
+  min-height: 250px;
+  padding: 28px 30px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #fff;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.panelHeader .panelTitle {
+  margin-bottom: 0;
 }
 
 .panelTitle {
@@ -267,19 +295,65 @@
   font-weight: 800;
 }
 
+.editButton {
+  height: 38px !important;
+  padding: 0 18px !important;
+  border: 1px solid #b45309 !important;
+  border-radius: 999px !important;
+  color: #b45309 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.editButton:hover {
+  border-color: #92400e !important;
+  color: #92400e !important;
+}
+
+.introText {
+  min-height: 94px;
+  margin-bottom: 26px;
+  white-space: pre-wrap;
+  color: #475569;
+  font-size: 15px;
+  line-height: 2;
+}
+
+.tagGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .infoGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 56px;
-  row-gap: 24px;
+  grid-template-columns: 1fr;
+  row-gap: 0;
 }
 
 .infoItem {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   column-gap: 16px;
   min-width: 0;
+}
+
+.infoItem:not(:last-child) .infoText {
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .infoIcon {
@@ -289,15 +363,19 @@
   align-items: center;
   justify-content: center;
   color: #4b5563;
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .infoText {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.38fr) minmax(0, 1fr);
+  align-items: center;
   min-width: 0;
+  min-height: 42px;
 }
 
 .infoLabel {
-  margin: 0 0 7px;
+  margin: 0;
   color: #64748b;
   font-size: 15px;
   font-weight: 600;
@@ -307,21 +385,25 @@
   margin: 0;
   overflow-wrap: anywhere;
   color: #475569;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.35;
   font-weight: 500;
 }
 
-@media (max-width: 980px) {
+.fullWidthItem {
+  grid-column: auto;
+}
+
+@media (max-width: 1024px) {
   .profileCard {
-    padding: 34px 24px 28px;
+    padding: 30px 24px;
   }
 
   .topActions {
     position: static;
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
 
   .hero {
@@ -329,58 +411,61 @@
     justify-items: center;
     padding-right: 0;
     text-align: center;
-    row-gap: 28px;
+    row-gap: 26px;
   }
 
   .nameRow,
-  .joinTime,
-  .followInfoRow /* 让关注行在移动端也能居中对齐 */ {
+  .followInfoRow,
+  .joinTime {
     justify-content: center;
   }
 
-  .statsGrid {
+  .statsGrid,
+  .splitLayout {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
-  .infoGrid {
-    grid-template-columns: 1fr 1fr;
-    column-gap: 28px;
+  .splitLayout {
+    margin-top: 24px;
   }
 }
 
 @media (max-width: 640px) {
   .profilePage {
-    padding: 92px 12px 14px;
+    padding: 96px 12px 18px;
   }
 
   .profileCard {
-    min-height: auto;
     border-radius: 18px;
   }
 
   .avatarWrap {
-    width: 150px;
-    height: 150px;
+    width: 142px;
+    height: 142px;
   }
 
   .nickname {
-    font-size: 30px;
-  }
-
-  .bio {
-    font-size: 17px;
+    font-size: 28px;
   }
 
   .statCard {
-    padding: 24px;
+    padding: 20px 22px;
   }
 
+  .introPanel,
   .infoPanel {
-    padding: 26px 20px;
+    padding: 24px 20px;
   }
 
-  .infoGrid {
+  .panelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .infoText {
     grid-template-columns: 1fr;
+    row-gap: 6px;
+    padding: 10px 0;
   }
 }

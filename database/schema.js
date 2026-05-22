@@ -11,6 +11,7 @@ export const Users = mysqlTable("users",{
     gender: varchar("gender", { length: 10 }), 
     age: int("age"),
     createdAt:timestamp("createAt").defaultNow(),
+    introduction:text('introduction')
 })
 
 
