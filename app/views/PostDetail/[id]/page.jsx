@@ -5,6 +5,7 @@ import {use} from 'react'
 import React from 'react'
 import {useState,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
+import Link from 'next/link'
 
 const PostDetail=({params})=>{
     const router = useRouter();
@@ -212,7 +213,10 @@ const PostDetail=({params})=>{
                             </div>
 
                             <div className="author-row">
-                                <div className="author-card">
+                                <Link 
+                                href={`/views/User/${post.userId || post.author?.userId}`}
+                                className="author-card">
+                                    
                                     <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" className="author-avatar" />
                                     <div className="author-meta">
                                         <div className="author-name-line">
@@ -221,9 +225,9 @@ const PostDetail=({params})=>{
                                         </div>
                                         <div className="post-time">{formatTime(post.createdAt || post.createAt)} · 湛江市 {post.location || ''}</div>
                                     </div>
-                                </div>
+                                </Link>
 
-                                <button className="follow-btn">+ 关注</button>
+                                {/* <button className="follow-btn">+ 关注</button> */}
                             </div>
 
                             <div className="description">{post.description}</div>

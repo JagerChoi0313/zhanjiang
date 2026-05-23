@@ -93,15 +93,13 @@ const DishCard =({ data = {
         
         <div style={{ ...styles.imageWrapper, position: 'relative' }}>
         <Image 
-          src={`/images/food/${data.id}.png`} 
-          alt={data.name}
-          // 解决方案：使用 fill 模式
-          fill 
-          // 保持图片不被拉伸，并位于正中央
-          style={{ objectFit: 'contain' }} 
-          // 可选：告诉 Next.js 这是一张需要优先加载的封面图
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+    // 把这里路径里的小写 i 改成了大写 I，精确匹配你的物理文件夹
+    src={`/Image/food/${data.id}.png`} 
+    alt={data.name}
+    fill 
+    style={{ objectFit: 'contain' }} 
+    sizes="(max-width: 768px) 100vw, 33vw"
+  />
       </div>
 
         <div style={styles.content}>
