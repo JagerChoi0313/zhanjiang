@@ -5,11 +5,26 @@ import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
+import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
 
 
 // GET请求，获取所有的帖子
 export async function GET(){
     try {
+        //监听前端传来的搜索关键字
+        const {searchParams} = new URL(request.url)
+        const keyword = searchParams.get('q');
+
+        //2.构建基础的查询条件
+        //如果有关键字，就要求标题（title）或描述(description)里包含这个词，否则就是undefined(查全部)
+        const searchCondition = keyword
+            ? or(
+                like(posts.title,`%${keyword}%`),
+                like(posts.description,`%${keyword}%`)
+            )
+            :undefined;
+
+
         const allPosts = await db
         .select({
             id:posts.id,
@@ -40,6 +55,9 @@ export async function GET(){
 
         //3.关联评论表，方便count计算
         .leftJoin(Comments,eq(posts.id,Comments.postId))
+
+        //插入搜索条件
+        .where(searchCondition)
 
         // 关键：只要用了 count() 这类聚合函数，必须按主表 id 进行分组隔离
         .groupBy(posts.id, Users.nickname, Users.avatar)
