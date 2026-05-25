@@ -4,16 +4,26 @@ import {useState,useEffect} from 'react'
 import FoodPost from './FoodPost/page'; // 引入我们刚才写的卡片组件
 import Link from "next/link"
 
-const FoodList = () => {
+//接收Mainpage传下来的关键词
+const FoodList = ({searchQuery=""}) => {
    const [postData,setPostData] = useState([]);
    const [loading,setLoading] = useState(true);
    
    useEffect(()=>{
     const fetchPosts = async()=>{
+      setLoading(true)
       try{
-        const response = await fetch('/API/Post')
+
+        //动态拼装，有搜索词就加上？q=，没有就查全部
+        const url = searchQuery
+            ?`/API/Post?q=${encodeURIComponent(searchQuery)}`
+            :`/API/Post`
+
+        const response = await fetch(url, { cache: 'no-store' })
         const data = await response.json();
-        setPostData(data)
+
+        //防御性测试，确保拿到的是数组
+        setPostData(Array.isArray(data)?data:[])
       }catch(error){
           console.error("获取帖子失败：",error);
       }finally{
@@ -21,7 +31,8 @@ const FoodList = () => {
       }
     }
     fetchPosts();
-   },[])
+    // 核心机制：把 searchQuery 变成监听依赖，只要它变了，马上重新执行查询！
+   },[searchQuery])
 
  const styles = {
   container: {

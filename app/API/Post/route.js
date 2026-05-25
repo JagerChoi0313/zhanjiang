@@ -9,7 +9,7 @@ import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索�
 
 
 // GET请求，获取所有的帖子
-export async function GET(){
+export async function GET(request){
     try {
         //监听前端传来的搜索关键字
         const {searchParams} = new URL(request.url)
@@ -24,8 +24,9 @@ export async function GET(){
             )
             :undefined;
 
-
-        const allPosts = await db
+        
+        //构建不需要where的基础连接车厢
+        let queryBuilder = db
         .select({
             id:posts.id,
             title:posts.title,
@@ -46,6 +47,8 @@ export async function GET(){
             favoriteCount:sql`count(distinct ${Favorites.id})`.mapWith(Number),
             commentCount:sql`count(distinct ${Comments.id})`.mapWith(Number)
         })
+
+        
         .from(posts)
         //1.关联用户表，拿到发帖人的真实昵称和头像
         .leftJoin(Users,eq(posts.userId,Users.userId))
@@ -64,6 +67,20 @@ export async function GET(){
         //按时间倒序排列
         .orderBy(desc(posts.createdAt)) 
         
+        //动态判断，只有前端传了搜索词，才挂上where过滤条件
+        if(keyword){
+            queryBuilder = queryBuilder.where(
+                or(
+                    like(posts.title,`%${keyword}%`),
+                    like(posts.description,`%${keyword}%`)
+                )
+            )
+        }
+
+        const allPosts = await queryBuilder
+            .groupBy(posts.id,Users.nickname,Users.avatar)
+            .orderBy(desc(posts.createdAt))
+
         return NextResponse.json(allPosts);
     } catch(error) {
         console.error("Fetch error:", error)

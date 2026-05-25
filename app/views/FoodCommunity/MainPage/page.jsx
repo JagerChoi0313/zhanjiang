@@ -5,8 +5,38 @@ import FoodList from './FoodList/page';
 import HotTopicsPannel from './HotTopicsPannel/page';
 import Promotion from './Promotion/page';
 import ActiveUserPannel from './ActiveUserPannel/page';
+//引入next.js强大的路由和参数提取工具
+import {useRouter,useSearchParams} from 'next/navigation'
+import {useState,useEffect} from 'react'
 
 const MainPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  //提取URL里的q参数（如果有的话）
+  const currentQuery = searchParams.get('q') || '';
+
+  //本地状态：控制搜索框里的文字
+  const [inputValue,setInputValue] = useState(currentQuery);
+
+  //监听回车键触发URL跳转
+  const handleKeyDown = (e) =>{
+    if(e.key === 'Enter'){
+      if(inputValue.trim()){
+        //带着静默参数改变URL
+        router.push(`?q=${encodeURIComponent(inputValue.trim())}`);
+      }else{
+        //如果清空了输入框按回车就清空了参数，显示全部的帖子
+        router.push(`?`)
+      }
+    }
+  };
+
+  //如果用户点击了浏览器的后退按钮，我们要确保搜索框里的字也跟着变回原样
+  useEffect(()=>{
+    setInputValue(currentQuery);
+  },[currentQuery])
+
   const styles = {
     pageContainer: {
       display: 'flex',
@@ -81,7 +111,7 @@ const MainPage = () => {
   const tabs = ["推荐", "最新", "精华", "问答", "探店", "家常菜", "地方小吃"];
 
   return (
-    <div style={styles.pageContainer}>
+  <div style={styles.pageContainer}>
       {/* 1. 中间：滚动内容流 */}
       <div style={styles.scrollArea}>
         {/* 顶部粘性搜索和分类区 */}
@@ -90,6 +120,10 @@ const MainPage = () => {
             type="text" 
             placeholder="🔍 搜索美食、话题或用户..." 
             style={styles.searchBar} 
+            // 👇 绑定状态和回车事件
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <div style={styles.tabGroup}>
             {tabs.map((tab, index) => (
@@ -97,7 +131,7 @@ const MainPage = () => {
                 key={tab} 
                 style={{
                   ...styles.tab, 
-                  ...(index === 0 ? styles.activeTab : {}) // 默认选中第一个
+                  ...(index === 0 ? styles.activeTab : {}) 
                 }}
               >
                 {tab}
@@ -108,23 +142,22 @@ const MainPage = () => {
 
         {/* 帖子列表组件 */}
         <div style={{ paddingBottom: '40px' }}>
-          <FoodList />
+          {/* 👇 最核心的一步：把解析出来的 URL 搜索关键字，传给 FoodList */}
+          <FoodList searchQuery={currentQuery} />
         </div>
       </div>
 
-      {/* 2. 右侧：固定榜单（不随中间滚动） */}
+      {/* 2. 右侧：固定榜单 */}
       <aside style={styles.rightFixedPanel}>
-      <div style={{ marginBottom: '16px' }}>
-    <HotTopicsPannel />
-  </div>
-  
-  <div style={{ marginBottom: '16px' }}>
-    <Promotion />
-  </div>
-  
-  <div>
-    <ActiveUserPannel />
-  </div>
+        <div style={{ marginBottom: '16px' }}>
+          <HotTopicsPannel />
+        </div>
+        <div style={{ marginBottom: '16px' }}>
+          <Promotion />
+        </div>
+        <div>
+          <ActiveUserPannel />
+        </div>
       </aside>
     </div>
   );
