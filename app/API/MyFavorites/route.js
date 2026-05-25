@@ -4,6 +4,7 @@ import {Favorites,posts,Users,Comments} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt' //引入解密工具
+import {like,or} from 'drizzle-orm'
 
 
 //如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
@@ -47,9 +48,25 @@ export async function GET(request){
             //查到了就是true，没查到就是false
             return NextResponse.json({isFavorited:existingFavorite.length>0},{status:200})
         }
+
+        //抓取关键词
+        const keyword = searchParams.get('q')
+
         const page = parseInt(searchParams.get("page")) || 1;  // 如果没传 page，默认就是第 1 页
         const pageSize=4;   // 每页只显示 4 条
         const offset = (page-1)*pageSize;       // 计算跳过多少条。比如第2页，就跳过前4条。
+
+        //动态拼装查询条件
+        const baseCondition = eq(Favorites.userId,userId)
+        const searchCondition = keyword
+            ?and(
+                baseCondition,
+                or(
+                    like(posts.title,`%${keyword}%`),
+                    like(posts.description,`%${keyword}%`)
+                )
+            )
+            :baseCondition
 
         //查询收藏总条数
         // 这一步是为了告诉前端：用户一共收藏了多少个美食，好让前端算出“总页数”
@@ -82,7 +99,7 @@ export async function GET(request){
             .innerJoin(posts,eq(Favorites.postId,posts.id))     // 【关键】：把收藏表里的 postId 对应到 posts 表的 id
             //核心关联区：关联上Users表，确保查出是谁发的这篇帖子
             .leftJoin(Users,eq(posts.userId,Users.userId))
-            .where(eq(Favorites.userId,userId))
+            .where(searchCondition)
             .orderBy(desc(Favorites.createdAt))
             .limit(pageSize)
             .offset(offset)

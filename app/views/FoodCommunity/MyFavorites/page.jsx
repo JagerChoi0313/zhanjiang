@@ -1,11 +1,16 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import FavoriteFilter from './FavoriteFilter/page';
 import FavoriteCard from './FavoriteCard/page';
 import Pagination from './Pagination/page';
 import Link from "next/link"
+import { useSearchParams } from 'next/navigation';
 
 export default function MyFavorites() {
+
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || ''; // 提取搜索词
+
   const [favorites, setFavorites] = useState([]);
   const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1 }); 
   const [loading, setLoading] = useState(true);
@@ -13,27 +18,35 @@ export default function MyFavorites() {
   //用来判断用户是否合法登录
   const [isAuthorized,setIsAuthorized] = useState(true)
 
-  const fetchList = async (page) => {
+  // 使用 useRef 记录上一次的搜索词，用于判断是否是“新搜索”
+  const prevSearchQuery = useRef(searchQuery);
+
+  const fetchList = async (page, query) => {
     setLoading(true);
+
     try {
-      //如果后端返回401，说明没登录或者后端只认cookie里的token，只传page
-      const res = await fetch(`/API/MyFavorites?page=${page}`);
+      // 👇 修复：完全使用 page 和 query 变量来拼接 URL
+      const url = query 
+        ? `/API/MyFavorites?page=${page}&q=${encodeURIComponent(query)}`
+        : `/API/MyFavorites?page=${page}`;
+
+      console.log("👉 [收藏夹] 前端准备请求的地址是:", url);
+
+      const res = await fetch(url, { cache: 'no-store' });
       const result = await res.json();
 
-      // 👇 修复点：将 include 换成 includes，并增加 ? 安全链
       if(res.status===401 || (!result.success && result.message?.includes("登录"))){
         setIsAuthorized(false)
-        return;   //直接打断，不再往下执行
+        return; 
       }
 
       if (result.success) {
-        setIsAuthorized(true);//确认身份合法
+        setIsAuthorized(true);
         setFavorites(result.data);
 
-        // 防止 undefined 报错
-        if(result.pagination?.totalPages > 0) {
+        if(result.pagination) {
            setPagination({
-             totalPages: result.pagination.totalPages || result.pagination.totalPage, // 兼容你后端的不同写法
+             totalPages: result.pagination.totalPages || result.pagination.totalPage || 1, 
              currentPage: result.pagination.currentPage
            });
         }
@@ -46,9 +59,17 @@ export default function MyFavorites() {
   };
 
   useEffect(() => {
-    fetchList(pagination.currentPage);
-  }, [pagination.currentPage]);
+    let targetPage = pagination.currentPage;
+    
+    if (prevSearchQuery.current !== searchQuery) {
+      targetPage = 1; 
+      prevSearchQuery.current = searchQuery; 
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }
 
+    fetchList(targetPage, searchQuery);
+  }, [pagination.currentPage, searchQuery]);
+  
   if (!isAuthorized) {
     return (
       <div className="w-full min-h-screen bg-[#FAFAFA] flex flex-col justify-center items-center py-6 px-10">
