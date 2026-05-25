@@ -1,21 +1,34 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import PostFilter from './PostFilter/page';
 import PostCard from './PostCard/page';
 import PaginationPost from './Pagination/page';
 import Link from "next/link"
+import { useSearchParams } from 'next/navigation';
 
 export default function MyPost() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1 }); 
   const [loading, setLoading] = useState(true);
 
   const [isAuthorized,setIsAuthorized] = useState(true)
 
-  const fetchList = async (page) => {
+  // 记录上一次的搜索词，用于分页判定
+  const prevSearchQuery = useRef(searchQuery);
+
+  const fetchList = async (page,query) => {
     setLoading(true);
     try {
-      const res = await fetch(`/API/MyPost?&page=${page}`);
+      // 动态拼装请求 URL
+      const url = query 
+        ? `/API/MyPost?page=${page}&q=${encodeURIComponent(query)}`
+        : `/API/MyPost?page=${page}`;
+
+      // 严格使用带防缓存的 fetch
+      const res = await fetch(url, { cache: 'no-store' });
       const result = await res.json();
 
       //拦截逻辑
@@ -41,8 +54,16 @@ export default function MyPost() {
   };
 
   useEffect(() => {
-    fetchList(pagination.currentPage);
-  }, [pagination.currentPage]);
+    let targetPage = pagination.currentPage;
+    
+    if (prevSearchQuery.current !== searchQuery) {
+      targetPage = 1; 
+      prevSearchQuery.current = searchQuery; 
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }
+
+    fetchList(targetPage, searchQuery);
+  }, [pagination.currentPage, searchQuery]);
 
   // 动态计算头部导航的数量
   const counts = {

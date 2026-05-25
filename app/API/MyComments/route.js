@@ -29,11 +29,7 @@ export async function GET(request){
         const pageSize = 4;
         const offset = (page-1) * pageSize;
 
-        console.log("👉 [我的评论后端] 收到的搜索词是：", keyword); // 监控探头
-
-        // ==========================================
-        // ✅ 终极防弹写法：提前组装好统一的 Where 条件
-        // ==========================================
+        
         const baseCondition = eq(Comments.userId, userId);
         
         // 如果有关键字，就把 baseCondition 和搜索条件用 AND 绑在一起；否则就只用 baseCondition

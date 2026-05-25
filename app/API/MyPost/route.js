@@ -3,6 +3,7 @@ import {posts} from '../../../database/schema'
 import {eq,desc,sql} from 'drizzle-orm'
 import {NextResponse} from 'next/server'
 import {verifyToken} from "../../../lib/jwt"
+import {and,like,or} from "drizzle-orm"
 
 export async function GET(request){
     try{
@@ -28,9 +29,23 @@ export async function GET(request){
 
         //解析分页参数
         const { searchParams } = new URL(request.url);
+        const keyword = searchParams.get('q');//抓取关键字
         const page = parseInt(searchParams.get("page")) || 1;  
         const pageSize = 4; // 严格控制为4条，配合前端的一页无滚动条排版
         const offset = (page - 1) * pageSize;
+
+        const baseCondition = eq(posts.userId, userId);
+        
+        // 帖子表里搜：标题或描述
+        const finalCondition = (keyword && keyword.trim() !== '')
+            ? and(
+                baseCondition,
+                or(
+                    like(posts.title, `%${keyword}%`),
+                    like(posts.description, `%${keyword}%`)
+                )
+            )
+            : baseCondition;
 
         // 3. 查询总条数（用于给前端计算总页数）
         const totalResult = await db
@@ -44,7 +59,7 @@ export async function GET(request){
         const myPosts = await db
         .select()
         .from(posts)
-        .where(eq(posts.userId,userId))
+        .where(finalCondition)
         .orderBy(desc(posts.createdAt))
         .limit(pageSize)
         .offset(offset)
