@@ -1,6 +1,7 @@
 "use client"
 import DishCard from './DishCard'
 import {useState,useEffect} from 'react'
+import Link from 'next/link'
 
 const pageStyles = {
     wrapper: {
@@ -72,7 +73,7 @@ const TasteCard=()=>{
    
 
     return(
-        <div style={pageStyles.wrapper}>
+<div style={pageStyles.wrapper}>
             <header style={pageStyles.header}>
                 <h1 style={pageStyles.title}>味觉卡片:湛江食材百科</h1>
                 <p style={pageStyles.subtitle}>The Encyclopedia of Zhanjiang Ingredients</p>
@@ -80,11 +81,17 @@ const TasteCard=()=>{
 
             <main style={pageStyles.grid}>
                 {loading ? (
-                    // 这里可以放一个简单的加载占位，或者留空
                     <p style={{ textAlign: 'center', gridColumn: '1/-1', color: '#999' }}>加载百科中...</p>
                 ) : (
                     ingredients.map((item) => (
-                        <DishCard key={item.id} data={item} />
+                        // --- 核心修改：使用 Link 组件包裹 DishCard，传入对应数据的 id ---
+                        <Link 
+                            href={`/views/discover/children-views/TasteCard/${item.id}`} 
+                            key={item.id}
+                            style={{ textDecoration: 'none', display: 'block' }} // 消除 a 标签默认样式，保持 grid 布局不乱
+                        >
+                            <DishCard data={item} />
+                        </Link>
                     ))
                 )}
                 
