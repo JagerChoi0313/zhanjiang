@@ -106,7 +106,23 @@ export const TasteCardTable = mysqlTable("taste_card", {
   enName: varchar('en_name', { length: 100 }),
   desc: text('desc'),
   bgColor: varchar('bg_color', { length: 7 }),
-  imagePath: varchar('image_path', { length: 255 }).default('/images/food/default.png')
+  imagePath: varchar('image_path', { length: 255 }).default('/images/food/default.png'),
+  //“味觉卡片”详情页新增字段
+  tags:json("tags"),//顶部标签页
+  //右侧概览信息
+  origin:varchar("origin",{length:100}),
+  season: varchar("season", { length: 100 }),      // 最佳时节
+  mainMethods: varchar("main_methods", { length: 255 }), // 主要做法
+  tasteProfile: varchar("taste_profile", { length: 255 }), // 口味特点
+
+  // 中间三个深度科普模块 
+  features: json("features"),
+  nutrition: json("nutrition"),
+  culture: json("culture"),
+
+  // 底部常见做法列表 
+  recipes: json("recipes"),
+  
 });
 
 export const posts = mysqlTable("posts",{

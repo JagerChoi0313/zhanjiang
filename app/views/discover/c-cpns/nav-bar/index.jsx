@@ -130,14 +130,7 @@ const NavBar = () => {
 
       {/* 4. 右侧功能区：搜索框微调为暖灰色，投稿按钮用暖橙红 */}
       <div className="navbar-end gap-6 flex items-center">
-        <div className="relative hidden sm:block">
-          <input 
-            type="text" 
-            placeholder="搜搜白切鸡..." 
-            className="input h-10 w-48 bg-[#1a2a3a]/5 rounded-full pl-11 text-sm border-none focus:ring-1 focus:ring-[#005da1]/20 transition-all placeholder:text-gray-400" 
-          />
-          <Search className="absolute left-4 top-3 w-4 h-4 text-gray-500" />
-        </div>
+        
         
         {/* 投稿按钮：从冰冷的黑变成热情的红土色 #a63d2d */}
         <Link 
