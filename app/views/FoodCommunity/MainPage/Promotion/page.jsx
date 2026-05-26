@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 const Promotion =()=>{
     return(
 <div className="relative overflow-hidden rounded-[24px] bg-[#FDF8F4] p-6 border border-orange-100/50 shadow-sm">
@@ -20,12 +22,17 @@ const Promotion =()=>{
           记录生活中的美味时刻
         </p>
         
-        <button 
+        <Link
+        href="/views/PostFunction"
+        >
+         <button
+          href="/views/PostFunction"
           className="mt-5 px-5 py-2.5 bg-[#8B5742] hover:bg-[#734735] text-white text-[13px] font-medium rounded-full transition-all duration-300 shadow-sm active:scale-95"
           onClick={() => console.log('跳转至投稿页')}
         >
           立即投稿
         </button>
+        </Link>
       </div>
     </div>
     )
