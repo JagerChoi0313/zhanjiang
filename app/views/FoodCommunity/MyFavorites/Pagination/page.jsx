@@ -1,4 +1,6 @@
-export default function Pagination({ totalPages, currentPage, onPageChange }) {
+"use client";
+
+export default function Pagination({ totalPages = 1, currentPage = 1, onPageChange = () => {} }) {
   // 生成分页数组，为了完全匹配模板图效果，限制最多显示页码或加入省略号
   const getPages = () => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);

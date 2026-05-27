@@ -1,8 +1,10 @@
+ "use client";
+
 import { Search, ChevronDown, Filter } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 
-export default function PostFilter({ counts = { all: 0, published: 0, draft: 0, pending: 0 } }) {
+function PostFilterContent({ counts = { all: 0, published: 0, draft: 0, pending: 0 } }) {
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,5 +76,13 @@ export default function PostFilter({ counts = { all: 0, published: 0, draft: 0, 
         </button>
       </div>
     </div>
+  );
+}
+
+export default function PostFilter(props) {
+  return (
+    <Suspense fallback={null}>
+      <PostFilterContent {...props} />
+    </Suspense>
   );
 }

@@ -1,9 +1,9 @@
 "use client"
 import { Search, ChevronDown, Filter } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 
-export default function FavoriteFilter() {
+function FavoriteFilterContent() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -70,5 +70,13 @@ export default function FavoriteFilter() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function FavoriteFilter() {
+  return (
+    <Suspense fallback={null}>
+      <FavoriteFilterContent />
+    </Suspense>
   );
 }

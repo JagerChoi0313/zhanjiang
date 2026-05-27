@@ -2,22 +2,9 @@
 //也不会重新加载。这就是为什么高亮动画能丝滑渡过的原因
 
 "use client"
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "./views/discover/c-cpns/nav-bar";
 import {usePathname} from "next/navigation"   //引入路径钩子
-
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 // export const metadata: Metadata = {
 //   title: "Zhanjiang Food",
@@ -41,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col">
         {/*逻辑判断：只有不是论坛页时，才显示主页导航栏 */}

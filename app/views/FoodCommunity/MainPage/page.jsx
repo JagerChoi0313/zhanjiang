@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { Suspense } from 'react';
 import FoodList from './FoodList/page';
 // 引入右侧的三个面板组件
 import HotTopicsPannel from './HotTopicsPannel/page';
@@ -9,7 +9,7 @@ import ActiveUserPannel from './ActiveUserPannel/page';
 import {useRouter,useSearchParams} from 'next/navigation'
 import {useState,useEffect} from 'react'
 
-const MainPage = () => {
+const MainPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -162,5 +162,11 @@ const MainPage = () => {
     </div>
   );
 };
+
+const MainPage = () => (
+  <Suspense fallback={null}>
+    <MainPageContent />
+  </Suspense>
+);
 
 export default MainPage;

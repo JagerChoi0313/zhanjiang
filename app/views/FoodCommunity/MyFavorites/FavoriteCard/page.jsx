@@ -1,7 +1,9 @@
+"use client";
+
 import React from 'react';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
 
-export default function FavoriteCard({ data }) {
+export default function FavoriteCard({ data = {} }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return "2026-04-29";
     return dateStr.split('T')[0];

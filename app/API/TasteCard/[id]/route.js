@@ -1,7 +1,7 @@
-import { db } from '../../../database/index'
-import { TasteCardTable } from '../../../database/schema'
-import { NextResponse } from 'next/server'
+import { db } from '../../../../database/index'
+import { TasteCardTable } from '../../../../database/schema'
 import { eq } from 'drizzle-orm' // 需要引入 eq 来做条件查询
+import { ApiResponse, ErrorCode } from '../../../../lib/api-response.mjs'
 
 export async function GET(request, { params }) {
     try {
@@ -15,10 +15,7 @@ export async function GET(request, { params }) {
 
         // 3. 如果没查到数据，返回 404
         if (data.length === 0) {
-            return NextResponse.json({
-                success: false,
-                message: "未找到该美食档案"
-            }, { status: 404 });
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到该美食档案");
         }
 
         // 4. 获取唯一的那条数据
@@ -35,16 +32,10 @@ export async function GET(request, { params }) {
         };
 
         // 6. 返回成功及数据
-        return NextResponse.json({
-            success: true,
-            data: parsedData
-        }, { status: 200 });
+        return ApiResponse.success(parsedData);
 
     } catch (error) {
         console.error("读取单条食材数据库失败：", error)
-        return NextResponse.json({
-            success: false,
-            message: "获取味觉卡片详情失败"
-        }, { status: 500 });
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取味觉卡片详情失败");
     }
 }

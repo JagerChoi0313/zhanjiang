@@ -16,7 +16,12 @@ const cardStyle = {
   boxShadow:'0 10px 26px rgba(70, 54, 38, 0.04)'
 };
 
-const EditorSection=({title,setTitle,description,setDescription})=>{
+const EditorSection=({
+  title = '',
+  setTitle = () => {},
+  description = '',
+  setDescription = () => {},
+})=>{
 
     // 假工具栏图标数据
   const mockTools = [

@@ -1,4 +1,6 @@
-export default function PaginationPost({ totalPages, currentPage, onPageChange }) {
+"use client";
+
+export default function PaginationPost({ totalPages = 1, currentPage = 1, onPageChange = () => {} }) {
   const getPages = () => {
     if (totalPages <= 5) 
     return Array.from({ length: totalPages }, (_, i) => i + 1);

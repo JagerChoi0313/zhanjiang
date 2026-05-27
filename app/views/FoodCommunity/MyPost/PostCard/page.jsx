@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
 
-export default function PostCard({ data }) {
+export default function PostCard({ data = {} }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return "2026-04-29";
     return dateStr.split('T')[0];

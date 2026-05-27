@@ -1,4 +1,6 @@
-const CommentCard=({data})=>{
+"use client";
+
+const CommentCard=({data = {}})=>{
 
    const dateStr = data.createAt 
     ? new Date(data.createAt).toLocaleDateString().replace(/\//g, '-') 

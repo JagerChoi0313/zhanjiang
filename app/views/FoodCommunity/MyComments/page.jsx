@@ -1,5 +1,5 @@
 "use client"
-import {useState,useEffect} from 'react'
+import {Suspense, useState,useEffect} from 'react'
 import CommentCard from "./CommentCard/page"
 import Pagination from './Pagination/page'
 import CommentFilter from './CommentFilter/page'
@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {useRef} from 'react'    //引入useRef记录上一次的搜索词
 import {useSearchParams} from 'next/navigation' //引入路由参数工具
 
-const MyComments=()=>{
+const MyCommentsContent=()=>{
 
     //获得URL里的q参数
     const searchParams = useSearchParams()
@@ -136,5 +136,11 @@ const MyComments=()=>{
     </div>
     )
 }
+
+const MyComments=()=>(
+    <Suspense fallback={<div className="p-5 text-gray-400 text-center">加载中...</div>}>
+        <MyCommentsContent />
+    </Suspense>
+)
 
 export default MyComments;
