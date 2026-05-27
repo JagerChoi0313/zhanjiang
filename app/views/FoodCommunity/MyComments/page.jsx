@@ -1,8 +1,8 @@
 "use client"
 import {Suspense, useState,useEffect} from 'react'
-import CommentCard from "./CommentCard/page"
-import Pagination from './Pagination/page'
-import CommentFilter from './CommentFilter/page'
+import CommentCard from "./components/CommentCard"
+import Pagination from './components/Pagination'
+import CommentFilter from './components/CommentFilter'
 import Link from 'next/link'
 import {useRef} from 'react'    //引入useRef记录上一次的搜索词
 import {useSearchParams} from 'next/navigation' //引入路由参数工具

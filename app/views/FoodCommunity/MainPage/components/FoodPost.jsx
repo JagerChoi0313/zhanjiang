@@ -1,4 +1,4 @@
-// views/FoodCommunity/MainPage/FoodList/FoodPost/page.jsx
+// views/FoodCommunity/MainPage/components/FoodPost.jsx
 import React from 'react';
 
 const FoodPost = ({ data }) => {

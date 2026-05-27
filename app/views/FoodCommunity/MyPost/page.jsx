@@ -1,8 +1,8 @@
 "use client"
 import React, { Suspense, useEffect, useState,useRef } from 'react';
-import PostFilter from './PostFilter/page';
-import PostCard from './PostCard/page';
-import PaginationPost from './Pagination/page';
+import PostFilter from './components/PostFilter';
+import PostCard from './components/PostCard';
+import PaginationPost from './components/PaginationPost';
 import Link from "next/link"
 import { useSearchParams } from 'next/navigation';
 

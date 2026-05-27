@@ -1,8 +1,8 @@
 "use client"
 import React, { Suspense, useEffect, useState,useRef } from 'react';
-import FavoriteFilter from './FavoriteFilter/page';
-import FavoriteCard from './FavoriteCard/page';
-import Pagination from './Pagination/page';
+import FavoriteFilter from './components/FavoriteFilter';
+import FavoriteCard from './components/FavoriteCard';
+import Pagination from './components/Pagination';
 import Link from "next/link"
 import { useSearchParams } from 'next/navigation';
 

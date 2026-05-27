@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import {useState,useEffect} from 'react'
-import FoodPost from './FoodPost/page'; // 引入我们刚才写的卡片组件
+import FoodPost from './FoodPost'; // 引入我们刚才写的卡片组件
 import Link from "next/link"
 
 //接收Mainpage传下来的关键词
