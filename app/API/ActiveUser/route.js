@@ -3,7 +3,7 @@
 import {db} from '../../../database/index'
 import {TalkRanking} from '../../../database/schema'
 import {desc,sql,count} from 'drizzle-orm'
-import {NextResponse} from 'next/server'
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 export async function GET(){
     try{
@@ -20,16 +20,10 @@ export async function GET(){
         .orderBy(desc(sql`comment_count`))
         .limit(5)
 
-        return NextResponse.json({
-            success:true,
-            data:data
-        },{status:200})
+        return ApiResponse.success(data)
 
     }catch(error){
         console.error("获取数据失败：",error)
-        return NextReponse.json({
-            success:false,
-            message:"获取用户榜单失败"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取用户榜单失败")
     }
 }

@@ -20,10 +20,11 @@ const FoodList = ({searchQuery=""}) => {
             :`/API/Post`
 
         const response = await fetch(url, { cache: 'no-store' })
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data;
 
         //防御性测试，确保拿到的是数组
-        setPostData(Array.isArray(data)?data:[])
+        setPostData(result.success && Array.isArray(data)?data:[])
       }catch(error){
           console.error("获取帖子失败：",error);
       }finally{

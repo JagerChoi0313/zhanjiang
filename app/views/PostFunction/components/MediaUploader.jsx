@@ -63,12 +63,13 @@ const MediaUploader=({images,setImages})=>{
             const data = await res.json();
 
             if(data.success){
+                const uploadedUrl = data.data?.url;
                 //上传成功：更新预览列表，并同步结果给主页面
                 setPreviewList(prev=>prev.map(item=>
-                    item.id === previewItem.id ? {...item,status:'success',remoteUrl:data.url} : item
+                    item.id === previewItem.id ? {...item,status:'success',remoteUrl:uploadedUrl} : item
                 ));
                 //同步给主页面数据表需要的数组
-                setImages(prev=>[...prev,data.url]);
+                setImages(prev=>[...prev,uploadedUrl]);
             }else{
                 throw new Error('上传失败')
             }

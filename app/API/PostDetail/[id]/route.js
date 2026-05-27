@@ -1,9 +1,9 @@
 import {db} from "../../../../database/index"
 import {posts} from "../../../../database/schema"
 import {eq} from 'drizzle-orm'
-import {NextResponse} from "next/server"
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
 import {verifyToken} from "../../../../lib/jwt"
+import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 
 
 //帖子详情以及包含所有评论
@@ -37,23 +37,14 @@ export async function GET(request,{params}){
 
         //防御性判断：如果数据库里没有这个ID，返回404
         if(!result){
-            return NextResponse.json({
-                success:false,
-                message:"未找到帖子"
-            },{status:404})
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到帖子")
         }
 
         //4,成功找到，返回这条帖子的完整数据对象
-        return NextResponse.json({
-            success:true,
-            data:result
-        })
+        return ApiResponse.success(result)
     }catch(error){
         console.error("Fetch post detail error:",error);
-        return NextResponse.json({
-            success:false,
-            message:"服务器读取数据失败"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器读取数据失败")
     }
 }
 
@@ -66,19 +57,13 @@ export async function POST(request,{params}){
         const token = request.cookies.get('auth_token')?.value
 
         if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录后再发表评论"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录后再发表评论")
         }
 
         const payload = await verifyToken(token)
 
         if(!payload){
-            return NextResponse({
-                success:false,
-                message:"登录失效，请重新登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录失效，请重新登录")
         }
 
         const userId = payload.userId
@@ -89,10 +74,7 @@ export async function POST(request,{params}){
 
         //基础防御：防空值提交
         if(!content || !content.trim()){
-            return NextResponse.json({
-                success:false,
-                message:"评论内容不能为空"
-            },{status:400})
+            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "评论内容不能为空")
         }
 
         //执行插入数据库操作
@@ -103,9 +85,9 @@ export async function POST(request,{params}){
         })
 
         //插入成功后返回给前端
-        return NextResponse.json({success:true,message:"评论发表成功"})
+        return ApiResponse.success(undefined, "评论发表成功")
     }catch(error){
         console.error("Submit comment error",error)
-        return NextResponse.json({success:false,message:"评论发表失败"},{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "评论发表失败")
     }
 }

@@ -1,11 +1,11 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {desc} from 'drizzle-orm'
-import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
 import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 
 // GET请求，获取所有的帖子
@@ -81,10 +81,10 @@ export async function GET(request){
             .groupBy(posts.id,Users.nickname,Users.avatar)
             .orderBy(desc(posts.createdAt))
 
-        return NextResponse.json(allPosts);
+        return ApiResponse.success(allPosts);
     } catch(error) {
         console.error("Fetch error:", error)
-        return NextResponse.json({error: "数据库读取失败"}, {status: 500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "数据库读取失败")
     }
 }
 
@@ -94,21 +94,15 @@ export async function POST(request){
     try{
         
         //从cookies中提取通行证并解密身份
-        const token = request.cookies.get('auth_token')?.values
+        const token = request.cookies.get('auth_token')?.value
         if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
         }
 
         const payload = await verifyToken(token)
         
         if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录失效，请重新登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录失效，请重新登录")
         }
 
         //提取出经过后端校验，绝无可能被前端篡改的用户ID
@@ -132,16 +126,9 @@ export async function POST(request){
             createdAt:new Date()
         });
 
-        return NextResponse.json({
-            success:true,
-            message:"发布成功",
-            postId:result.insertId
-        })
+        return ApiResponse.created({postId:result.insertId}, "发布成功")
     }catch(error){
             console.error("Post error:",error);
-            return NextResponse.json({
-                success:false,
-                message:"发布失败"
-            },{status:500})
+            return ApiResponse.error(ErrorCode.DATABASE_ERROR, "发布失败")
     }
 }

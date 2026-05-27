@@ -48,7 +48,7 @@ const MyCommentsContent=()=>{
                 setIsAuthorized(true)   //确认身份合法
                 setCommentList(result.data);
                 // 确保后端返回的是 pagination.totalPages
-                setTotalPages(result.pagination?.totalPages || 1);
+                setTotalPages(result.meta?.pagination?.totalPages || 1);
             }
         } catch (error) {
             console.error("Failed to fetch Comment:", error)

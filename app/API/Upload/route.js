@@ -1,10 +1,10 @@
 //投稿功能中“图片上传”的实现
 // 先把文件存到你的服务器 public/uploads 文件夹或者云存储，拿到 URL 后再塞进这个 POST 接口。
 
-import {NextResponse} from "next/server"
 import {writeFile} from 'fs/promises'   //专门用于异步写入文件的工具
 import {join} from 'path'               //用于智能拼接文件路径（兼容windows和Mac）
 import {v4 as uuidv4} from 'uuid'       //生成全球唯一标识符，防止文件名重复
+import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 
 export async function POST(request){
     try{
@@ -12,10 +12,7 @@ export async function POST(request){
         const file = formData.get('file');      //从表单中提取key为‘file’的内容
 
         if(!file){
-            return NextResponse.json({
-                success:false,
-                message:"未找到文件"
-            },{status:400})
+            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "未找到文件")
         }
 
         //核心步骤：将文件转化为二进制数组缓冲区（ArrayBuffer）
@@ -45,18 +42,14 @@ export async function POST(request){
 
         console.log(`文件已保存至：${path}`)
 
-        return NextResponse.json({
-            success:true,
+        return ApiResponse.success({
             url:fileUrl     //前端拿到这个后，再去提交给/API/Post接口
         })
 
 
     }catch(error){
         console.error('Upload Error:',error)
-        return NextResponse.json({
-            success:false,
-            message:'服务器上传失败'
-        },{status:500})
+        return ApiResponse.error(ErrorCode.UPLOAD_ERROR, '服务器上传失败')
     }
 }
 

@@ -1,28 +1,22 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {eq,desc,sql} from 'drizzle-orm'
-import {NextResponse} from 'next/server'
 import {verifyToken} from "../../../lib/jwt"
 import {and,like,or} from "drizzle-orm"
+import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 
 export async function GET(request){
     try{
         //1.解密并提取token
         const token = await request.cookies.get('auth_token')?.value
         if(!token){
-            return NextResponse({
-                success:false,
-                message:"未登录，请先登录"
-            })
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
         }
 
         const payload = await verifyToken(token)
 
         if(!payload){
-            return NextResponse({
-                success:false,
-                message:"已过期，请重新登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "已过期，请重新登录")
         }
 
         const userId = payload.userId;
@@ -64,22 +58,18 @@ export async function GET(request){
         .limit(pageSize)
         .offset(offset)
 
-        return NextResponse.json({
-            success:true,
-            data:myPosts,
-            pagination: {
+        return ApiResponse.paginated(
+            myPosts,
+            {
                 totalCount: totalCount,
                 pageSize: pageSize,
                 totalPages: Math.ceil(totalCount / pageSize),
                 currentPage: page
             }
-        },{status:200})
+        )
 
     }catch(error){
         console.error("Fetch MyPosts error:",error)
-        return NextResponse.json({
-            success:false,
-            message:"获取数据失败"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取数据失败")
     }
 }

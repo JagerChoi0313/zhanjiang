@@ -54,7 +54,7 @@ const PostConfig = ({category,setCategory,location,setLocation,coverImage,setCov
     const res = await fetch('/API/Upload',{method:'POST',body:formData})
     const data = await res.json();
     if(data.success){
-      setCoverImage(data.url)
+      setCoverImage(data.data?.url)
     }else{
       alert("封面上传失败")
     }

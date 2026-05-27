@@ -39,10 +39,11 @@ function MyPostContent() {
 
       if (result.success) {
         setPosts(result.data);
-        if(result.pagination?.totalPages > 0) {
+        const pageInfo = result.meta?.pagination;
+        if(pageInfo) {
            setPagination({
-             totalPages: result.pagination.totalPages,
-             currentPage: result.pagination.currentPage
+             totalPages: pageInfo.totalPages || 1,
+             currentPage: pageInfo.currentPage
            });
         }
       }

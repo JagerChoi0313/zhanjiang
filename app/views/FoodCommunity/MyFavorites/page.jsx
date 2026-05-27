@@ -44,10 +44,11 @@ function MyFavoritesContent() {
         setIsAuthorized(true);
         setFavorites(result.data);
 
-        if(result.pagination) {
+        const pageInfo = result.meta?.pagination;
+        if(pageInfo) {
            setPagination({
-             totalPages: result.pagination.totalPages || result.pagination.totalPage || 1, 
-             currentPage: result.pagination.currentPage
+             totalPages: pageInfo.totalPages || 1,
+             currentPage: pageInfo.currentPage
            });
         }
       }

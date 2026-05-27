@@ -45,7 +45,7 @@ const UserProfilePage=()=>{
         const followData = await followRes.json();
 
         if (followData.success) {
-          setIsFollowing(followData.isFollowing);
+          setIsFollowing(followData.data?.isFollowing);
         }
       } catch (error) {
         console.error(error);
@@ -69,8 +69,9 @@ const UserProfilePage=()=>{
       
       if (data.success) {
         message.success(data.message);
-        setIsFollowing(data.isFollowing);
-        setFollowerCount(prev => data.isFollowing ? prev + 1 : prev - 1);
+        const nextIsFollowing = data.data?.isFollowing;
+        setIsFollowing(nextIsFollowing);
+        setFollowerCount(prev => nextIsFollowing ? prev + 1 : prev - 1);
       } else {
         message.error(data.message);
       }

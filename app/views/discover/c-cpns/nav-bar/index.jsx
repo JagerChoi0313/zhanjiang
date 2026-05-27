@@ -20,7 +20,7 @@ const NavBar = () => {
         const data = await res.json()
 
         if(data.success){
-          setUser(data.user);//查验成功，存入用户的信息
+          setUser(data.data?.user);//查验成功，存入用户的信息
         }
       }catch(error){
         console.error("导航栏身份查验失败:",error)

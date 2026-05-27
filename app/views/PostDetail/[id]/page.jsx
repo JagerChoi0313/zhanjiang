@@ -56,8 +56,8 @@ const PostDetail=({params})=>{
             const data = await res.json()
 
             //如果后端返回了状态就更新到前端的星星上
-            if(data.isFavorited!==undefined){
-                setIsFavorited(data.isFavorited)
+            if(data.data?.isFavorited!==undefined){
+                setIsFavorited(data.data.isFavorited)
             }
 
         }catch(error){
@@ -89,7 +89,7 @@ const PostDetail=({params})=>{
 
             if(data.success){
                 //切换前端按钮收藏状态：
-                setIsFavorited(data.isFavorited);
+                setIsFavorited(data.data?.isFavorited);
             }else{
                 alert(data.message)
             }

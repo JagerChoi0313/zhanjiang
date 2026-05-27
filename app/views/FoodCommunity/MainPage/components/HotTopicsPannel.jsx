@@ -70,13 +70,14 @@ const styles = {
         const fetchTopics = async () => {
             try {
                 const res = await fetch('/API/HotTopics');
-                const data = await res.json();
+                const result = await res.json();
+                const data = result.data;
                 
-                if (Array.isArray(data)) {
+                if (result.success && Array.isArray(data)) {
                     setTopics(data);
                 } else {
                     setTopics([]); 
-                    console.error("后端返回了错误格式:", data);
+                    console.error("后端返回了错误格式:", result);
                 }
             } catch (error) {
                 console.error("网络请求失败:", error);

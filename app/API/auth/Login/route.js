@@ -1,9 +1,9 @@
 import {db} from '../../../../database/index'       //你的数据库连接实例
 import {Users,posts,Comments,Favorites,Follows} from '../../../../database/schema'   //你的数据库的表定义
 import {eq,and,count} from 'drizzle-orm'            
-import {NextResponse} from "next/server"            //Next.js提供的响应式回复工具
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {verifyToken} from "../../../../lib/jwt"     //解析token的工具
+import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
 
 export async function POST(request){        // 必须叫 POST，对应前端的 method:'POST'
 
@@ -35,9 +35,7 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
             const token = await signToken(tokenPayload)
 
             //构造Next.js的响应对象
-            const response = NextResponse.json({
-                success:true,
-                message:"登录成功",
+            const response = ApiResponse.success({
                 user:{
                     userId:user.userId,
                     nickname:user.nickname,
@@ -47,7 +45,7 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
                     phoneNumber:user.phoneNumber,
                     email:user.email
                 }
-            })
+            }, "登录成功")
 
             //4.将Token种入HttpOnly Cookie
             response.cookies.set({
@@ -64,17 +62,11 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
             return response;
 
         }else{
-            return NextResponse.json(
-                {success:false,error:"邮箱或密码错误"},
-                {status:401}
-            )
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "邮箱或密码错误")
         }
     }catch(error){
         console.error("登录操作失败:",error)
-        return NextResponse.json(
-            {success:false,error:"服务器内部错误"},
-            {status:500}
-        )
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器内部错误")
     }
 }
 
@@ -85,20 +77,14 @@ export async function GET(request){
 
         //如果没有token说明没登录
         if(!token){
-            return NextResponse.json({
-                success:false,
-                error:"未登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录")
         }
 
         //校验token是否有效或过期
         const payload=await verifyToken(token)
 
         if(!payload){
-            return NextResponse.json({
-                success:false,
-                error:"登录已失效，请重新登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已失效，请重新登录")
         }
         
         //既然token里面有个userId，那就拿着这个userId去数据库里调出完整的资料
@@ -108,10 +94,7 @@ export async function GET(request){
         .limit(1)
 
         if(dbUserList.length === 0){
-            return NextResponse.json({
-                success:false,
-                error:"该食客不存在"
-            },{status:404})
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "该食客不存在")
         }
 
         const currentUser = dbUserList[0];
@@ -124,8 +107,7 @@ export async function GET(request){
             db.select({value:count()}).from(Follows).where(eq(Follows.followingId,payload.userId))  // 计算有多少人关注了我
         ])
         //校验通过，返回解析出的用户信息（供前端渲染和个人主页）
-        return NextResponse.json({
-            success:true,
+        return ApiResponse.success({
             user:{
                 userId: currentUser.userId,
                 nickname: currentUser.nickname,
@@ -147,9 +129,6 @@ export async function GET(request){
 
     }catch(error){
         console.error("获取当前登录状态失败：",error)
-        return NextResponse.json({
-            success:false,
-            error:"服务器内部错误"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器内部错误")
     }
 }

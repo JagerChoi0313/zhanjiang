@@ -1,10 +1,10 @@
 "use server"
 import {db} from '../../../database/index'
-import {Favorites,posts,Users,Comments} from  '../../../database/schema'
+import {Favorites,posts,Users} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
-import {NextResponse} from 'next/server'
 import {verifyToken} from '../../../lib/jwt' //引入解密工具
 import {like,or} from 'drizzle-orm'
+import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 
 
 //如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
@@ -13,18 +13,12 @@ export async function GET(request){
         //1.核心鉴权：从Cookies中提取通行证并解密真实的身份
         const token = request.cookies.get('auth_token')?.value
         if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
         }
         
         const payload = await verifyToken(token)
         if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录已经失效，请重新登录"
-            },{status:401})
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已经失效，请重新登录")
         }
 
         const userId = payload.userId   //获取真实的用户Id
@@ -46,7 +40,7 @@ export async function GET(request){
                 )
             );
             //查到了就是true，没查到就是false
-            return NextResponse.json({isFavorited:existingFavorite.length>0},{status:200})
+            return ApiResponse.success({isFavorited:existingFavorite.length>0})
         }
 
         //抓取关键词
@@ -105,23 +99,19 @@ export async function GET(request){
             .offset(offset)
 
         //返回标准响应式结构
-        return NextResponse.json({
-            success:true,
-            data:data,
-            pagination:{
+        return ApiResponse.paginated(
+            data,
+            {
                 totalCount:totalCount,
                 pageSize:pageSize,
-                totalPage:Math.ceil(totalCount/pageSize),
+                totalPages:Math.ceil(totalCount/pageSize),
                 currentPage:page
             }
-        },{status:200})
+        )
 
     }catch(error){
         console.error("Fetch Favorites Error:",error)
-        return NextResponse.json({
-            success:false,
-            message:"获取收藏列表失败",
-        },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取收藏列表失败")
     }
 }
 
@@ -132,19 +122,13 @@ export async function POST(request){
         //1.核心鉴权：绝对不信任前端传的userId，必须后端亲自解密
         const token = request.cookies.get('auth_token') ?.value
         if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录"
-            })
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
         }
 
         const payload = await verifyToken(token)
 
         if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录已失效，请重新登录"
-            })
+            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已失效，请重新登录")
         }
 
         const userId = payload.userId;//提取真实ID
@@ -156,10 +140,7 @@ export async function POST(request){
         
         //基础防御：
         if(!postId){
-            return NextResponse.json({
-                success:false,
-                message:"参数不完整，缺少postid"
-            },{status:400})
+            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "参数不完整，缺少postid")
         }
 
         //去数据库里查一下看看有没有这个帖子
@@ -178,11 +159,7 @@ export async function POST(request){
                 //2.如果查到了数据（说明已经收藏过了），这次点击就是取消收藏
                 await db.delete(Favorites)
                         .where(eq(Favorites.id,existingFavorite[0].id))
-                return NextResponse.json({
-                    success:true,
-                    message:"已取消收藏",
-                    isFavorited:false   //告诉前端现在是未收藏状态
-                })
+                return ApiResponse.success({isFavorited:false}, "已取消收藏")
             }else{
                 //如果还没查到数据（说明还没收藏），这次点击就是添加收藏
                 await db.insert(Favorites).values({
@@ -190,17 +167,10 @@ export async function POST(request){
                     userId:userId   //直接解析后端传进来的真实ID
                 });
 
-                return NextResponse.json({
-                    success:true,
-                    message:"收藏成功",
-                    isFavorited:true
-                })
+                return ApiResponse.success({isFavorited:true}, "收藏成功")
             }
     }catch(error){
                 console.error("Favorite action error:",error)
-                return NextResponse.json({
-                    success:false,
-                    message:"收藏操作失败"
-                },{status:500})
+                return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "收藏操作失败")
     }
 }
