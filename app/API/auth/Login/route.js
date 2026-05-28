@@ -4,11 +4,23 @@ import {eq,and,count} from 'drizzle-orm'
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {verifyToken} from "../../../../lib/jwt"     //解析token的工具
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
+import {
+    ApiValidationError,
+    isEmail,
+    readJsonBody,
+    requiredString,
+    toApiValidationResponse,
+} from "../../../../lib/api-validation.mjs"
 
 export async function POST(request){        // 必须叫 POST，对应前端的 method:'POST'
 
     try{
-        const {email,password} = await request.json();
+        const body = await readJsonBody(request)
+        const email = requiredString(body.email, "邮箱")
+        if (!isEmail(email)) {
+            throw new ApiValidationError("邮箱格式不正确")
+        }
+        const password = requiredString(body.password, "密码")
 
         //在user中同时查找邮箱和密码匹配同时匹配的记录
         const userList = await db.select()      // 我要查询数据
@@ -65,6 +77,9 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
             return ApiResponse.error(ErrorCode.UNAUTHORIZED, "邮箱或密码错误")
         }
     }catch(error){
+        if (error instanceof ApiValidationError) {
+            return toApiValidationResponse(error)
+        }
         console.error("登录操作失败:",error)
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器内部错误")
     }

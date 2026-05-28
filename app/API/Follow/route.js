@@ -3,6 +3,12 @@ import {Follows} from "../../../database/schema"
 import {eq,and} from "drizzle-orm"
 import {verifyToken} from  "../../../lib/jwt"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {
+    ApiValidationError,
+    positiveInt,
+    readJsonBody,
+    toApiValidationResponse,
+} from "../../../lib/api-validation.mjs"
 
 export async function GET(request){
     try{
@@ -20,11 +26,7 @@ export async function GET(request){
         const currentUserId = payload.userId
 
         const {searchParams} = new URL(request.url)
-        const targetUserId = searchParams.get("targetId")
-
-        if(!targetUserId){
-            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "缺少目标用户id")
-        }
+        const targetUserId = positiveInt(searchParams.get("targetId"), "目标用户id")
 
         //去数据库查有没有这条记录
         const existingFollow = await db
@@ -33,7 +35,7 @@ export async function GET(request){
             .where(
                 and(
                     eq(Follows.followerId,currentUserId),
-                    eq(Follows.followingId,parseInt(targetUserId))
+                    eq(Follows.followingId,targetUserId)
                 )
             )
 
@@ -42,6 +44,9 @@ export async function GET(request){
             })
 
     }catch(error){
+            if(error instanceof ApiValidationError){
+                return toApiValidationResponse(error)
+            }
             console.error("Check follow status error:",error)
             return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "检查状态失败")
     }
@@ -62,14 +67,10 @@ export async function POST(request){
         }
 
         const currentUserId = payload.userId
-        const body = await request.json()
-        const {targetId} = body
+        const body = await readJsonBody(request)
+        const targetId = positiveInt(body.targetId, "目标用户ID")
 
-        if(!targetId){
-            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "缺少目标用户ID")
-        }
-
-        if(currentUserId === parseInt(targetId)){
+        if(Number(currentUserId) === targetId){
             return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "不能关注自己哦")
         }
 
@@ -80,7 +81,7 @@ export async function POST(request){
             .where(
                 and(
                     eq(Follows.followerId,currentUserId),
-                    eq(Follows.followingId,parseInt(targetId))
+                    eq(Follows.followingId,targetId)
                 )
             )
 
@@ -97,7 +98,7 @@ export async function POST(request){
             //没有关注过，则添加关注
             await db.insert(Follows).values({
                 followerId:currentUserId,
-                followingId:parseInt(targetId)
+                followingId:targetId
             })
 
             return ApiResponse.success({
@@ -106,6 +107,9 @@ export async function POST(request){
         }
 
     }catch(error){
+            if(error instanceof ApiValidationError){
+                return toApiValidationResponse(error)
+            }
             console.error("Follow action error:",error);
             return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "操作失败，请重试")
     }

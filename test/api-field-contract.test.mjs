@@ -39,3 +39,35 @@ test("api error responses do not expose raw exception messages", () => {
 
   assert.equal(matches, "");
 });
+
+test("hardened api routes use shared validation helpers", () => {
+  const routes = [
+    "app/API/auth/Login/route.js",
+    "app/API/auth/Register/route.js",
+    "app/API/auth/UpdateProfile/route.js",
+    "app/API/Post/route.js",
+    "app/API/Follow/route.js",
+    "app/API/MyFavorites/route.js",
+    "app/API/Upload/route.js",
+  ];
+
+  const missingImports = routes.filter((route) => !rg("api-validation\\.mjs", [route]));
+
+  assert.deepEqual(missingImports, []);
+});
+
+test("hardened json routes parse request bodies through readJsonBody", () => {
+  const matches = rg(
+    "request\\.json\\(",
+    [
+      "app/API/auth/Login/route.js",
+      "app/API/auth/Register/route.js",
+      "app/API/auth/UpdateProfile/route.js",
+      "app/API/Post/route.js",
+      "app/API/Follow/route.js",
+      "app/API/MyFavorites/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});

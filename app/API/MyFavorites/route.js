@@ -5,6 +5,12 @@ import {eq,desc,sql,and} from 'drizzle-orm'
 import {verifyToken} from '../../../lib/jwt' //引入解密工具
 import {like,or} from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
+import {
+    ApiValidationError,
+    positiveInt,
+    readJsonBody,
+    toApiValidationResponse,
+} from '../../../lib/api-validation.mjs'
 
 
 //如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
@@ -28,14 +34,15 @@ export async function GET(request){
         
         //判断是不是单篇帖子来查岗
         const checkPostId = searchParams.get("postId")
-        if(checkPostId){
+        if(searchParams.has("postId")){
+            const postId = positiveInt(checkPostId, "帖子ID")
             //如果传了PostId，就去查这个人有没有收藏过这篇帖子
             const existingFavorite = await db
             .select()
             .from(Favorites)
             .where(
                 and(
-                    eq(Favorites.postId,parseInt(checkPostId)),//parseInt:把一个字符串转换为一个整数
+                    eq(Favorites.postId,postId),
                     eq(Favorites.userId,userId)
                 )
             );
@@ -46,7 +53,8 @@ export async function GET(request){
         //抓取关键词
         const keyword = searchParams.get('q')
 
-        const page = parseInt(searchParams.get("page")) || 1;  // 如果没传 page，默认就是第 1 页
+        const pageParam = searchParams.get("page")
+        const page = pageParam === null ? 1 : positiveInt(pageParam, "页码");  // 如果没传 page，默认就是第 1 页
         const pageSize=4;   // 每页只显示 4 条
         const offset = (page-1)*pageSize;       // 计算跳过多少条。比如第2页，就跳过前4条。
 
@@ -110,6 +118,9 @@ export async function GET(request){
         )
 
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch Favorites Error:",error)
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取收藏列表失败")
     }
@@ -135,13 +146,8 @@ export async function POST(request){
 
 
         
-        const body = await request.json();
-        const {postId} = body;      //千万不要相信前端传过来userid
-        
-        //基础防御：
-        if(!postId){
-            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "参数不完整，缺少postid")
-        }
+        const body = await readJsonBody(request);
+        const postId = positiveInt(body.postId, "帖子ID")      //千万不要相信前端传过来userid
 
         //去数据库里查一下看看有没有这个帖子
         //使用and（）必须同时满足：帖子Id匹配且用户Id匹配
@@ -150,7 +156,7 @@ export async function POST(request){
             .from(Favorites)
             .where(
                 and(
-                    eq(Favorites.postId,parseInt(postId)),
+                    eq(Favorites.postId,postId),
                     eq(Favorites.userId,userId)
                 )
             )
@@ -163,13 +169,16 @@ export async function POST(request){
             }else{
                 //如果还没查到数据（说明还没收藏），这次点击就是添加收藏
                 await db.insert(Favorites).values({
-                    postId:parseInt(postId),
+                    postId:postId,
                     userId:userId   //直接解析后端传进来的真实ID
                 });
 
                 return ApiResponse.success({isFavorited:true}, "收藏成功")
             }
     }catch(error){
+                if(error instanceof ApiValidationError){
+                    return toApiValidationResponse(error)
+                }
                 console.error("Favorite action error:",error)
                 return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "收藏操作失败")
     }
