@@ -2,9 +2,9 @@
 import {db} from '../../../database/index'
 import {Favorites,posts,Users} from  '../../../database/schema'
 import {eq,desc,sql,and} from 'drizzle-orm'
-import {verifyToken} from '../../../lib/jwt' //引入解密工具
 import {like,or} from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
+import {requireAuth} from '../../../lib/api-auth.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -16,18 +16,15 @@ import {
 //如果前端传了postId进来，我们就只查询单篇帖子的收藏状态
 export async function GET(request){
     try{
-        //1.核心鉴权：从Cookies中提取通行证并解密真实的身份
-        const token = request.cookies.get('auth_token')?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
-        }
-        
-        const payload = await verifyToken(token)
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已经失效，请重新登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录已经失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const userId = payload.userId   //获取真实的用户Id
+        const userId = auth.userId   //获取真实的用户Id
 
         // 解析 URL 里的参数，比如 /api/my-favorites?page=2
         const {searchParams} = new URL(request.url);  
@@ -130,19 +127,15 @@ export async function GET(request){
 //POST接口：处理帖子的“收藏/取消收藏”的功能
 export async function POST(request){
     try{
-        //1.核心鉴权：绝对不信任前端传的userId，必须后端亲自解密
-        const token = request.cookies.get('auth_token') ?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录已失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已失效，请重新登录")
-        }
-
-        const userId = payload.userId;//提取真实ID
+        const userId = auth.userId;//提取真实ID
 
 
         

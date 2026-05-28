@@ -1,8 +1,8 @@
 import {db} from "../../../database/index"
 import {Follows} from "../../../database/schema"
 import {eq,and} from "drizzle-orm"
-import {verifyToken} from  "../../../lib/jwt"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {requireAuth} from "../../../lib/api-auth.mjs"
 import {
     ApiValidationError,
     positiveInt,
@@ -12,18 +12,15 @@ import {
 
 export async function GET(request){
     try{
-        const token = request.cookies.get('auth_token')?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录过期，请重新登录")
-        }
-
-        const currentUserId = payload.userId
+        const currentUserId = auth.userId
 
         const {searchParams} = new URL(request.url)
         const targetUserId = positiveInt(searchParams.get("targetId"), "目标用户id")
@@ -55,18 +52,15 @@ export async function GET(request){
 //post接口：处理“关注”和“取消关注”
 export async function POST(request){
     try{
-        const token=request.cookies.get('auth_token')?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录过期，请重新登录")
-        }
-
-        const currentUserId = payload.userId
+        const currentUserId = auth.userId
         const body = await readJsonBody(request)
         const targetId = positiveInt(body.targetId, "目标用户ID")
 

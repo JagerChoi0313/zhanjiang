@@ -71,3 +71,21 @@ test("hardened json routes parse request bodies through readJsonBody", () => {
 
   assert.equal(matches, "");
 });
+
+test("authenticated api routes use the shared auth helper", () => {
+  const matches = rg(
+    "cookies\\.get\\(['\"]auth_token['\"]\\)|verifyToken\\(",
+    [
+      "app/API/auth/Login/route.js",
+      "app/API/auth/UpdateProfile/route.js",
+      "app/API/Follow/route.js",
+      "app/API/MyFavorites/route.js",
+      "app/API/MyComments/route.js",
+      "app/API/MyPost/route.js",
+      "app/API/Post/route.js",
+      "app/API/PostDetail/[id]/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});

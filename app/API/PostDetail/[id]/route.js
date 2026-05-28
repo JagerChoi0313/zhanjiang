@@ -2,8 +2,8 @@ import {db} from "../../../../database/index"
 import {posts} from "../../../../database/schema"
 import {eq} from 'drizzle-orm'
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
-import {verifyToken} from "../../../../lib/jwt"
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
+import { requireAuth } from "../../../../lib/api-auth.mjs"
 
 
 //帖子详情以及包含所有评论
@@ -54,19 +54,15 @@ export async function POST(request,{params}){
     try{
         const {id:postId} = await params
 
-        const token = request.cookies.get('auth_token')?.value
-
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录后再发表评论")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录后再发表评论",
+            invalidMessage: "登录失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录失效，请重新登录")
-        }
-
-        const userId = payload.userId
+        const userId = auth.userId
 
         //解析前端发来的JSON数据体
         const body = await request.json()

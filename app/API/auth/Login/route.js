@@ -2,8 +2,8 @@ import {db} from '../../../../database/index'       //你的数据库连接实�
 import {Users,posts,Comments,Favorites,Follows} from '../../../../database/schema'   //你的数据库的表定义
 import {eq,and,count} from 'drizzle-orm'            
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
-import {verifyToken} from "../../../../lib/jwt"     //解析token的工具
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
+import {requireAuth} from "../../../../lib/api-auth.mjs"
 import {
     ApiValidationError,
     isEmail,
@@ -87,25 +87,18 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
 
 export async function GET(request){
     try{
-        //从请求头中提取名为 auth_token的Cookie
-        const token = request.cookies.get('auth_token')?.value
-
-        //如果没有token说明没登录
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录")
-        }
-
-        //校验token是否有效或过期
-        const payload=await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已失效，请重新登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录",
+            invalidMessage: "登录已失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
         
         //既然token里面有个userId，那就拿着这个userId去数据库里调出完整的资料
         const dbUserList = await db.select()
         .from(Users)
-        .where(eq(Users.userId,payload.userId))
+        .where(eq(Users.userId,auth.userId))
         .limit(1)
 
         if(dbUserList.length === 0){
@@ -115,11 +108,11 @@ export async function GET(request){
         const currentUser = dbUserList[0];
 
         const [postCountRes,commentCountRes,favoriteCountRes,followingCountRes,followerCountRes] = await Promise.all([
-            db.select({value:count()}).from(posts).where(eq(posts.userId,payload.userId)),
-            db.select({value:count()}).from(Comments).where(eq(Comments.userId,payload.userId)),
-            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,payload.userId)),
-            db.select({value:count()}).from(Follows).where(eq(Follows.followerId,payload.userId)), // 计算我关注了多少人
-            db.select({value:count()}).from(Follows).where(eq(Follows.followingId,payload.userId))  // 计算有多少人关注了我
+            db.select({value:count()}).from(posts).where(eq(posts.userId,auth.userId)),
+            db.select({value:count()}).from(Comments).where(eq(Comments.userId,auth.userId)),
+            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,auth.userId)),
+            db.select({value:count()}).from(Follows).where(eq(Follows.followerId,auth.userId)), // 计算我关注了多少人
+            db.select({value:count()}).from(Follows).where(eq(Follows.followingId,auth.userId))  // 计算有多少人关注了我
         ])
         //校验通过，返回解析出的用户信息（供前端渲染和个人主页）
         return ApiResponse.success({

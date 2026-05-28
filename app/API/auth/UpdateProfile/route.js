@@ -1,8 +1,8 @@
 import { db } from '../../../../database/index'
 import { Users } from '../../../../database/schema'
 import { eq } from 'drizzle-orm'
-import { verifyToken } from "../../../../lib/jwt"
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
+import { requireAuth } from "../../../../lib/api-auth.mjs"
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -17,17 +17,15 @@ import {
 export async function POST(request) {
     try {
         // 1. 鉴权：查验身份
-        const token = request.cookies.get('auth_token')?.value
-        if (!token) {
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，无法修改资料")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，无法修改资料",
+            invalidMessage: "登录已失效，请重新登录",
+        })
+        if (!auth.ok) {
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-        if (!payload) {
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录已失效，请重新登录")
-        }
-
-        const currentUserId = payload.userId
+        const currentUserId = auth.userId
 
         // 2. 接收前端传来的数据（严格只拿这5个字段）
         const body = await readJsonBody(request)

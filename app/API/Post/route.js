@@ -1,11 +1,11 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {desc} from 'drizzle-orm'
-import {verifyToken} from '../../../lib/jwt'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
 import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
 import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
+import {requireAuth} from '../../../lib/api-auth.mjs'
 import {
     ApiValidationError,
     optionalString,
@@ -100,20 +100,16 @@ export async function GET(request){
 export async function POST(request){
     try{
         
-        //从cookies中提取通行证并解密身份
-        const token = request.cookies.get('auth_token')?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
-        }
-
-        const payload = await verifyToken(token)
-        
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "登录失效，请重新登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
         //提取出经过后端校验，绝无可能被前端篡改的用户ID
-        const userId = payload.userId;
+        const userId = auth.userId;
 
         const body = await readJsonBody(request);
         const title = requiredString(body.title, "标题", {maxLength:255})

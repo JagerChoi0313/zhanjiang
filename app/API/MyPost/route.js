@@ -1,25 +1,21 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {eq,desc,sql} from 'drizzle-orm'
-import {verifyToken} from "../../../lib/jwt"
 import {and,like,or} from "drizzle-orm"
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
+import { requireAuth } from '../../../lib/api-auth.mjs'
 
 export async function GET(request){
     try{
-        //1.解密并提取token
-        const token = await request.cookies.get('auth_token')?.value
-        if(!token){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "未登录，请先登录")
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "已过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return ApiResponse.error(ErrorCode.UNAUTHORIZED, "已过期，请重新登录")
-        }
-
-        const userId = payload.userId;
+        const userId = auth.userId;
 
         //解析分页参数
         const { searchParams } = new URL(request.url);
