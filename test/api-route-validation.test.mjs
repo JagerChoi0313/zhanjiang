@@ -69,7 +69,10 @@ const LoginRoute = await import("../app/API/auth/Login/route.js");
 const RegisterRoute = await import("../app/API/auth/Register/route.js");
 const FollowRoute = await import("../app/API/Follow/route.js");
 const MyFavoritesRoute = await import("../app/API/MyFavorites/route.js");
+const MyCommentsRoute = await import("../app/API/MyComments/route.js");
+const MyPostRoute = await import("../app/API/MyPost/route.js");
 const PostRoute = await import("../app/API/Post/route.js");
+const PostDetailRoute = await import("../app/API/PostDetail/[id]/route.js");
 const UploadRoute = await import("../app/API/Upload/route.js");
 
 const resetState = () => {
@@ -331,6 +334,60 @@ test("MyFavorites rejects invalid postId and page parameters", async () => {
       status: 400,
       code: ErrorCode.VALIDATION_ERROR,
       message: "帖子ID必须是正整数",
+    },
+  );
+});
+
+test("MyComments and MyPost reject invalid page parameters", async () => {
+  resetState();
+
+  await assertApiError(
+    await MyCommentsRoute.GET(jsonRequest(undefined, {
+      url: "http://localhost/API/MyComments?page=abc",
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "页码必须是正整数",
+    },
+  );
+
+  await assertApiError(
+    await MyPostRoute.GET(jsonRequest(undefined, {
+      url: "http://localhost/API/MyPost?page=0",
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "页码必须是正整数",
+    },
+  );
+});
+
+test("PostDetail comments reject invalid post ids and blank content", async () => {
+  resetState();
+
+  await assertApiError(
+    await PostDetailRoute.POST(
+      jsonRequest({ content: "好吃" }),
+      { params: Promise.resolve({ id: "abc" }) },
+    ),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "帖子ID必须是正整数",
+    },
+  );
+
+  await assertApiError(
+    await PostDetailRoute.POST(
+      jsonRequest({ content: "   " }),
+      { params: Promise.resolve({ id: "1" }) },
+    ),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "评论内容不能为空",
     },
   );
 });

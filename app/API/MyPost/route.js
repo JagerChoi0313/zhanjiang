@@ -4,6 +4,11 @@ import {eq,desc,sql} from 'drizzle-orm'
 import {and,like,or} from "drizzle-orm"
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import { requireAuth } from '../../../lib/api-auth.mjs'
+import {
+    ApiValidationError,
+    positiveInt,
+    toApiValidationResponse,
+} from '../../../lib/api-validation.mjs'
 
 export async function GET(request){
     try{
@@ -20,7 +25,8 @@ export async function GET(request){
         //解析分页参数
         const { searchParams } = new URL(request.url);
         const keyword = searchParams.get('q');//抓取关键字
-        const page = parseInt(searchParams.get("page")) || 1;  
+        const pageParam = searchParams.get("page");
+        const page = pageParam === null ? 1 : positiveInt(pageParam, "页码");
         const pageSize = 4; // 严格控制为4条，配合前端的一页无滚动条排版
         const offset = (page - 1) * pageSize;
 
@@ -65,6 +71,9 @@ export async function GET(request){
         )
 
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch MyPosts error:",error)
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取数据失败")
     }

@@ -48,6 +48,7 @@ test("hardened api routes use shared validation helpers", () => {
     "app/API/Post/route.js",
     "app/API/Follow/route.js",
     "app/API/MyFavorites/route.js",
+    "app/API/PostDetail/[id]/route.js",
     "app/API/Upload/route.js",
   ];
 
@@ -64,7 +65,21 @@ test("hardened json routes parse request bodies through readJsonBody", () => {
       "app/API/auth/Register/route.js",
       "app/API/auth/UpdateProfile/route.js",
       "app/API/Post/route.js",
+      "app/API/PostDetail/[id]/route.js",
       "app/API/Follow/route.js",
+      "app/API/MyFavorites/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("paginated api routes reject legacy parseInt page fallbacks", () => {
+  const matches = rg(
+    "parseInt\\(searchParams\\.get\\(\"page\"\\)\\) \\|\\| 1",
+    [
+      "app/API/MyComments/route.js",
+      "app/API/MyPost/route.js",
       "app/API/MyFavorites/route.js",
     ],
   );

@@ -4,6 +4,13 @@ import {eq} from 'drizzle-orm'
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
+import {
+    ApiValidationError,
+    positiveInt,
+    readJsonBody,
+    requiredString,
+    toApiValidationResponse,
+} from "../../../../lib/api-validation.mjs"
 
 
 //帖子详情以及包含所有评论
@@ -53,6 +60,7 @@ export async function GET(request,{params}){
 export async function POST(request,{params}){
     try{
         const {id:postId} = await params
+        const parsedPostId = positiveInt(postId, "帖子ID")
 
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录后再发表评论",
@@ -65,24 +73,22 @@ export async function POST(request,{params}){
         const userId = auth.userId
 
         //解析前端发来的JSON数据体
-        const body = await request.json()
-        const {content} = body; //坚决不结构前端传来的userId
-
-        //基础防御：防空值提交
-        if(!content || !content.trim()){
-            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "评论内容不能为空")
-        }
+        const body = await readJsonBody(request)
+        const content = requiredString(body.content, "评论内容") //坚决不结构前端传来的userId
 
         //执行插入数据库操作
         await db.insert(Comments).values({
-            postId:parseInt(postId),
+            postId:parsedPostId,
             userId:userId,  //插入正确的Uerid
-            content:content.trim()
+            content:content
         })
 
         //插入成功后返回给前端
         return ApiResponse.success(undefined, "评论发表成功")
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Submit comment error",error)
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "评论发表失败")
     }

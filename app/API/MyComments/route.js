@@ -5,6 +5,11 @@ import {Comments, posts, Users} from '../../../database/schema'
 import {eq, desc, sql, and, like, or} from 'drizzle-orm' 
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import { requireAuth } from '../../../lib/api-auth.mjs'
+import {
+    ApiValidationError,
+    positiveInt,
+    toApiValidationResponse,
+} from '../../../lib/api-validation.mjs'
 
 
 
@@ -22,7 +27,8 @@ export async function GET(request){
 
         const {searchParams} = new URL(request.url);
         const keyword = searchParams.get('q'); 
-        const page = parseInt(searchParams.get("page")) || 1;  
+        const pageParam = searchParams.get("page");
+        const page = pageParam === null ? 1 : positiveInt(pageParam, "页码");
         const pageSize = 4;
         const offset = (page-1) * pageSize;
 
@@ -85,6 +91,9 @@ export async function GET(request){
             }
         );
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch Comments Error:",error);
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取评论信息失败")
     }
