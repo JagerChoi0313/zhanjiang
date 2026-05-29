@@ -1,9 +1,10 @@
 import {db} from '../../../../database/index'       //你的数据库连接实例
 import {Users,posts,Comments,Favorites,Follows} from '../../../../database/schema'   //你的数据库的表定义
-import {eq,and,count} from 'drizzle-orm'            
+import {eq,count} from 'drizzle-orm'
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
 import {requireAuth} from "../../../../lib/api-auth.mjs"
+import {hashPassword, verifyPassword} from "../../../../lib/password.mjs"
 import {
     ApiValidationError,
     isEmail,
@@ -22,21 +23,27 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
         }
         const password = requiredString(body.password, "密码")
 
-        //在user中同时查找邮箱和密码匹配同时匹配的记录
+        //先按邮箱查用户，再用统一密码校验兼容 BCrypt 和旧明文
         const userList = await db.select()      // 我要查询数据
         .from(Users)                            // 从 Users 这张表里查
-        .where(                                 // 过滤条件是：
-            and(                                // 同时满足以下两点：
-                eq(Users.email,email),          // 数据库里的 email 等于 用户输入的 email
-                eq(Users.password,password)     // 数据库里的密码 等于 用户输入的密码
-            )
-        )
+        .where(eq(Users.email,email))           // 数据库里的 email 等于 用户输入的 email
 
         .limit(1);          // 只要找到一个匹配的就停下，提高效率
 
         if(userList.length>0){
 
             const user = userList[0];//提取出当前匹配到的用户信息
+            const passwordCheck = await verifyPassword(password, user.password)
+
+            if(!passwordCheck.matches){
+                return ApiResponse.error(ErrorCode.UNAUTHORIZED, "邮箱或密码错误")
+            }
+
+            if(passwordCheck.needsMigration){
+                await db.update(Users)
+                    .set({password:await hashPassword(password)})
+                    .where(eq(Users.userId,user.userId))
+            }
 
             //准备塞进Token的数据包（payload）
             const tokenPayload = {

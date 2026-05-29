@@ -2,6 +2,7 @@ import {db} from "../../../../database/index";
 import {Users} from "../../../../database/schema";
 import {eq} from "drizzle-orm";
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
+import {hashPassword} from "../../../../lib/password.mjs";
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -47,11 +48,13 @@ export async function POST(request){
             return ApiResponse.error(ErrorCode.CONFLICT, "该邮箱已注册");
         }
 
+        const hashedPassword=await hashPassword(password);
+
         // 2. 执行插入操作（这是 Drizzle ORM 的语法）
         await db.insert(Users).values({
             nickname:nickname,          // 前面是数据库字段，后面是上面解构出来的变量
             email:email,
-            password:password,
+            password:hashedPassword,
             phoneNumber:phoneNumber ?? null,
             gender:gender ?? null,
             age:age ?? null,
