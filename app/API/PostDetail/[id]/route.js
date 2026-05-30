@@ -76,6 +76,13 @@ export async function POST(request,{params}){
         const body = await readJsonBody(request)
         const content = requiredString(body.content, "评论内容") //坚决不结构前端传来的userId
 
+        const targetPost = await db.query.posts.findFirst({
+            where:eq(posts.id,parsedPostId)
+        })
+        if(!targetPost){
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到帖子")
+        }
+
         //执行插入数据库操作
         await db.insert(Comments).values({
             postId:parsedPostId,

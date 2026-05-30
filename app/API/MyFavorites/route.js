@@ -155,9 +155,14 @@ export async function POST(request){
             )
 
             if(existingFavorite.length>0){
-                //2.如果查到了数据（说明已经收藏过了），这次点击就是取消收藏
+                //2.如果查到了数据（说明已经收藏过了），这次点击就是取消收藏；按关系键删除历史重复记录
                 await db.delete(Favorites)
-                        .where(eq(Favorites.id,existingFavorite[0].id))
+                        .where(
+                            and(
+                                eq(Favorites.postId,postId),
+                                eq(Favorites.userId,userId)
+                            )
+                        )
                 return ApiResponse.success({isFavorited:false}, "已取消收藏")
             }else{
                 //如果还没查到数据（说明还没收藏），这次点击就是添加收藏

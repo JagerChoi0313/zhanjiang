@@ -81,9 +81,14 @@ export async function POST(request){
 
 
         if (existingFollow.length>0){
-            //已经关注过，则取消关注
+            //已经关注过，则取消关注；按关系键删除，顺带清掉历史重复记录
             await db.delete(Follows)
-                .where(eq(Follows.id,existingFollow[0].id))
+                .where(
+                    and(
+                        eq(Follows.followerId,currentUserId),
+                        eq(Follows.followingId,targetId)
+                    )
+                )
 
             return ApiResponse.success({
                 isFollowing:false

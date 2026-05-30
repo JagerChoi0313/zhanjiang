@@ -8,12 +8,15 @@ import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
 import {
     ApiValidationError,
+    assertAllowedValue,
     optionalString,
     readJsonBody,
     requiredString,
     toApiValidationResponse,
 } from '../../../lib/api-validation.mjs'
 
+const POST_CATEGORIES = ["菜谱", "探店", "攻略", "美食分享", "其他"];
+const POST_LOCATIONS = ["赤坎区", "霞山区", "坡头区", "麻章区", "遂溪县", "徐闻县", "廉江市", "雷州市", "吴川市"];
 
 // GET请求，获取所有的帖子
 export async function GET(request){
@@ -114,8 +117,16 @@ export async function POST(request){
         const body = await readJsonBody(request);
         const title = requiredString(body.title, "标题", {maxLength:255})
         const description = requiredString(body.description, "描述")
-        const category = requiredString(body.category, "分类", {maxLength:50})
-        const location = requiredString(body.location, "地点", {maxLength:100})
+        const category = assertAllowedValue(
+            requiredString(body.category, "分类", {maxLength:50}),
+            POST_CATEGORIES,
+            "分类"
+        )
+        const location = assertAllowedValue(
+            requiredString(body.location, "地点", {maxLength:100}),
+            POST_LOCATIONS,
+            "地点"
+        )
         const coverImage = optionalString(body.coverImage, "封面图")
         const images = body.images === undefined
             ? []

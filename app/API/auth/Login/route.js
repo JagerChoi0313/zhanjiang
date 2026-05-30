@@ -4,6 +4,7 @@ import {eq,count} from 'drizzle-orm'
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
 import {requireAuth} from "../../../../lib/api-auth.mjs"
+import {setAuthCookie} from "../../../../lib/auth-cookie.mjs"
 import {hashPassword, verifyPassword} from "../../../../lib/password.mjs"
 import {
     ApiValidationError,
@@ -67,15 +68,7 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
             }, "登录成功")
 
             //4.将Token种入HttpOnly Cookie
-            response.cookies.set({
-                name:'auth_token',
-                value:token,
-                httpOnly:true,  //核心安全配置：防止前端js窃取
-                secure:process.env.NODE_ENV === "production",   //生产环境开启HTTPs专属
-                sameSite:'lax',     //防止跨站请求伪造（CSRF）
-                path:'/',       //cookie在全站均有效
-                maxAge:7 * 24 * 60 * 60     //过期时间：7天（这里是以秒为单位）
-            });
+            setAuthCookie(response, token);
 
             //5.返回带有Cookies的响应
             return response;

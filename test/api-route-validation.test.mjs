@@ -7,8 +7,10 @@ import { hashPassword, verifyPassword } from "../lib/password.mjs";
 
 const dbState = {
   selectRows: [],
+  queryPost: { id: 1 },
   insertValues: [],
   updateSets: [],
+  deleteCalls: [],
 };
 
 const createSelectQuery = () => ({
@@ -50,6 +52,21 @@ const db = {
       },
     };
   },
+  delete(table) {
+    return {
+      where(condition) {
+        dbState.deleteCalls.push({ table, condition });
+        return Promise.resolve();
+      },
+    };
+  },
+  query: {
+    posts: {
+      findFirst() {
+        return Promise.resolve(dbState.queryPost);
+      },
+    },
+  },
 };
 
 let authPayload = { userId: 7 };
@@ -66,6 +83,7 @@ await mock.module("../lib/jwt.js", {
 });
 
 const LoginRoute = await import("../app/API/auth/Login/route.js");
+const LogoutRoute = await import("../app/API/auth/Logout/route.js");
 const RegisterRoute = await import("../app/API/auth/Register/route.js");
 const FollowRoute = await import("../app/API/Follow/route.js");
 const MyFavoritesRoute = await import("../app/API/MyFavorites/route.js");
@@ -77,8 +95,10 @@ const UploadRoute = await import("../app/API/Upload/route.js");
 
 const resetState = () => {
   dbState.selectRows = [];
+  dbState.queryPost = { id: 1 };
   dbState.insertValues = [];
   dbState.updateSets = [];
+  dbState.deleteCalls = [];
   authPayload = { userId: 7 };
 };
 
@@ -123,6 +143,8 @@ const assertApiError = async (response, { status, code, message }) => {
   assert.equal(result.body.message, message);
   assert.equal("error" in result.body, false);
 };
+
+const setCookieHeader = (response) => response.headers.get("set-cookie") ?? "";
 
 test("Register stores a BCrypt password hash instead of plaintext", async () => {
   resetState();
@@ -170,6 +192,62 @@ test("Login accepts BCrypt passwords and does not migrate them again", async () 
   assert.equal(result.body.success, true);
   assert.equal(result.body.data.user.userId, 1);
   assert.deepEqual(dbState.updateSets, []);
+});
+
+test("Login sets the standard auth cookie options", async () => {
+  resetState();
+  dbState.selectRows = [{
+    userId: 1,
+    nickname: "食客",
+    avatar: null,
+    gender: "secret",
+    age: null,
+    phoneNumber: null,
+    email: "cookie@example.com",
+    password: await hashPassword("123456"),
+  }];
+
+  const response = await LoginRoute.POST(jsonRequest({
+    email: "cookie@example.com",
+    password: "123456",
+  }));
+  const result = await readBody(response);
+  const cookie = setCookieHeader(response);
+
+  assert.equal(result.status, 200);
+  assert.match(cookie, /auth_token=mock-token/);
+  assert.match(cookie, /HttpOnly/i);
+  assert.match(cookie, /SameSite=Lax/i);
+  assert.match(cookie, /Path=\//i);
+  assert.match(cookie, /Max-Age=604800/i);
+});
+
+test("Logout clears the auth cookie with the same session scope", async () => {
+  const response = await LogoutRoute.POST();
+  const result = await readBody(response);
+  const cookie = setCookieHeader(response);
+
+  assert.equal(result.status, 200);
+  assert.match(cookie, /auth_token=/);
+  assert.match(cookie, /HttpOnly/i);
+  assert.match(cookie, /SameSite=Lax/i);
+  assert.match(cookie, /Path=\//i);
+  assert.match(cookie, /Max-Age=0/i);
+});
+
+test("Register does not create an auth session cookie", async () => {
+  resetState();
+
+  const response = await RegisterRoute.POST(jsonRequest({
+    nickname: "食客",
+    email: "register-cookie@example.com",
+    password: "123456",
+    gender: "secret",
+  }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(setCookieHeader(response), "");
 });
 
 test("Login migrates matching legacy plaintext passwords to BCrypt", async () => {
@@ -303,6 +381,21 @@ test("Follow rejects invalid target ids and self-follow requests", async () => {
   );
 });
 
+test("Follow removes all duplicate follow rows when toggling off", async () => {
+  resetState();
+  dbState.selectRows = [{ id: 11 }, { id: 12 }];
+
+  const response = await FollowRoute.POST(jsonRequest({ targetId: 8 }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.deepEqual(result.body.data, { isFollowing: false });
+  assert.equal(result.body.message, "已取消关注");
+  assert.equal(dbState.deleteCalls.length, 1);
+  assert.equal(dbState.insertValues.length, 0);
+});
+
 test("MyFavorites rejects invalid postId and page parameters", async () => {
   resetState();
 
@@ -336,6 +429,21 @@ test("MyFavorites rejects invalid postId and page parameters", async () => {
       message: "帖子ID必须是正整数",
     },
   );
+});
+
+test("MyFavorites removes all duplicate favorite rows when toggling off", async () => {
+  resetState();
+  dbState.selectRows = [{ id: 21 }, { id: 22 }];
+
+  const response = await MyFavoritesRoute.POST(jsonRequest({ postId: 9 }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.deepEqual(result.body.data, { isFavorited: false });
+  assert.equal(result.body.message, "已取消收藏");
+  assert.equal(dbState.deleteCalls.length, 1);
+  assert.equal(dbState.insertValues.length, 0);
 });
 
 test("MyComments and MyPost reject invalid page parameters", async () => {
@@ -392,14 +500,33 @@ test("PostDetail comments reject invalid post ids and blank content", async () =
   );
 });
 
+test("PostDetail comments reject comments for missing posts", async () => {
+  resetState();
+  dbState.queryPost = null;
+
+  await assertApiError(
+    await PostDetailRoute.POST(
+      jsonRequest({ content: "好吃" }),
+      { params: Promise.resolve({ id: "1" }) },
+    ),
+    {
+      status: 404,
+      code: ErrorCode.NOT_FOUND,
+      message: "未找到帖子",
+    },
+  );
+
+  assert.equal(dbState.insertValues.length, 0);
+});
+
 test("Post rejects missing required fields and invalid image arrays", async () => {
   resetState();
 
   await assertApiError(
     await PostRoute.POST(jsonRequest({
       description: "好吃",
-      category: "海鲜",
-      location: "湛江",
+      category: "菜谱",
+      location: "赤坎区",
       images: [],
     })),
     {
@@ -413,7 +540,7 @@ test("Post rejects missing required fields and invalid image arrays", async () =
     await PostRoute.POST(jsonRequest({
       title: "白切鸡",
       description: "好吃",
-      category: "粤菜",
+      category: "菜谱",
       images: [],
     })),
     {
@@ -427,14 +554,48 @@ test("Post rejects missing required fields and invalid image arrays", async () =
     await PostRoute.POST(jsonRequest({
       title: "白切鸡",
       description: "好吃",
-      category: "粤菜",
-      location: "湛江",
+      category: "菜谱",
+      location: "赤坎区",
       images: "not-array",
     })),
     {
       status: 400,
       code: ErrorCode.VALIDATION_ERROR,
       message: "图片列表必须是数组",
+    },
+  );
+});
+
+test("Post rejects category and location values outside the publishing options", async () => {
+  resetState();
+
+  await assertApiError(
+    await PostRoute.POST(jsonRequest({
+      title: "白切鸡",
+      description: "好吃",
+      category: "粤菜",
+      location: "赤坎区",
+      images: [],
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "分类不正确",
+    },
+  );
+
+  await assertApiError(
+    await PostRoute.POST(jsonRequest({
+      title: "白切鸡",
+      description: "好吃",
+      category: "菜谱",
+      location: "湛江",
+      images: [],
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "地点不正确",
     },
   );
 });
