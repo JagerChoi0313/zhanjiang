@@ -49,6 +49,8 @@ test("hardened api routes use shared validation helpers", () => {
     "app/API/Follow/route.js",
     "app/API/MyFavorites/route.js",
     "app/API/PostDetail/[id]/route.js",
+    "app/API/TasteCard/[id]/route.js",
+    "app/API/UserInfo/route.js",
     "app/API/Upload/route.js",
   ];
 
@@ -81,6 +83,19 @@ test("paginated api routes reject legacy parseInt page fallbacks", () => {
       "app/API/MyComments/route.js",
       "app/API/MyPost/route.js",
       "app/API/MyFavorites/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("dynamic id api routes reject legacy parseInt id parsing", () => {
+  const matches = rg(
+    "parseInt\\(",
+    [
+      "app/API/PostDetail/[id]/route.js",
+      "app/API/UserInfo/route.js",
+      "app/API/TasteCard/[id]/route.js",
     ],
   );
 

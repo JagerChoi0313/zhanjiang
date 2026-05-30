@@ -8,6 +8,8 @@ import { hashPassword, verifyPassword } from "../lib/password.mjs";
 const dbState = {
   selectRows: [],
   queryPost: { id: 1 },
+  selectCalls: 0,
+  queryPostFinds: 0,
   insertValues: [],
   updateSets: [],
   deleteCalls: [],
@@ -30,6 +32,7 @@ const createSelectQuery = () => ({
 
 const db = {
   select() {
+    dbState.selectCalls += 1;
     return createSelectQuery();
   },
   insert() {
@@ -63,6 +66,7 @@ const db = {
   query: {
     posts: {
       findFirst() {
+        dbState.queryPostFinds += 1;
         return Promise.resolve(dbState.queryPost);
       },
     },
@@ -91,11 +95,15 @@ const MyCommentsRoute = await import("../app/API/MyComments/route.js");
 const MyPostRoute = await import("../app/API/MyPost/route.js");
 const PostRoute = await import("../app/API/Post/route.js");
 const PostDetailRoute = await import("../app/API/PostDetail/[id]/route.js");
+const TasteCardDetailRoute = await import("../app/API/TasteCard/[id]/route.js");
 const UploadRoute = await import("../app/API/Upload/route.js");
+const UserInfoRoute = await import("../app/API/UserInfo/route.js");
 
 const resetState = () => {
   dbState.selectRows = [];
   dbState.queryPost = { id: 1 };
+  dbState.selectCalls = 0;
+  dbState.queryPostFinds = 0;
   dbState.insertValues = [];
   dbState.updateSets = [];
   dbState.deleteCalls = [];
@@ -517,6 +525,48 @@ test("PostDetail comments reject comments for missing posts", async () => {
   );
 
   assert.equal(dbState.insertValues.length, 0);
+});
+
+test("dynamic id routes reject invalid ids before database access", async () => {
+  resetState();
+
+  await assertApiError(
+    await PostDetailRoute.GET(
+      jsonRequest(undefined),
+      { params: Promise.resolve({ id: "abc" }) },
+    ),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "帖子ID必须是正整数",
+    },
+  );
+  assert.equal(dbState.queryPostFinds, 0);
+
+  await assertApiError(
+    await TasteCardDetailRoute.GET(
+      jsonRequest(undefined),
+      { params: Promise.resolve({ id: "abc" }) },
+    ),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "味觉卡片ID必须是数字",
+    },
+  );
+  assert.equal(dbState.selectCalls, 0);
+
+  await assertApiError(
+    await UserInfoRoute.GET(jsonRequest(undefined, {
+      url: "http://localhost/API/UserInfo?id=abc",
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "用户ID必须是正整数",
+    },
+  );
+  assert.equal(dbState.selectCalls, 0);
 });
 
 test("Post rejects missing required fields and invalid image arrays", async () => {

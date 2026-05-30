@@ -5,6 +5,7 @@ import {
   ApiValidationError,
   MAX_UPLOAD_BYTES,
   assertAllowedValue,
+  digitString,
   isEmail,
   isPhone,
   optionalIntRange,
@@ -34,6 +35,13 @@ test("positiveInt only accepts positive integers", () => {
   assert.throws(() => positiveInt("0", "postId"), /postId必须是正整数/);
   assert.throws(() => positiveInt("1.5", "postId"), /postId必须是正整数/);
   assert.throws(() => positiveInt("abc", "postId"), /postId必须是正整数/);
+});
+
+test("digitString accepts numeric string ids including leading zeroes", () => {
+  assert.equal(digitString("01", "味觉卡片ID"), "01");
+  assert.equal(digitString(" 12 ", "味觉卡片ID"), "12");
+  assert.throws(() => digitString("abc", "味觉卡片ID"), /味觉卡片ID必须是数字/);
+  assert.throws(() => digitString("", "味觉卡片ID"), /味觉卡片ID必须是数字/);
 });
 
 test("optionalIntRange validates optional bounded integers", () => {

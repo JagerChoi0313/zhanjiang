@@ -18,13 +18,14 @@ export async function GET(request,{params}){
     try{
         //后端也需要await解开params
         const {id:postId} = await params
+        const parsedPostId = positiveInt(postId, "帖子ID")
         
         //2.告诉drizzle去posts表里查：拿出id等于postId那行
         //使用db.query 既然再schema中写好了relations，这里就可以直接用with进行嵌套查询
 
         const result = await db.query.posts
         .findFirst({
-            where:eq(posts.id,parseInt(postId)),
+            where:eq(posts.id,parsedPostId),
             with:{
                 //把帖子的作者信息找出来
                 author:true,
@@ -50,6 +51,9 @@ export async function GET(request,{params}){
         //4,成功找到，返回这条帖子的完整数据对象
         return ApiResponse.success(result)
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch post detail error:",error);
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器读取数据失败")
     }

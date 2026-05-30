@@ -2,6 +2,11 @@ import {db} from "../../../database/index"
 import {Users,posts,Comments,Favorites,Follows} from "../../../database/schema"
 import {eq,count} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {
+    ApiValidationError,
+    positiveInt,
+    toApiValidationResponse,
+} from "../../../lib/api-validation.mjs"
 
 
 export async function GET(request){
@@ -17,7 +22,7 @@ export async function GET(request){
             return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "缺少请求参数")
         }
 
-        const parseId = parseInt(targetId)
+        const parseId = positiveInt(targetId, "用户ID")
 
         //1.查询用户基本公开信息：
         const userBaseInfo = await db 
@@ -67,6 +72,9 @@ export async function GET(request){
 
         return ApiResponse.success(PublicUserData)
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch public user info error:",error)
         return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取信息失败，请稍后重试")
     }
