@@ -13,6 +13,7 @@ const dbState = {
   insertValues: [],
   updateSets: [],
   deleteCalls: [],
+  uploadWrites: [],
 };
 
 const createSelectQuery = () => ({
@@ -79,6 +80,14 @@ await mock.module("../database/index.js", {
   namedExports: { db },
 });
 
+await mock.module("fs/promises", {
+  namedExports: {
+    writeFile: async (path, buffer) => {
+      dbState.uploadWrites.push({ path, buffer });
+    },
+  },
+});
+
 await mock.module("../lib/jwt.js", {
   namedExports: {
     signToken: async () => "mock-token",
@@ -107,6 +116,7 @@ const resetState = () => {
   dbState.insertValues = [];
   dbState.updateSets = [];
   dbState.deleteCalls = [];
+  dbState.uploadWrites = [];
   authPayload = { userId: 7 };
 };
 
@@ -127,7 +137,8 @@ const jsonRequest = (body, options = {}) => ({
   },
 });
 
-const formRequest = (file) => ({
+const formRequest = (file, options = {}) => ({
+  cookies: cookies(options.token),
   async formData() {
     const formData = new FormData();
     if (file !== undefined) {
@@ -690,4 +701,38 @@ test("Upload rejects missing files invalid MIME oversized files and invalid exte
       message: "文件扩展名不正确",
     },
   );
+});
+
+test("Upload requires auth before reading multipart bodies", async () => {
+  resetState();
+
+  await assertApiError(
+    await UploadRoute.POST({
+      cookies: cookies(null),
+      async formData() {
+        throw new Error("formData should not be read before auth");
+      },
+    }),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "未登录，请先登录",
+    },
+  );
+
+  assert.equal(dbState.uploadWrites.length, 0);
+});
+
+test("Upload returns data.url for authenticated image uploads", async () => {
+  resetState();
+
+  const response = await UploadRoute.POST(formRequest(new File(["image-bytes"], "food.png", {
+    type: "image/png",
+  })));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.match(result.body.data?.url, /^\/upload\/.+\.png$/);
+  assert.equal(dbState.uploadWrites.length, 1);
 });

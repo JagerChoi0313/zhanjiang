@@ -6,9 +6,18 @@ import {join} from 'path'               //用于智能拼接文件路径（兼�
 import {v4 as uuidv4} from 'uuid'       //生成全球唯一标识符，防止文件名重复
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {ApiValidationError, toApiValidationResponse, validateUploadFile} from "../../../lib/api-validation.mjs"
+import {requireAuth} from "../../../lib/api-auth.mjs"
 
 export async function POST(request){
     try{
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
+        }
+
         const formData = await request.formData();  //解析前端传来的FormData格式数据（包含文件和其他文本）
         const file = formData.get('file');      //从表单中提取key为‘file’的内容
 
