@@ -7,10 +7,12 @@ import { hashPassword, verifyPassword } from "../lib/password.mjs";
 
 const dbState = {
   selectRows: [],
+  selectQueue: [],
   queryPost: { id: 1 },
   selectCalls: 0,
   queryPostFinds: 0,
   insertValues: [],
+  insertError: null,
   updateSets: [],
   deleteCalls: [],
   uploadWrites: [],
@@ -24,10 +26,10 @@ const createSelectQuery = () => ({
     return this;
   },
   limit() {
-    return Promise.resolve(dbState.selectRows);
+    return Promise.resolve(dbState.selectQueue.length > 0 ? dbState.selectQueue.shift() : dbState.selectRows);
   },
   then(resolve, reject) {
-    return Promise.resolve(dbState.selectRows).then(resolve, reject);
+    return Promise.resolve(dbState.selectQueue.length > 0 ? dbState.selectQueue.shift() : dbState.selectRows).then(resolve, reject);
   },
 });
 
@@ -40,6 +42,9 @@ const db = {
     return {
       values(values) {
         dbState.insertValues.push(values);
+        if (dbState.insertError) {
+          return Promise.reject(dbState.insertError);
+        }
         return Promise.resolve({ insertId: 1 });
       },
     };
@@ -110,10 +115,12 @@ const UserInfoRoute = await import("../app/API/UserInfo/route.js");
 
 const resetState = () => {
   dbState.selectRows = [];
+  dbState.selectQueue = [];
   dbState.queryPost = { id: 1 };
   dbState.selectCalls = 0;
   dbState.queryPostFinds = 0;
   dbState.insertValues = [];
+  dbState.insertError = null;
   dbState.updateSets = [];
   dbState.deleteCalls = [];
   dbState.uploadWrites = [];
@@ -415,6 +422,37 @@ test("Follow removes all duplicate follow rows when toggling off", async () => {
   assert.equal(dbState.insertValues.length, 0);
 });
 
+test("Follow rejects missing target users before writing relationships", async () => {
+  resetState();
+  dbState.selectQueue = [[]];
+
+  await assertApiError(
+    await FollowRoute.POST(jsonRequest({ targetId: 8 })),
+    {
+      status: 404,
+      code: ErrorCode.NOT_FOUND,
+      message: "目标用户不存在",
+    },
+  );
+
+  assert.equal(dbState.insertValues.length, 0);
+  assert.equal(dbState.deleteCalls.length, 0);
+});
+
+test("Follow treats duplicate relation insert races as already followed", async () => {
+  resetState();
+  dbState.selectQueue = [[{ userId: 8 }], []];
+  dbState.insertError = { code: "ER_DUP_ENTRY" };
+
+  const response = await FollowRoute.POST(jsonRequest({ targetId: 8 }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.deepEqual(result.body.data, { isFollowing: true });
+  assert.equal(result.body.message, "关注成功");
+});
+
 test("MyFavorites rejects invalid postId and page parameters", async () => {
   resetState();
 
@@ -463,6 +501,37 @@ test("MyFavorites removes all duplicate favorite rows when toggling off", async 
   assert.equal(result.body.message, "已取消收藏");
   assert.equal(dbState.deleteCalls.length, 1);
   assert.equal(dbState.insertValues.length, 0);
+});
+
+test("MyFavorites rejects missing posts before writing relationships", async () => {
+  resetState();
+  dbState.selectQueue = [[]];
+
+  await assertApiError(
+    await MyFavoritesRoute.POST(jsonRequest({ postId: 9 })),
+    {
+      status: 404,
+      code: ErrorCode.NOT_FOUND,
+      message: "帖子不存在",
+    },
+  );
+
+  assert.equal(dbState.insertValues.length, 0);
+  assert.equal(dbState.deleteCalls.length, 0);
+});
+
+test("MyFavorites treats duplicate relation insert races as already favorited", async () => {
+  resetState();
+  dbState.selectQueue = [[{ id: 9 }], []];
+  dbState.insertError = { errno: 1062 };
+
+  const response = await MyFavoritesRoute.POST(jsonRequest({ postId: 9 }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.deepEqual(result.body.data, { isFavorited: true });
+  assert.equal(result.body.message, "收藏成功");
 });
 
 test("MyComments and MyPost reject invalid page parameters", async () => {

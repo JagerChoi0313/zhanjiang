@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const rg = (pattern, paths) => {
@@ -123,4 +124,23 @@ test("authenticated api routes use the shared auth helper", () => {
 
   assert.equal(matches, "");
   assert.deepEqual(missingAuth, []);
+});
+
+test("relationship toggle tables declare compound uniqueness", () => {
+  const schema = readFileSync("database/schema.js", "utf8");
+
+  assert.match(
+    schema,
+    /uniqueIndex\(["']favorites_user_post_unique["']\)\.on\(table\.userId,\s*table\.postId\)/,
+  );
+  assert.match(
+    schema,
+    /uniqueIndex\(["']follows_follower_following_unique["']\)\.on\(table\.followerId,\s*table\.followingId\)/,
+  );
+});
+
+test("drizzle config points at the runtime schema", () => {
+  const config = readFileSync("drizzle.config.js", "utf8");
+
+  assert.match(config, /schema:\s*["']\.\/database\/schema\.js["']/);
 });

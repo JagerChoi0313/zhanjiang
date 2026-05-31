@@ -5,6 +5,7 @@ import {eq,desc,sql,and} from 'drizzle-orm'
 import {like,or} from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
+import {isDuplicateKeyError} from '../../../lib/db-errors.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -142,6 +143,15 @@ export async function POST(request){
         const body = await readJsonBody(request);
         const postId = positiveInt(body.postId, "帖子ID")      //千万不要相信前端传过来userid
 
+        const targetPost = await db
+            .select({id: posts.id})
+            .from(posts)
+            .where(eq(posts.id, postId))
+            .limit(1)
+        if(targetPost.length === 0){
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "帖子不存在")
+        }
+
         //去数据库里查一下看看有没有这个帖子
         //使用and（）必须同时满足：帖子Id匹配且用户Id匹配
         const existingFavorite = await db
@@ -166,10 +176,16 @@ export async function POST(request){
                 return ApiResponse.success({isFavorited:false}, "已取消收藏")
             }else{
                 //如果还没查到数据（说明还没收藏），这次点击就是添加收藏
-                await db.insert(Favorites).values({
-                    postId:postId,
-                    userId:userId   //直接解析后端传进来的真实ID
-                });
+                try{
+                    await db.insert(Favorites).values({
+                        postId:postId,
+                        userId:userId   //直接解析后端传进来的真实ID
+                    });
+                }catch(error){
+                    if(!isDuplicateKeyError(error)){
+                        throw error
+                    }
+                }
 
                 return ApiResponse.success({isFavorited:true}, "收藏成功")
             }

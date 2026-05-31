@@ -1,8 +1,9 @@
 import {db} from "../../../database/index"
-import {Follows} from "../../../database/schema"
+import {Follows, Users} from "../../../database/schema"
 import {eq,and} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
+import {isDuplicateKeyError} from "../../../lib/db-errors.mjs"
 import {
     ApiValidationError,
     positiveInt,
@@ -68,6 +69,15 @@ export async function POST(request){
             return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "不能关注自己哦")
         }
 
+        const targetUser = await db
+            .select({userId: Users.userId})
+            .from(Users)
+            .where(eq(Users.userId, targetId))
+            .limit(1)
+        if(targetUser.length === 0){
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "目标用户不存在")
+        }
+
         //检查是否已经关注过：
         const existingFollow = await db
             .select()
@@ -95,10 +105,16 @@ export async function POST(request){
             }, "已取消关注")
         }else{
             //没有关注过，则添加关注
-            await db.insert(Follows).values({
-                followerId:currentUserId,
-                followingId:targetId
-            })
+            try{
+                await db.insert(Follows).values({
+                    followerId:currentUserId,
+                    followingId:targetId
+                })
+            }catch(error){
+                if(!isDuplicateKeyError(error)){
+                    throw error
+                }
+            }
 
             return ApiResponse.success({
                 isFollowing:true

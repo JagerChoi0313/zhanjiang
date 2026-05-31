@@ -1,4 +1,4 @@
-import {mysqlTable, serial, varchar, timestamp, float, int,text,boolean,json} from 'drizzle-orm/mysql-core';
+import {mysqlTable, serial, varchar, timestamp, float, int,text,boolean,json, uniqueIndex} from 'drizzle-orm/mysql-core';
 import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
@@ -202,7 +202,9 @@ export const Favorites = mysqlTable("favorites",{
   .references(()=>posts.id,{onDelete:'cascade'}),
 
   createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
-})
+}, (table) => [
+  uniqueIndex("favorites_user_post_unique").on(table.userId, table.postId)
+])
 
 //核心逻辑：记录谁（followerId)关注了谁（followingId）
 export const Follows = mysqlTable("follows",{
@@ -221,7 +223,9 @@ export const Follows = mysqlTable("follows",{
   //关注的时间
   createdAt:timestamp("created_at").defaultNow()
     
-})
+}, (table) => [
+  uniqueIndex("follows_follower_following_unique").on(table.followerId, table.followingId)
+])
 
 //定义Follows表和Users表的关系
 export const followRelations = relations(Follows,({one})=>({
