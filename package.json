@@ -2,6 +2,7 @@
   "name": "zhanjiang",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +15,13 @@
     "db:check": "drizzle-kit check --config drizzle.config.js",
     "db:export": "drizzle-kit export --config drizzle.config.js",
     "uploads:cleanup": "node scripts/cleanup-uploads.mjs",
-    "admin:seed": "node scripts/seed-super-admin.mjs"
+    "admin:seed": "node scripts/seed-super-admin.mjs",
+    "deploy:init": "node scripts/deploy-init.mjs",
+    "deploy:mysql": "docker compose -f deploy/docker-compose.yml up -d mysql",
+    "deploy:migrate": "docker compose -f deploy/docker-compose.yml run --rm migrate",
+    "deploy:admin:seed": "docker compose -f deploy/docker-compose.yml run --rm admin-seed",
+    "deploy:up": "docker compose -f deploy/docker-compose.yml up -d app nginx",
+    "deploy:down": "docker compose -f deploy/docker-compose.yml down"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
