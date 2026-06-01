@@ -21,6 +21,8 @@
     "deploy:migrate": "docker compose -f deploy/docker-compose.yml run --rm migrate",
     "deploy:admin:seed": "docker compose -f deploy/docker-compose.yml run --rm admin-seed",
     "deploy:up": "docker compose -f deploy/docker-compose.yml up -d app",
+    "deploy:up:nginx": "docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.nginx.yml up -d app nginx",
+    "deploy:down:nginx": "docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.nginx.yml down",
     "deploy:down": "docker compose -f deploy/docker-compose.yml down"
   },
   "dependencies": {

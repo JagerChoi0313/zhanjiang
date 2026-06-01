@@ -118,6 +118,7 @@ const writeSecret = async (name, value) => {
 await mkdir(path.join(runtimeDir, "mysql"), { recursive: true });
 await mkdir(path.join(runtimeDir, "uploads"), { recursive: true });
 await mkdir(path.join(runtimeDir, "logs"), { recursive: true });
+await mkdir(path.join(runtimeDir, "nginx", "certs"), { recursive: true });
 await mkdir(secretsDir, { recursive: true, mode: 0o700 });
 await chmod(secretsDir, 0o700);
 await chmod(path.join(runtimeDir, "uploads"), 0o777);
@@ -148,3 +149,4 @@ console.log("  docker compose -f deploy/docker-compose.yml run --rm migrate");
 console.log("  docker compose -f deploy/docker-compose.yml run --rm admin-seed");
 console.log("  docker compose -f deploy/docker-compose.yml up -d app");
 console.log("Nginx 可参考 deploy/nginx/http.conf 或 deploy/nginx/https.conf 单独部署。");
+console.log("如需由 compose 一起部署 Nginx 1.30.2，请先放置证书到 deploy/runtime/nginx/certs，再执行 pnpm deploy:up:nginx。");
