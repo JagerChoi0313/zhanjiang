@@ -3,6 +3,7 @@ import {Users} from "../../../../database/schema";
 import {eq} from "drizzle-orm";
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
 import {hashPassword} from "../../../../lib/password.mjs";
+import {requireCsrf} from "../../../../lib/csrf.mjs"
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -19,6 +20,11 @@ import {
 export async function POST(request){
 
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         //1.获取前端传过来的JSON数据
         // 这一步是把前端传来的“字符串”解构成具体的变量
         const body=await readJsonBody(request);

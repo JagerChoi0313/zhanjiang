@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './profile.module.css'; // ✅ 坚决保留你的 CSS Module
 import IdenticonAvatar from '../../components/IdenticonAvatar';
+import {csrfFetch} from '../../../lib/csrf-client';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -57,7 +58,7 @@ const ProfilePage = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/API/auth/Logout", { method: "POST" });
+      const res = await csrfFetch("/API/auth/Logout", { method: "POST" });
       const data = await res.json();
       if (data.success) {
         message.success("已成功退出登录，期待与您下次美食相遇");
@@ -72,7 +73,7 @@ const ProfilePage = () => {
   };
 
   const saveProfile = async (values) => {
-    const res = await fetch('/API/auth/UpdateProfile', {
+    const res = await csrfFetch('/API/auth/UpdateProfile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values)
@@ -113,7 +114,7 @@ const ProfilePage = () => {
       formData.append('file', file);
       formData.append('purpose', 'avatar');
 
-      const uploadRes = await fetch('/API/Upload', {
+      const uploadRes = await csrfFetch('/API/Upload', {
         method: 'POST',
         body: formData
       });
@@ -180,6 +181,11 @@ const ProfilePage = () => {
         <div className={styles.profileCard}>
           
           <div className={styles.topActions}>
+            {user.userRole === 'super_admin' && (
+              <Link href="/views/Admin">
+                <Button className={styles.logoutButton}>管理后台</Button>
+              </Link>
+            )}
             <Button icon={<LogoutOutlined />} onClick={handleLogout} className={styles.logoutButton}>退出登录</Button>
           </div>
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import { mock, test } from "node:test";
 
 import sharp from "sharp";
@@ -108,6 +109,16 @@ const db = {
 };
 
 let authPayload = { userId: 7 };
+const CSRF_TEST_SECRET = "csrf-test-secret";
+
+const csrfToken = () => {
+  const timestamp = String(Date.now());
+  const nonce = "test-nonce";
+  const signature = createHmac("sha256", Buffer.from(CSRF_TEST_SECRET))
+    .update(`${timestamp}.${nonce}`)
+    .digest("base64url");
+  return `${timestamp}.${nonce}.${signature}`;
+};
 
 await mock.module("../database/index.js", {
   namedExports: { db },
@@ -132,6 +143,7 @@ await mock.module("fs/promises", {
 
 await mock.module("../lib/jwt.js", {
   namedExports: {
+    getJwtSecretKey: () => new TextEncoder().encode(CSRF_TEST_SECRET),
     signToken: async () => "mock-token",
     verifyToken: async (token) => (token === "valid-token" ? authPayload : null),
   },
@@ -169,36 +181,56 @@ const resetState = () => {
   authPayload = { userId: 7 };
 };
 
-const cookies = (token = "valid-token") => ({
+const cookies = (token = "valid-token", csrf = csrfToken()) => ({
   get(name) {
     if (name === "auth_token" && token) {
       return { value: token };
+    }
+    if (name === "csrf_token" && csrf) {
+      return { value: csrf };
     }
     return undefined;
   },
 });
 
-const jsonRequest = (body, options = {}) => ({
-  url: options.url ?? "http://localhost/API/test",
-  cookies: cookies(options.token),
-  async json() {
-    return body;
+const headers = (csrf) => ({
+  get(name) {
+    if (name.toLowerCase() === "x-csrf-token") {
+      return csrf;
+    }
+    return null;
   },
 });
 
-const formRequest = (file, options = {}) => ({
-  cookies: cookies(options.token),
-  async formData() {
-    const formData = new FormData();
-    if (file !== undefined) {
-      formData.set("file", file);
-    }
-    if (options.purpose !== undefined) {
-      formData.set("purpose", options.purpose);
-    }
-    return formData;
-  },
-});
+const jsonRequest = (body, options = {}) => {
+  const csrf = Object.hasOwn(options, "csrfToken") ? options.csrfToken : csrfToken();
+  return {
+    url: options.url ?? "http://localhost/API/test",
+    cookies: cookies(options.token, csrf),
+    headers: headers(csrf),
+    async json() {
+      return body;
+    },
+  };
+};
+
+const formRequest = (file, options = {}) => {
+  const csrf = Object.hasOwn(options, "csrfToken") ? options.csrfToken : csrfToken();
+  return {
+    cookies: cookies(options.token, csrf),
+    headers: headers(csrf),
+    async formData() {
+      const formData = new FormData();
+      if (file !== undefined) {
+        formData.set("file", file);
+      }
+      if (options.purpose !== undefined) {
+        formData.set("purpose", options.purpose);
+      }
+      return formData;
+    },
+  };
+};
 
 const imageFile = async ({
   name = "food.png",
@@ -249,6 +281,40 @@ test("Health returns a non-cacheable standard success envelope", async () => {
     service: "zhanjiang",
   });
   assert.equal(response.headers.get("cache-control"), "no-store");
+});
+
+test("state-changing routes reject missing csrf before reading request bodies", async () => {
+  resetState();
+
+  await assertApiError(
+    await LoginRoute.POST({
+      ...jsonRequest({}, { csrfToken: null }),
+      async json() {
+        throw new Error("json should not be read before csrf validation");
+      },
+    }),
+    {
+      status: 403,
+      code: ErrorCode.FORBIDDEN,
+      message: "CSRF校验失败，请刷新页面后重试",
+    },
+  );
+
+  await assertApiError(
+    await UploadRoute.POST({
+      ...formRequest(undefined, { csrfToken: null }),
+      async formData() {
+        throw new Error("formData should not be read before csrf validation");
+      },
+    }),
+    {
+      status: 403,
+      code: ErrorCode.FORBIDDEN,
+      message: "CSRF校验失败，请刷新页面后重试",
+    },
+  );
+
+  assert.equal(dbState.uploadWrites.length, 0);
 });
 
 test("Register stores a BCrypt password hash instead of plaintext", async () => {
@@ -330,7 +396,7 @@ test("Login sets the standard auth cookie options", async () => {
 });
 
 test("Logout clears the auth cookie with the same session scope", async () => {
-  const response = await LogoutRoute.POST();
+  const response = await LogoutRoute.POST(jsonRequest({}));
   const result = await readBody(response);
   const cookie = setCookieHeader(response);
 
@@ -1058,7 +1124,7 @@ test("Upload requires auth before reading multipart bodies", async () => {
 
   await assertApiError(
     await UploadRoute.POST({
-      cookies: cookies(null),
+      ...formRequest(undefined, { token: null }),
       async formData() {
         throw new Error("formData should not be read before auth");
       },

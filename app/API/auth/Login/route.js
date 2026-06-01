@@ -1,11 +1,14 @@
 import {db} from '../../../../database/index'       //你的数据库连接实例
 import {Users,posts,Comments,Favorites,Follows} from '../../../../database/schema'   //你的数据库的表定义
-import {eq,count} from 'drizzle-orm'
+import {and, eq, count} from 'drizzle-orm'
 import {signToken} from "../../../../lib/jwt"          //引入刚刚封装的jwt工具
 import {ApiResponse, ErrorCode} from "../../../../lib/api-response.mjs"
 import {requireAuth} from "../../../../lib/api-auth.mjs"
 import {setAuthCookie} from "../../../../lib/auth-cookie.mjs"
 import {hashPassword, verifyPassword} from "../../../../lib/password.mjs"
+import {USER_STATUSES} from "../../../../lib/admin-auth.mjs"
+import {CONTENT_STATUS} from "../../../../lib/content-status.mjs"
+import {requireCsrf} from "../../../../lib/csrf.mjs"
 import {
     ApiValidationError,
     isEmail,
@@ -17,6 +20,11 @@ import {
 export async function POST(request){        // 必须叫 POST，对应前端的 method:'POST'
 
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const body = await readJsonBody(request)
         const email = requiredString(body.email, "邮箱")
         if (!isEmail(email)) {
@@ -38,6 +46,10 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
 
             if(!passwordCheck.matches){
                 return ApiResponse.error(ErrorCode.UNAUTHORIZED, "邮箱或密码错误")
+            }
+
+            if(user.userStatus === USER_STATUSES.DISABLED){
+                return ApiResponse.error(ErrorCode.FORBIDDEN, "账号已被禁用")
             }
 
             if(passwordCheck.needsMigration){
@@ -63,7 +75,9 @@ export async function POST(request){        // 必须叫 POST，对应前端的 
                     gender:user.gender,
                     age:user.age,
                     phoneNumber:user.phoneNumber,
-                    email:user.email
+                    email:user.email,
+                    userRole:user.userRole,
+                    userStatus:user.userStatus
                 }
             }, "登录成功")
 
@@ -106,11 +120,16 @@ export async function GET(request){
         }
 
         const currentUser = dbUserList[0];
+        if(currentUser.userStatus === USER_STATUSES.DISABLED){
+            return ApiResponse.error(ErrorCode.FORBIDDEN, "账号已被禁用")
+        }
 
         const [postCountRes,commentCountRes,favoriteCountRes,followingCountRes,followerCountRes] = await Promise.all([
-            db.select({value:count()}).from(posts).where(eq(posts.userId,auth.userId)),
-            db.select({value:count()}).from(Comments).where(eq(Comments.userId,auth.userId)),
-            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,auth.userId)),
+            db.select({value:count()}).from(posts).where(and(eq(posts.userId,auth.userId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
+            db.select({value:count()}).from(Comments).where(and(eq(Comments.userId,auth.userId), eq(Comments.status, CONTENT_STATUS.ACTIVE))),
+            db.select({value:count()}).from(Favorites)
+                .innerJoin(posts, eq(Favorites.postId, posts.id))
+                .where(and(eq(Favorites.userId,auth.userId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
             db.select({value:count()}).from(Follows).where(eq(Follows.followerId,auth.userId)), // 计算我关注了多少人
             db.select({value:count()}).from(Follows).where(eq(Follows.followingId,auth.userId))  // 计算有多少人关注了我
         ])
@@ -125,6 +144,8 @@ export async function GET(request){
                 phoneNumber: currentUser.phoneNumber,
                 email: currentUser.email,
                 introduction:currentUser.introduction,
+                userRole: currentUser.userRole,
+                userStatus: currentUser.userStatus,
                 stats:{
                     posts: postCountRes[0]?.value || 0,
                     comments: commentCountRes[0]?.value ||0,

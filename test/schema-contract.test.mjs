@@ -42,8 +42,11 @@ test("drizzle export contains indexes for common query paths", () => {
 
   assert.match(sql, /CREATE INDEX `posts_created_at_idx` ON `posts` \(`create_at`\)/i);
   assert.match(sql, /CREATE INDEX `posts_user_created_at_idx` ON `posts` \(`user_id`,`create_at`\)/i);
+  assert.match(sql, /CREATE INDEX `posts_status_created_at_idx` ON `posts` \(`status`,`create_at`\)/i);
   assert.match(sql, /CREATE INDEX `comments_post_created_at_idx` ON `comments` \(`post_id`,`created_at`\)/i);
   assert.match(sql, /CREATE INDEX `comments_user_created_at_idx` ON `comments` \(`user_id`,`created_at`\)/i);
+  assert.match(sql, /CREATE INDEX `comments_status_created_at_idx` ON `comments` \(`status`,`created_at`\)/i);
+  assert.match(sql, /CREATE INDEX `users_role_status_idx` ON `users` \(`user_role`,`user_status`\)/i);
   assert.match(sql, /CREATE INDEX `favorites_user_created_at_idx` ON `favorites` \(`user_id`,`created_at`\)/i);
   assert.match(sql, /CREATE INDEX `favorites_post_idx` ON `favorites` \(`post_id`\)/i);
   assert.match(sql, /CREATE INDEX `follows_following_idx` ON `follows` \(`following_id`\)/i);
@@ -52,6 +55,16 @@ test("drizzle export contains indexes for common query paths", () => {
   assert.match(sql, /CREATE INDEX `hot_topics_rank_idx` ON `hot_topics` \(`rank`\)/i);
   assert.match(sql, /CREATE INDEX `talk_ranking_created_at_idx` ON `talk_ranking` \(`create_at`\)/i);
   assert.match(sql, /CREATE INDEX `talk_ranking_user_avatar_idx` ON `talk_ranking` \(`user_name`,`avatar`\)/i);
+});
+
+test("drizzle export contains admin role and content status fields", () => {
+  const sql = exportSchemaSql();
+
+  assert.match(sql, /`users`[\s\S]*`user_role`\s+varchar\(20\)\s+NOT NULL\s+DEFAULT 'user'/i);
+  assert.match(sql, /`users`[\s\S]*`user_status`\s+varchar\(20\)\s+NOT NULL\s+DEFAULT 'active'/i);
+  assert.match(sql, /`posts`[\s\S]*`status`\s+tinyint unsigned\s+NOT NULL\s+DEFAULT 1/i);
+  assert.match(sql, /`comments`[\s\S]*`status`\s+tinyint unsigned\s+NOT NULL\s+DEFAULT 1/i);
+  assert.doesNotMatch(sql, /`is_deleted`|`deleted_at`|`deleted_by`/i);
 });
 
 test("drizzle export contains upload asset governance tables without foreign keys", () => {

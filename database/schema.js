@@ -10,9 +10,13 @@ export const Users = mysqlTable("users",{
     phoneNumber: varchar("phoneNumber", { length: 20 }),
     gender: varchar("gender", { length: 10 }), 
     age: tinyint("age", { unsigned: true }),
+    userRole: varchar("user_role", { length: 20 }).notNull().default("user"),
+    userStatus: varchar("user_status", { length: 20 }).notNull().default("active"),
     createdAt:timestamp("createAt").defaultNow(),
     introduction:text('introduction')
-})
+}, (table) => [
+    index("users_role_status_idx").on(table.userRole, table.userStatus),
+])
 
 
 
@@ -149,9 +153,11 @@ export const posts = mysqlTable("posts",{
   comments: int("comments").default(0),
   isHot: boolean("is_hot").default(false), // 修正为下划线对应关系，防止报错
   createdAt: timestamp("create_at").defaultNow(),
+  status: tinyint("status", { unsigned: true }).notNull().default(1),
 }, (table) => [
   index("posts_created_at_idx").on(table.createdAt),
   index("posts_user_created_at_idx").on(table.userId, table.createdAt),
+  index("posts_status_created_at_idx").on(table.status, table.createdAt),
 ]);
 
 
@@ -200,9 +206,11 @@ export const Comments = mysqlTable("comments",{
 
   //评论时间，对应评论日期
   createAt:timestamp("created_at").defaultNow(),
+  status: tinyint("status", { unsigned: true }).notNull().default(1),
 }, (table) => [
   index("comments_post_created_at_idx").on(table.postId, table.createAt),
   index("comments_user_created_at_idx").on(table.userId, table.createAt),
+  index("comments_status_created_at_idx").on(table.status, table.createAt),
 ])
 
 export const Favorites = mysqlTable("favorites",{

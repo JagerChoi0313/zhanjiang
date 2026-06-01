@@ -13,6 +13,7 @@ import {
   CameraOutlined
 } from '@ant-design/icons';
 import IdenticonAvatar from '../../../components/IdenticonAvatar';
+import {csrfFetch} from '../../../../lib/csrf-client';
 
 const UserProfilePage=()=>{
     const {id} = useParams();
@@ -60,7 +61,7 @@ const UserProfilePage=()=>{
   const handleFollowToggle = async () => {
     setFollowLoading(true);
     try {
-      const res = await fetch('/API/Follow', {
+      const res = await csrfFetch('/API/Follow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetId: id })

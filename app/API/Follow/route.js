@@ -3,6 +3,7 @@ import {Follows, Users} from "../../../database/schema"
 import {eq,and} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
+import {requireCsrf} from "../../../lib/csrf.mjs"
 import {isDuplicateKeyError} from "../../../lib/db-errors.mjs"
 import {ensureUserExists} from "../../../lib/referential-integrity.mjs"
 import {
@@ -54,6 +55,11 @@ export async function GET(request){
 //post接口：处理“关注”和“取消关注”
 export async function POST(request){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录",
             invalidMessage: "登录过期，请重新登录",

@@ -7,6 +7,7 @@ import {useState,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
 import Link from 'next/link'
 import IdenticonAvatar from '../../../components/IdenticonAvatar';
+import {csrfFetch} from '../../../../lib/csrf-client';
 
 const PostDetail=({params})=>{
     const router = useRouter();
@@ -77,7 +78,7 @@ const PostDetail=({params})=>{
         setIsFavoriteLoading(true);
         try{
             //访问收藏专属API
-            const res = await fetch(`/API/MyFavorites`,{
+            const res = await csrfFetch(`/API/MyFavorites`,{
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({
@@ -111,7 +112,7 @@ const PostDetail=({params})=>{
     setIsSubmitting(true)
 
     try{
-        const res = await fetch(`/API/PostDetail/${postId}`,{
+        const res = await csrfFetch(`/API/PostDetail/${postId}`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({

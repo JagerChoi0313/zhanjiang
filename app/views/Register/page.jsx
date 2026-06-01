@@ -3,6 +3,7 @@ import {Form,Input,Card,Button,message,Select,InputNumber} from 'antd';
 import {UserOutlined,MailOutlined,LockOutlined,PhoneOutlined} from '@ant-design/icons';
 import {useState} from 'react'
 import Link from 'next/link';
+import {csrfFetch} from '../../../lib/csrf-client';
 
 const { Option } = Select;
 
@@ -15,7 +16,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       // 发起网络请求
-      const response = await fetch('/API/auth/Register', {
+      const response = await csrfFetch('/API/auth/Register', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values)

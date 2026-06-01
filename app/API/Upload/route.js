@@ -1,11 +1,17 @@
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {ApiValidationError, toApiValidationResponse, validateUploadFile} from "../../../lib/api-validation.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
+import {requireCsrf} from "../../../lib/csrf.mjs"
 import {normalizeUploadPurpose, processUploadImage} from "../../../lib/upload-image.mjs"
 import {createUploadClaimForProcessedImage} from "../../../lib/upload-assets.mjs"
 
 export async function POST(request){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录",
             invalidMessage: "登录过期，请重新登录",

@@ -4,6 +4,7 @@ import {MailOutlined,LockOutlined} from '@ant-design/icons'
 import {useState} from 'react'
 import Link from 'next/link';
 import {useRouter} from 'next/navigation'
+import {csrfFetch} from '../../../lib/csrf-client'
 
 const LoginPage=()=>{
 
@@ -16,7 +17,7 @@ const LoginPage=()=>{
         setLoading(true);
 
         try{
-            const response = await fetch('/API/auth/Login',{
+            const response = await csrfFetch('/API/auth/Login',{
                 method:'POST',      //使用POST方法，意为新建/提交
                 headers:{'Content-Type':'application/json'},    //告诉后端，我发给你的是json格式的数据
                 body:JSON.stringify(values)                 //把js对象转换成字符串，后端才能理解

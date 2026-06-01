@@ -1,13 +1,15 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
-import {desc} from 'drizzle-orm'
+import {and, desc} from 'drizzle-orm'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
 import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
 import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
+import {requireCsrf} from '../../../lib/csrf.mjs'
 import {ensureUserExists} from '../../../lib/referential-integrity.mjs'
 import {attachPostUploadReferences, findCurrentUploadClaims} from '../../../lib/upload-assets.mjs'
+import {CONTENT_STATUS} from '../../../lib/content-status.mjs'
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -30,11 +32,14 @@ export async function GET(request){
         //2.构建基础的查询条件
         //如果有关键字，就要求标题（title）或描述(description)里包含这个词，否则就是undefined(查全部)
         const searchCondition = keyword
-            ? or(
+            ? and(
+                eq(posts.status, CONTENT_STATUS.ACTIVE),
+                or(
                 like(posts.title,`%${keyword}%`),
                 like(posts.description,`%${keyword}%`)
+                )
             )
-            :undefined;
+            :eq(posts.status, CONTENT_STATUS.ACTIVE);
 
         
         //构建不需要where的基础连接车厢
@@ -69,7 +74,7 @@ export async function GET(request){
         .leftJoin(Favorites,eq(posts.id,Favorites.postId))
 
         //3.关联评论表，方便count计算
-        .leftJoin(Comments,eq(posts.id,Comments.postId))
+        .leftJoin(Comments,and(eq(posts.id,Comments.postId), eq(Comments.status, CONTENT_STATUS.ACTIVE)))
 
         //插入搜索条件
         .where(searchCondition)
@@ -79,19 +84,7 @@ export async function GET(request){
         //按时间倒序排列
         .orderBy(desc(posts.createdAt)) 
         
-        //动态判断，只有前端传了搜索词，才挂上where过滤条件
-        if(keyword){
-            queryBuilder = queryBuilder.where(
-                or(
-                    like(posts.title,`%${keyword}%`),
-                    like(posts.description,`%${keyword}%`)
-                )
-            )
-        }
-
         const allPosts = await queryBuilder
-            .groupBy(posts.id,Users.nickname,Users.avatar)
-            .orderBy(desc(posts.createdAt))
 
         return ApiResponse.success(allPosts);
     } catch(error) {
@@ -104,6 +97,10 @@ export async function GET(request){
 
 export async function POST(request){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
         
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录",

@@ -3,6 +3,7 @@ import { Users } from '../../../../database/schema'
 import { eq } from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
+import { requireCsrf } from "../../../../lib/csrf.mjs"
 import {ensureUserExists} from "../../../../lib/referential-integrity.mjs"
 import {findCurrentUploadClaim, replaceAvatarUploadReference} from "../../../../lib/upload-assets.mjs"
 import {
@@ -19,6 +20,11 @@ import {
 
 export async function POST(request) {
     try {
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         // 1. 鉴权：查验身份
         const auth = await requireAuth(request, {
             missingMessage: "未登录，无法修改资料",

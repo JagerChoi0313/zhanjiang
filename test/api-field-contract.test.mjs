@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 const rg = (pattern, paths) => {
@@ -18,6 +19,18 @@ const rg = (pattern, paths) => {
   }
 
   return result.stdout.trim();
+};
+
+const collectSourceFiles = (dir) => {
+  const entries = readdirSync(dir);
+  return entries.flatMap((entry) => {
+    const fullPath = path.join(dir, entry);
+    const stat = statSync(fullPath);
+    if (stat.isDirectory()) {
+      return collectSourceFiles(fullPath);
+    }
+    return /\.(jsx?|tsx?)$/.test(entry) ? [fullPath] : [];
+  });
 };
 
 test("api routes do not create ad-hoc json responses", () => {
@@ -124,6 +137,64 @@ test("authenticated api routes use the shared auth helper", () => {
 
   assert.equal(matches, "");
   assert.deepEqual(missingAuth, []);
+});
+
+test("admin api routes use the shared super admin guard", () => {
+  const adminRoutes = [
+    "app/API/Admin/Users/route.js",
+    "app/API/Admin/Posts/route.js",
+    "app/API/Admin/Posts/[id]/route.js",
+    "app/API/Admin/Comments/route.js",
+    "app/API/Admin/Comments/[id]/route.js",
+  ];
+
+  const missingGuard = adminRoutes.filter((route) => !rg("requireSuperAdmin\\(", [route]));
+
+  assert.deepEqual(missingGuard, []);
+});
+
+test("state-changing api routes enforce csrf before mutating", () => {
+  const unsafeRoutes = [
+    "app/API/auth/Login/route.js",
+    "app/API/auth/Logout/route.js",
+    "app/API/auth/Register/route.js",
+    "app/API/auth/UpdateProfile/route.js",
+    "app/API/Follow/route.js",
+    "app/API/MyFavorites/route.js",
+    "app/API/Post/route.js",
+    "app/API/PostDetail/[id]/route.js",
+    "app/API/Upload/route.js",
+    "app/API/Admin/Posts/[id]/route.js",
+    "app/API/Admin/Comments/[id]/route.js",
+  ];
+
+  const missingCsrf = unsafeRoutes.filter((route) => !rg("requireCsrf\\(", [route]));
+
+  assert.deepEqual(missingCsrf, []);
+});
+
+test("frontend internal unsafe requests go through csrfFetch", () => {
+  const sourceFiles = [
+    ...collectSourceFiles("app/views"),
+    "app/page.tsx",
+  ];
+  const bareInternalUnsafeFetches = [];
+
+  for (const file of sourceFiles) {
+    const source = readFileSync(file, "utf8");
+    const fetchCalls = source.matchAll(/\bfetch\s*\(([\s\S]{0,800}?)\)/g);
+    for (const match of fetchCalls) {
+      const call = match[0];
+      if (
+        /method\s*:\s*['"](?:POST|DELETE|PUT|PATCH)['"]/.test(call)
+        && /(?:['"`])\/API\//.test(call)
+      ) {
+        bareInternalUnsafeFetches.push(`${file}:${source.slice(0, match.index).split("\n").length}`);
+      }
+    }
+  }
+
+  assert.deepEqual(bareInternalUnsafeFetches, []);
 });
 
 test("relationship toggle tables declare compound uniqueness", () => {

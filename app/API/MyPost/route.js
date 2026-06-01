@@ -4,6 +4,7 @@ import {eq,desc,sql} from 'drizzle-orm'
 import {and,like,or} from "drizzle-orm"
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import { requireAuth } from '../../../lib/api-auth.mjs'
+import {CONTENT_STATUS} from '../../../lib/content-status.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -30,7 +31,7 @@ export async function GET(request){
         const pageSize = 4; // 严格控制为4条，配合前端的一页无滚动条排版
         const offset = (page - 1) * pageSize;
 
-        const baseCondition = eq(posts.userId, userId);
+        const baseCondition = and(eq(posts.userId, userId), eq(posts.status, CONTENT_STATUS.ACTIVE));
         
         // 帖子表里搜：标题或描述
         const finalCondition = (keyword && keyword.trim() !== '')
@@ -47,7 +48,7 @@ export async function GET(request){
         const totalResult = await db
             .select({ count: sql`count(*)` })
             .from(posts)
-            .where(eq(posts.userId, userId));
+            .where(finalCondition);
         const totalCount = Number(totalResult[0].count);
 
 
