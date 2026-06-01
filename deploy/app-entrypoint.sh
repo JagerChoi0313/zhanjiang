@@ -44,4 +44,9 @@ fi
 
 mkdir -p "${UPLOAD_DIR:-/app/public/upload}"
 
+if [ "$(id -u)" = "0" ] && id nextjs >/dev/null 2>&1; then
+  chown -R nextjs:nodejs "${UPLOAD_DIR:-/app/public/upload}"
+  exec su-exec nextjs "$@"
+fi
+
 exec "$@"

@@ -18,6 +18,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+RUN apk add --no-cache su-exec
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
 COPY --from=builder /app/.next/standalone ./
@@ -29,7 +30,6 @@ RUN chmod +x /usr/local/bin/app-entrypoint.sh \
   && mkdir -p /app/public/upload \
   && chown -R nextjs:nodejs /app/public/upload
 
-USER nextjs
 EXPOSE 3000
 ENTRYPOINT ["app-entrypoint.sh"]
 CMD ["node", "server.js"]
