@@ -1,5 +1,6 @@
 // views/FoodCommunity/MainPage/components/FoodPost.jsx
 import React from 'react';
+import IdenticonAvatar from '../../../../components/IdenticonAvatar';
 
 const FoodPost = ({ data }) => {
   if (!data) return null;
@@ -34,6 +35,7 @@ const FoodPost = ({ data }) => {
 
   const favoriteCount = data.favoriteCount || data.favorites || 0;
   const commentCount = data.commentCount || (data.comments ? data.comments.length : 0) || 0;
+  const authorName = data.username || data.author?.nickname || "未知吃货";
 
   return (
  <div style={styles.card}>
@@ -46,8 +48,8 @@ const FoodPost = ({ data }) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             {/* 动态读取头像和作者名，加入兜底 */}
-            <img src={data.avatar || data.author?.avatar || "/upload/default-avatar.png"} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} alt="avatar" />
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>{data.username || data.author?.nickname || "未知吃货"}</span>
+            <IdenticonAvatar src={data.avatar || data.author?.avatar} seed={authorName} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} alt="avatar" />
+            <span style={{ fontSize: '13px', fontWeight: '500' }}>{authorName}</span>
           </div>
           <h3 style={styles.title}>{data.title}</h3>
           <p style={styles.desc}>{data.description}</p>

@@ -5,6 +5,7 @@ import {usePathname} from 'next/navigation'//使用usePathname替代原来的act
 import {UserCircle} from 'lucide-react';
 import {Dropdown} from 'antd';
 import {useState,useEffect} from 'react'
+import IdenticonAvatar from '../../../../components/IdenticonAvatar';
 
 
 const NavBar = () => {
@@ -148,19 +149,12 @@ const NavBar = () => {
             className="group shrink-0 cursor-pointer block"
           >
             <div className="w-10 h-10 rounded-full bg-[#1a2a3a]/5 flex items-center justify-center border border-[#1a2a3a]/10 overflow-hidden transition-all group-hover:border-[#a63d2d]/40 group-hover:shadow-md hover:scale-105 active:scale-95">
-              {user.avatar ? (
-                // 这里用 style 写死宽高，确保哪怕是 Base64 图像也能完美居中裁切
-                <img 
-                  src={user.avatar} 
-                  alt="avatar" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                />
-              ) : (
-                // 如果用户没有头像，提取昵称的第一个字作为占位符
-                <span className="text-[#1a2a3a]/70 font-semibold text-sm group-hover:text-[#a63d2d]">
-                  {user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U'}
-                </span>
-              )}
+              <IdenticonAvatar
+                src={user.avatar}
+                seed={user.nickname || user.email || user.userId}
+                alt="avatar"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
           </Link>
         ) : (

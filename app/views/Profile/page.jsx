@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Spin, Button, message, Modal, Form, Input, Select } from 'antd';
 import {
-  UserOutlined, LogoutOutlined, CalendarOutlined, MailOutlined, 
+  LogoutOutlined, CalendarOutlined, MailOutlined, 
   PhoneOutlined, IdcardOutlined, ManOutlined, WomanOutlined,
   EditOutlined, FileTextOutlined, EnvironmentOutlined, CoffeeOutlined, CameraOutlined,
   MessageOutlined, StarOutlined
@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './profile.module.css'; // ✅ 坚决保留你的 CSS Module
+import IdenticonAvatar from '../../components/IdenticonAvatar';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -182,7 +183,7 @@ const ProfilePage = () => {
           <section className={styles.hero}>
             <div className={styles.avatarWrap}>
               <div className={styles.avatarInner}>
-                {user.avatar ? <img src={user.avatar} alt="avatar" className={styles.avatarImg} /> : <UserOutlined className={styles.avatarFallback} />}
+                <IdenticonAvatar src={user.avatar} seed={user.nickname || user.email || user.userId} alt="avatar" className={styles.avatarImg} />
               </div>
               <button
                 type="button"

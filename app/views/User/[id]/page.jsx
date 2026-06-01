@@ -4,7 +4,6 @@ import {useState,useEffect} from 'react'
 import {Spin,message} from "antd"
 import {useParams} from 'next/navigation'
 import {
-  UserOutlined,
   FileTextOutlined,
   MessageOutlined,
   StarOutlined,
@@ -13,6 +12,7 @@ import {
   EnvironmentOutlined,
   CameraOutlined
 } from '@ant-design/icons';
+import IdenticonAvatar from '../../../components/IdenticonAvatar';
 
 const UserProfilePage=()=>{
     const {id} = useParams();
@@ -243,11 +243,7 @@ const UserProfilePage=()=>{
           <section style={heroStyle}>
             <div style={avatarStyle}>
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-                {targetUser.avatar ? (
-                  <img src={targetUser.avatar} alt="avatar" style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <UserOutlined style={{ color: '#cbd5e1', fontSize: 60 }} />
-                )}
+                <IdenticonAvatar src={targetUser.avatar} seed={targetUser.nickname || targetUser.email || targetUser.userId} alt="avatar" style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             </div>
 

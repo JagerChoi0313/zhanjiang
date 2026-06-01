@@ -6,6 +6,7 @@ import React from 'react'
 import {useState,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
 import Link from 'next/link'
+import IdenticonAvatar from '../../../components/IdenticonAvatar';
 
 const PostDetail=({params})=>{
     const router = useRouter();
@@ -217,7 +218,7 @@ const PostDetail=({params})=>{
                                 href={`/views/User/${post.userId || post.author?.userId}`}
                                 className="author-card">
                                     
-                                    <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" className="author-avatar" />
+                                    <IdenticonAvatar src={post.author?.avatar} seed={post.author?.nickname || post.userId || post.id} alt="avatar" className="author-avatar" />
                                     <div className="author-meta">
                                         <div className="author-name-line">
                                             <span className="author-name">{post.author?.nickname || "未知吃货"}</span>
@@ -291,7 +292,7 @@ const PostDetail=({params})=>{
                     <div className="comment-list">
                         {CommentsList.map((item) => (
                             <div key={item.id} className="comment-item">
-                                <img src={item.author?.avatar || "/upload/default-avatar.png"} alt="user" className="comment-avatar" />
+                                <IdenticonAvatar src={item.author?.avatar} seed={item.author?.nickname || item.userId || item.id} alt="user" className="comment-avatar" />
                                 <div className="comment-main">
                                     <div className="comment-name-line">
                                         <span className="comment-name">{item.author?.nickname || "匿名用户"}</span>

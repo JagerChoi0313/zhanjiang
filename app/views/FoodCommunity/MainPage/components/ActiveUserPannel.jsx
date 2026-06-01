@@ -1,5 +1,6 @@
 "use client"
 import {useState,useEffect} from 'react'
+import IdenticonAvatar from '../../../../components/IdenticonAvatar'
 
 const ActiveUserPannel=()=>{
 
@@ -44,8 +45,9 @@ const ActiveUserPannel=()=>{
             <div className="flex items-center gap-3">
               {/* 头像 */}
               <div className="relative">
-                <img 
-                  src={user.avatar} 
+                <IdenticonAvatar
+                  src={user.avatar}
+                  seed={user.user_name || user.id}
                   alt={user.user_name}
                   className="w-10 h-10 rounded-full object-cover border border-gray-50 shadow-sm"
                 />
