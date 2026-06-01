@@ -105,6 +105,7 @@ const LogoutRoute = await import("../app/API/auth/Logout/route.js");
 const RegisterRoute = await import("../app/API/auth/Register/route.js");
 const UpdateProfileRoute = await import("../app/API/auth/UpdateProfile/route.js");
 const FollowRoute = await import("../app/API/Follow/route.js");
+const HealthRoute = await import("../app/API/Health/route.js");
 const MyFavoritesRoute = await import("../app/API/MyFavorites/route.js");
 const MyCommentsRoute = await import("../app/API/MyComments/route.js");
 const MyPostRoute = await import("../app/API/MyPost/route.js");
@@ -172,6 +173,21 @@ const assertApiError = async (response, { status, code, message }) => {
 };
 
 const setCookieHeader = (response) => response.headers.get("set-cookie") ?? "";
+
+test("Health returns a non-cacheable standard success envelope", async () => {
+  const response = await HealthRoute.GET();
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.equal(result.body.code, ErrorCode.SUCCESS);
+  assert.equal(result.body.message, "服务正常");
+  assert.deepEqual(result.body.data, {
+    status: "ok",
+    service: "zhanjiang",
+  });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+});
 
 test("Register stores a BCrypt password hash instead of plaintext", async () => {
   resetState();
