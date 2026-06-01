@@ -45,8 +45,13 @@ test("drizzle export contains indexes for common query paths", () => {
   assert.match(sql, /CREATE INDEX `comments_post_created_at_idx` ON `comments` \(`post_id`,`created_at`\)/i);
   assert.match(sql, /CREATE INDEX `comments_user_created_at_idx` ON `comments` \(`user_id`,`created_at`\)/i);
   assert.match(sql, /CREATE INDEX `favorites_user_created_at_idx` ON `favorites` \(`user_id`,`created_at`\)/i);
+  assert.match(sql, /CREATE INDEX `favorites_post_idx` ON `favorites` \(`post_id`\)/i);
   assert.match(sql, /CREATE INDEX `follows_following_idx` ON `follows` \(`following_id`\)/i);
   assert.match(sql, /CREATE INDEX `explore_carousel_spot_sort_idx` ON `explore_carousel` \(`spot_id`,`sort_order`\)/i);
+  assert.match(sql, /CREATE INDEX `hot_recommend_rank_score_idx` ON `hot_recommend` \(`rank_score`\)/i);
+  assert.match(sql, /CREATE INDEX `hot_topics_rank_idx` ON `hot_topics` \(`rank`\)/i);
+  assert.match(sql, /CREATE INDEX `talk_ranking_created_at_idx` ON `talk_ranking` \(`create_at`\)/i);
+  assert.match(sql, /CREATE INDEX `talk_ranking_user_avatar_idx` ON `talk_ranking` \(`user_name`,`avatar`\)/i);
 });
 
 test("database scripts do not initialize from full backup dumps", () => {

@@ -38,7 +38,9 @@ export const HotRecommend=mysqlTable("hot_recommend",{
     category: varchar("category", { length: 100 }).default('全部'), // 分类标签
 
     createAt:timestamp("create_at").defaultNow(),
-})
+}, (table) => [
+    index("hot_recommend_rank_score_idx").on(table.rank_score),
+])
 
 export const TalkRanking = mysqlTable("talk_ranking",{
     id:int("id").autoincrement().primaryKey(),
@@ -47,7 +49,10 @@ export const TalkRanking = mysqlTable("talk_ranking",{
     avatar:varchar("avatar",{length:500}),
     rating:int("rating").default(5),
     create_at:timestamp("create_at").defaultNow(),
-})
+}, (table) => [
+    index("talk_ranking_created_at_idx").on(table.create_at),
+    index("talk_ranking_user_avatar_idx").on(table.user_name, table.avatar),
+])
 
 
 // 1. 点位位置表 (父表)
@@ -159,7 +164,9 @@ export const hotTopics = mysqlTable("hot_topics",{
   isHot:boolean('ishot').default(false),  //判断是否带火苗标志
   createAt:timestamp('create_at').defaultNow(),
 
-})
+}, (table) => [
+  index("hot_topics_rank_idx").on(table.rank),
+])
 
 
 // 为什么不在 posts 表里加评论字段？
@@ -210,6 +217,7 @@ export const Favorites = mysqlTable("favorites",{
 }, (table) => [
   uniqueIndex("favorites_user_post_unique").on(table.userId, table.postId),
   index("favorites_user_created_at_idx").on(table.userId, table.createdAt),
+  index("favorites_post_idx").on(table.postId),
 ])
 
 //核心逻辑：记录谁（followerId)关注了谁（followingId）

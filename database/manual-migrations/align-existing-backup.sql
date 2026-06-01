@@ -37,6 +37,11 @@ CREATE INDEX `comments_post_created_at_idx` ON `comments` (`post_id`, `created_a
 CREATE INDEX `comments_user_created_at_idx` ON `comments` (`user_id`, `created_at`);
 CREATE INDEX `explore_carousel_spot_sort_idx` ON `explore_carousel` (`spot_id`, `sort_order`);
 CREATE INDEX `favorites_user_created_at_idx` ON `favorites` (`user_id`, `created_at`);
+CREATE INDEX `favorites_post_idx` ON `favorites` (`post_id`);
 CREATE INDEX `follows_following_idx` ON `follows` (`following_id`);
+CREATE INDEX `hot_recommend_rank_score_idx` ON `hot_recommend` (`rank_score`);
+CREATE INDEX `hot_topics_rank_idx` ON `hot_topics` (`rank`);
 CREATE INDEX `posts_created_at_idx` ON `posts` (`create_at`);
 CREATE INDEX `posts_user_created_at_idx` ON `posts` (`user_id`, `create_at`);
+CREATE INDEX `talk_ranking_created_at_idx` ON `talk_ranking` (`create_at`);
+CREATE INDEX `talk_ranking_user_avatar_idx` ON `talk_ranking` (`user_name`, `avatar`);
