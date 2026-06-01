@@ -1,0 +1,146 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+const rg = (pattern, paths) => {
+  const result = spawnSync("rg", ["-n", pattern, ...paths], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  });
+
+  if (result.status === 1) {
+    return "";
+  }
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || `rg failed with status ${result.status}`);
+  }
+
+  return result.stdout.trim();
+};
+
+test("api routes do not create ad-hoc json responses", () => {
+  const matches = rg("NextResponse\\.json|Response\\.json", ["app/API"]);
+
+  assert.equal(matches, "");
+});
+
+test("frontend no longer reads legacy api response fields", () => {
+  const matches = rg(
+    "(^|[^.])\\b(data|result|followData|userData)\\.(error|pagination|url|user|isFollowing|isFavorited)\\b",
+    ["app/views", "app/page.tsx"],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("api error responses do not expose raw exception messages", () => {
+  const matches = rg("ApiResponse\\.error\\([^\\n]*error\\.message", ["app/API"]);
+
+  assert.equal(matches, "");
+});
+
+test("hardened api routes use shared validation helpers", () => {
+  const routes = [
+    "app/API/auth/Login/route.js",
+    "app/API/auth/Register/route.js",
+    "app/API/auth/UpdateProfile/route.js",
+    "app/API/Post/route.js",
+    "app/API/Follow/route.js",
+    "app/API/MyFavorites/route.js",
+    "app/API/PostDetail/[id]/route.js",
+    "app/API/TasteCard/[id]/route.js",
+    "app/API/UserInfo/route.js",
+    "app/API/Upload/route.js",
+  ];
+
+  const missingImports = routes.filter((route) => !rg("api-validation\\.mjs", [route]));
+
+  assert.deepEqual(missingImports, []);
+});
+
+test("hardened json routes parse request bodies through readJsonBody", () => {
+  const matches = rg(
+    "request\\.json\\(",
+    [
+      "app/API/auth/Login/route.js",
+      "app/API/auth/Register/route.js",
+      "app/API/auth/UpdateProfile/route.js",
+      "app/API/Post/route.js",
+      "app/API/PostDetail/[id]/route.js",
+      "app/API/Follow/route.js",
+      "app/API/MyFavorites/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("paginated api routes reject legacy parseInt page fallbacks", () => {
+  const matches = rg(
+    "parseInt\\(searchParams\\.get\\(\"page\"\\)\\) \\|\\| 1",
+    [
+      "app/API/MyComments/route.js",
+      "app/API/MyPost/route.js",
+      "app/API/MyFavorites/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("dynamic id api routes reject legacy parseInt id parsing", () => {
+  const matches = rg(
+    "parseInt\\(",
+    [
+      "app/API/PostDetail/[id]/route.js",
+      "app/API/UserInfo/route.js",
+      "app/API/TasteCard/[id]/route.js",
+    ],
+  );
+
+  assert.equal(matches, "");
+});
+
+test("authenticated api routes use the shared auth helper", () => {
+  const authenticatedRoutes = [
+    "app/API/auth/Login/route.js",
+    "app/API/auth/UpdateProfile/route.js",
+    "app/API/Follow/route.js",
+    "app/API/MyFavorites/route.js",
+    "app/API/MyComments/route.js",
+    "app/API/MyPost/route.js",
+    "app/API/Post/route.js",
+    "app/API/PostDetail/[id]/route.js",
+    "app/API/Upload/route.js",
+  ];
+
+  const matches = rg(
+    "cookies\\.get\\(['\"]auth_token['\"]\\)|verifyToken\\(",
+    authenticatedRoutes,
+  );
+  const missingAuth = authenticatedRoutes.filter((route) => !rg("requireAuth\\(", [route]));
+
+  assert.equal(matches, "");
+  assert.deepEqual(missingAuth, []);
+});
+
+test("relationship toggle tables declare compound uniqueness", () => {
+  const schema = readFileSync("database/schema.js", "utf8");
+
+  assert.match(
+    schema,
+    /uniqueIndex\(["']favorites_user_post_unique["']\)\.on\(table\.userId,\s*table\.postId\)/,
+  );
+  assert.match(
+    schema,
+    /uniqueIndex\(["']follows_follower_following_unique["']\)\.on\(table\.followerId,\s*table\.followingId\)/,
+  );
+});
+
+test("drizzle config points at the runtime schema", () => {
+  const config = readFileSync("drizzle.config.js", "utf8");
+
+  assert.match(config, /schema:\s*["']\.\/database\/schema\.js["']/);
+});

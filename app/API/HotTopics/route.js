@@ -1,7 +1,7 @@
 import {db} from '../../../database/index'
 import {hotTopics} from '../../../database/schema'
 import {asc} from 'drizzle-orm'     //用来升序排列
-import {NextResponse} from 'next/server'
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 export async function GET(){
     try{
@@ -10,9 +10,9 @@ export async function GET(){
         .from(hotTopics).
         orderBy(asc(hotTopics.rank))
 
-        return NextResponse.json(data)
+        return ApiResponse.success(data)
     }catch(error){
         console.error("获取热门话题失败：",error);
-        return NextResponse.json({error:"Fetch failed"},{status:500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取热门话题失败")
     }
 }

@@ -1,12 +1,12 @@
 "use client"
-import React, { useEffect, useState,useRef } from 'react';
-import PostFilter from './PostFilter/page';
-import PostCard from './PostCard/page';
-import PaginationPost from './Pagination/page';
+import React, { Suspense, useEffect, useState,useRef } from 'react';
+import PostFilter from './components/PostFilter';
+import PostCard from './components/PostCard';
+import PaginationPost from './components/PaginationPost';
 import Link from "next/link"
 import { useSearchParams } from 'next/navigation';
 
-export default function MyPost() {
+function MyPostContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
 
@@ -39,10 +39,11 @@ export default function MyPost() {
 
       if (result.success) {
         setPosts(result.data);
-        if(result.pagination?.totalPages > 0) {
+        const pageInfo = result.meta?.pagination;
+        if(pageInfo) {
            setPagination({
-             totalPages: result.pagination.totalPages,
-             currentPage: result.pagination.currentPage
+             totalPages: pageInfo.totalPages || 1,
+             currentPage: pageInfo.currentPage
            });
         }
       }
@@ -120,5 +121,13 @@ export default function MyPost() {
         />
       )}
     </div>
+  );
+}
+
+export default function MyPost() {
+  return (
+    <Suspense fallback={<div className="w-full min-h-screen bg-[#FAFAFA] py-6 px-10 text-gray-400 text-sm">加载中...</div>}>
+      <MyPostContent />
+    </Suspense>
   );
 }

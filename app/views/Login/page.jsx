@@ -27,7 +27,7 @@ const LoginPage=()=>{
                 message.success('欢迎回来');            //成功提示
                 router.push("/views/Profile")
             }else{
-                message.error('账号密码错误');
+                message.error(data.message || '账号密码错误');
             }
 
         }catch{

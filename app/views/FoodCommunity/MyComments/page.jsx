@@ -1,13 +1,13 @@
 "use client"
-import {useState,useEffect} from 'react'
-import CommentCard from "./CommentCard/page"
-import Pagination from './Pagination/page'
-import CommentFilter from './CommentFilter/page'
+import {Suspense, useState,useEffect} from 'react'
+import CommentCard from "./components/CommentCard"
+import Pagination from './components/Pagination'
+import CommentFilter from './components/CommentFilter'
 import Link from 'next/link'
 import {useRef} from 'react'    //引入useRef记录上一次的搜索词
 import {useSearchParams} from 'next/navigation' //引入路由参数工具
 
-const MyComments=()=>{
+const MyCommentsContent=()=>{
 
     //获得URL里的q参数
     const searchParams = useSearchParams()
@@ -48,7 +48,7 @@ const MyComments=()=>{
                 setIsAuthorized(true)   //确认身份合法
                 setCommentList(result.data);
                 // 确保后端返回的是 pagination.totalPages
-                setTotalPages(result.pagination?.totalPages || 1);
+                setTotalPages(result.meta?.pagination?.totalPages || 1);
             }
         } catch (error) {
             console.error("Failed to fetch Comment:", error)
@@ -136,5 +136,11 @@ const MyComments=()=>{
     </div>
     )
 }
+
+const MyComments=()=>(
+    <Suspense fallback={<div className="p-5 text-gray-400 text-center">加载中...</div>}>
+        <MyCommentsContent />
+    </Suspense>
+)
 
 export default MyComments;

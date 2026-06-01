@@ -1,6 +1,6 @@
 import {db} from '../../../database/index'
 import {TasteCardTable} from '../../../database/schema'
-import {NextResponse} from 'next/server'
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 export async function GET(){
 
@@ -10,16 +10,9 @@ export async function GET(){
         .from(TasteCardTable)
 
         //返回JSON数据
-        return NextResponse.json({
-            success:true,
-            data:data
-        },{status:200});
+        return ApiResponse.success(data);
     }catch(error){
         console.error("读取食材数据库失败：",error)
-        return NextResponse.json({
-            success:false,
-            message:"获取味觉卡片内容失败"
-        },{status:500}
-        );
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取味觉卡片内容失败");
     }
 }

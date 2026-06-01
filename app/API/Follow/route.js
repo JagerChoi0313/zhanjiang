@@ -1,39 +1,30 @@
 import {db} from "../../../database/index"
-import {Follows} from "../../../database/schema"
+import {Follows, Users} from "../../../database/schema"
 import {eq,and} from "drizzle-orm"
-import {NextResponse} from "next/server"
-import {verifyToken} from  "../../../lib/jwt"
+import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {requireAuth} from "../../../lib/api-auth.mjs"
+import {isDuplicateKeyError} from "../../../lib/db-errors.mjs"
+import {
+    ApiValidationError,
+    positiveInt,
+    readJsonBody,
+    toApiValidationResponse,
+} from "../../../lib/api-validation.mjs"
 
 export async function GET(request){
     try{
-        const token = request.cookies.get('auth_token')?.value
-        if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请登录"
-            },{status:401})
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录过期，请重新登录"
-            },{status:401})
-        }
-
-        const currentUserId = payload.userId
+        const currentUserId = auth.userId
 
         const {searchParams} = new URL(request.url)
-        const targetUserId = searchParams.get("targetId")
-
-        if(!targetUserId){
-            return NextResponse.json({
-                success:false,
-                message:"缺少目标用户id"
-            },{status:401})
-        }
+        const targetUserId = positiveInt(searchParams.get("targetId"), "目标用户id")
 
         //去数据库查有没有这条记录
         const existingFollow = await db
@@ -42,60 +33,49 @@ export async function GET(request){
             .where(
                 and(
                     eq(Follows.followerId,currentUserId),
-                    eq(Follows.followingId,parseInt(targetUserId))
+                    eq(Follows.followingId,targetUserId)
                 )
             )
 
-            return NextResponse.json({
-                success:true,
+            return ApiResponse.success({
                 isFollowing:existingFollow.length>0
-            },{status:200})
+            })
 
     }catch(error){
+            if(error instanceof ApiValidationError){
+                return toApiValidationResponse(error)
+            }
             console.error("Check follow status error:",error)
-            return NextResponse.json({
-                success:false,
-                message:"检查状态失败"
-            },{status:402})
+            return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "检查状态失败")
     }
 }
 
 //post接口：处理“关注”和“取消关注”
 export async function POST(request){
     try{
-        const token=request.cookies.get('auth_token')?.value
-        if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录"
-            },{status:401})
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
+        const currentUserId = auth.userId
+        const body = await readJsonBody(request)
+        const targetId = positiveInt(body.targetId, "目标用户ID")
 
-        if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录过期，请重新登录"
-            },{status:401})
+        if(Number(currentUserId) === targetId){
+            return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "不能关注自己哦")
         }
 
-        const currentUserId = payload.userId
-        const body = await request.json()
-        const {targetId} = body
-
-        if(!targetId){
-            return NextResponse.json({
-                success:false,
-                message:"缺少目标用户ID"
-            },{status:401})
-        }
-
-        if(currentUserId === parseInt(targetId)){
-            return NextResponse.json({
-                success:false,
-                message:"不能关注自己哦"
-            },{status:401})
+        const targetUser = await db
+            .select({userId: Users.userId})
+            .from(Users)
+            .where(eq(Users.userId, targetId))
+            .limit(1)
+        if(targetUser.length === 0){
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "目标用户不存在")
         }
 
         //检查是否已经关注过：
@@ -105,40 +85,47 @@ export async function POST(request){
             .where(
                 and(
                     eq(Follows.followerId,currentUserId),
-                    eq(Follows.followingId,parseInt(targetId))
+                    eq(Follows.followingId,targetId)
                 )
             )
 
 
         if (existingFollow.length>0){
-            //已经关注过，则取消关注
+            //已经关注过，则取消关注；按关系键删除，顺带清掉历史重复记录
             await db.delete(Follows)
-                .where(eq(Follows.id,existingFollow[0].id))
+                .where(
+                    and(
+                        eq(Follows.followerId,currentUserId),
+                        eq(Follows.followingId,targetId)
+                    )
+                )
 
-            return NextResponse.json({
-                success:true,
-                message:"已取消关注",
+            return ApiResponse.success({
                 isFollowing:false
-            })
+            }, "已取消关注")
         }else{
             //没有关注过，则添加关注
-            await db.insert(Follows).values({
-                followerId:currentUserId,
-                followingId:parseInt(targetId)
-            })
+            try{
+                await db.insert(Follows).values({
+                    followerId:currentUserId,
+                    followingId:targetId
+                })
+            }catch(error){
+                if(!isDuplicateKeyError(error)){
+                    throw error
+                }
+            }
 
-            return NextResponse.json({
-                success:true,
-                message:"关注成功",
+            return ApiResponse.success({
                 isFollowing:true
-            },{status:200})
+            }, "关注成功")
         }
 
     }catch(error){
+            if(error instanceof ApiValidationError){
+                return toApiValidationResponse(error)
+            }
             console.error("Follow action error:",error);
-            return NextResponse.json({
-                success:false,
-                message:"操作失败，请重试"
-            },{status:402})
+            return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "操作失败，请重试")
     }
 }

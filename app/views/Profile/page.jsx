@@ -21,18 +21,21 @@ const ProfilePage = () => {
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  const normalizeGender = (gender) => gender === 'unknown' ? 'secret' : gender;
+
   const fetchUserData = async () => {
     try {
       const res = await fetch('/API/auth/Login', { credentials: 'include' });
       const data = await res.json();
+      const currentUser = data.data?.user;
       if (data.success) {
-        setUser(data.user);
+        setUser(currentUser);
         form.setFieldsValue({
-          nickname: data.user.nickname,
-          gender: data.user.gender,
-          age: data.user.age,
-          phoneNumber: data.user.phoneNumber,
-          introduction: data.user.introduction // 获取个人简介
+          nickname: currentUser.nickname,
+          gender: normalizeGender(currentUser.gender),
+          age: currentUser.age,
+          phoneNumber: currentUser.phoneNumber,
+          introduction: currentUser.introduction // 获取个人简介
         });
       } else {
         setUser(null);
@@ -57,7 +60,7 @@ const ProfilePage = () => {
         setUser(null);
         router.push('/views/Login');
       } else {
-        message.error(data.error || '退出失败');
+        message.error(data.message || '退出失败');
       }
     } catch (error) {
       message.error("网络异常，请稍后再尝试");
@@ -79,7 +82,7 @@ const ProfilePage = () => {
         setIsModalOpen(false);
         fetchUserData(); 
       } else {
-        message.error(data.error || "更新失败");
+        message.error(data.message || "更新失败");
       }
     } catch (error) {
       message.error("网络错误，请稍后再试");
@@ -242,7 +245,7 @@ const ProfilePage = () => {
               <Input size="large" placeholder="输入你的昵称" />
             </Form.Item>
             <Form.Item name="gender" label="性别">
-              <Select size="large" options={[{ value: 'male', label: '男' }, { value: 'female', label: '女' }, { value: 'unknown', label: '保密' }]} />
+              <Select size="large" options={[{ value: 'male', label: '男' }, { value: 'female', label: '女' }, { value: 'secret', label: '保密' }]} />
             </Form.Item>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

@@ -1,50 +1,61 @@
 import { db } from '../../../../database/index'
 import { Users } from '../../../../database/schema'
 import { eq } from 'drizzle-orm'
-import { NextResponse } from "next/server"
-import { verifyToken } from "../../../../lib/jwt"
+import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
+import { requireAuth } from "../../../../lib/api-auth.mjs"
+import {
+    ApiValidationError,
+    assertAllowedValue,
+    isPhone,
+    optionalIntRange,
+    optionalString,
+    readJsonBody,
+    requiredString,
+    toApiValidationResponse,
+} from "../../../../lib/api-validation.mjs"
 
 export async function POST(request) {
     try {
         // 1. 鉴权：查验身份
-        const token = request.cookies.get('auth_token')?.value
-        if (!token) {
-            return NextResponse.json({ success: false, error: "未登录，无法修改资料" }, { status: 401 })
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，无法修改资料",
+            invalidMessage: "登录已失效，请重新登录",
+        })
+        if (!auth.ok) {
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-        if (!payload) {
-            return NextResponse.json({ success: false, error: "登录已失效，请重新登录" }, { status: 401 })
-        }
-
-        const currentUserId = payload.userId
+        const currentUserId = auth.userId
 
         // 2. 接收前端传来的数据（严格只拿这5个字段）
-        const body = await request.json()
-        const { nickname, gender, age, phoneNumber, introduction } = body
-
-        if (!nickname || nickname.trim() === "") {
-            return NextResponse.json({ success: false, error: "昵称不能为空哦" }, { status: 400 })
+        const body = await readJsonBody(request)
+        const nickname = requiredString(body.nickname, "昵称", { maxLength: 255 })
+        const gender = assertAllowedValue(body.gender, ["male", "female", "secret"], "性别")
+        const age = optionalIntRange(body.age, 1, 120, "年龄")
+        const phoneNumber = optionalString(body.phoneNumber, "手机号")
+        if (phoneNumber !== undefined && !isPhone(phoneNumber)) {
+            throw new ApiValidationError("手机号格式不正确")
         }
+        const introduction = optionalString(body.introduction, "个人简介", { maxLength: 500 })
 
         // 3. 写入数据库
         await db.update(Users)
             .set({
                 nickname,
-                gender,
-                age: age ? parseInt(age) : null,
-                phoneNumber,
-                introduction // ✅ 存入个人简介
+                gender: gender ?? null,
+                age: age ?? null,
+                phoneNumber: phoneNumber ?? null,
+                introduction: introduction ?? null // ✅ 存入个人简介
             })
             .where(eq(Users.userId, currentUserId))
 
-        return NextResponse.json({
-            success: true,
-            message: "资料保存成功！"
-        }, { status: 200 })
+        return ApiResponse.success(undefined, "资料保存成功！")
 
     } catch (error) {
+        if (error instanceof ApiValidationError) {
+            return toApiValidationResponse(error)
+        }
         console.error("更新个人资料失败：", error)
-        return NextResponse.json({ success: false, error: "服务器发生未知错误，资料保存失败" }, { status: 500 })
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器发生未知错误，资料保存失败")
     }
 }

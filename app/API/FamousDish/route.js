@@ -1,8 +1,8 @@
 "use server"
 import {db} from '../../../database/index'
 import {ExploreSpots,ExploreCarousel} from '../../../database/schema'
-import {NextResponse} from 'next/server'
 import {eq} from 'drizzle-orm'
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 export async function GET(){
 
@@ -27,18 +27,11 @@ export async function GET(){
             })
         )
 
-        return NextResponse.json({
-            success:true,
-            data:fullData,
-
-        },{status:200})
+        return ApiResponse.success(fullData)
 
     }catch(error){
         console.error("获取探店数据失败:",error)
 
-        return NextResponse.json({
-            success:false,
-            message:"服务器内部错误"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "服务器内部错误")
     }
 }

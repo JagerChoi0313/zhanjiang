@@ -3,7 +3,7 @@
 import {db} from '../../../database/index'
 import {TalkRanking} from '../../../database/schema'
 import {desc} from 'drizzle-orm'        //这是用来倒序的
-import {NextResponse} from 'next/server'
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 
 export async function GET(){
 
@@ -14,16 +14,10 @@ export async function GET(){
         .orderBy(desc(TalkRanking.create_at))
 
         //返回json响应
-        return NextResponse.json({
-            success:true,
-            data:data
-        },{status:200})
+        return ApiResponse.success(data)
 
     }catch(error){
         console.error("API error:",error);
-        return NextResponse.json({
-            success:false,
-            message:"获取用户互动榜单内容失败"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取用户互动榜单内容失败")
     }
 }

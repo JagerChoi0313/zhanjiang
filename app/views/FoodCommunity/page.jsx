@@ -2,7 +2,7 @@
 "use client";
 import React from 'react';
 // 引入你写好的 MainPage 组件
-import MainPage from './MainPage/page'; 
+import MainPage from './MainPage/MainPage';
 
 const FoodCommunityRoot = () => {
   return (

@@ -1,12 +1,22 @@
 import {db} from '../../../database/index'
 import {posts} from '../../../database/schema'
 import {desc} from 'drizzle-orm'
-import {NextResponse} from 'next/server'
-import {verifyToken} from '../../../lib/jwt'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
 import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
+import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
+import {requireAuth} from '../../../lib/api-auth.mjs'
+import {
+    ApiValidationError,
+    assertAllowedValue,
+    optionalString,
+    readJsonBody,
+    requiredString,
+    toApiValidationResponse,
+} from '../../../lib/api-validation.mjs'
 
+const POST_CATEGORIES = ["菜谱", "探店", "攻略", "美食分享", "其他"];
+const POST_LOCATIONS = ["赤坎区", "霞山区", "坡头区", "麻章区", "遂溪县", "徐闻县", "廉江市", "雷州市", "吴川市"];
 
 // GET请求，获取所有的帖子
 export async function GET(request){
@@ -81,10 +91,10 @@ export async function GET(request){
             .groupBy(posts.id,Users.nickname,Users.avatar)
             .orderBy(desc(posts.createdAt))
 
-        return NextResponse.json(allPosts);
+        return ApiResponse.success(allPosts);
     } catch(error) {
         console.error("Fetch error:", error)
-        return NextResponse.json({error: "数据库读取失败"}, {status: 500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "数据库读取失败")
     }
 }
 
@@ -93,55 +103,68 @@ export async function GET(request){
 export async function POST(request){
     try{
         
-        //从cookies中提取通行证并解密身份
-        const token = request.cookies.get('auth_token')?.values
-        if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录"
-            },{status:401})
-        }
-
-        const payload = await verifyToken(token)
-        
-        if(!payload){
-            return NextResponse.json({
-                success:false,
-                message:"登录失效，请重新登录"
-            },{status:401})
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
         //提取出经过后端校验，绝无可能被前端篡改的用户ID
-        const userId = payload.userId;
+        const userId = auth.userId;
 
-        const body = await request.json();
+        const body = await readJsonBody(request);
+        const title = requiredString(body.title, "标题", {maxLength:255})
+        const description = requiredString(body.description, "描述")
+        const category = assertAllowedValue(
+            requiredString(body.category, "分类", {maxLength:50}),
+            POST_CATEGORIES,
+            "分类"
+        )
+        const location = assertAllowedValue(
+            requiredString(body.location, "地点", {maxLength:100}),
+            POST_LOCATIONS,
+            "地点"
+        )
+        const coverImage = optionalString(body.coverImage, "封面图")
+        const images = body.images === undefined
+            ? []
+            : body.images
+
+        if(!Array.isArray(images)){
+            throw new ApiValidationError("图片列表必须是数组")
+        }
+
+        const normalizedImages = images.map((image) => {
+            if(typeof image !== "string"){
+                throw new ApiValidationError("图片地址必须是文本")
+            }
+            return image.trim()
+        })
 
         //自动生成摘要：取描述的前100字
-        const excerpt = body.description ? body.description.substring(0,100) : "";
+        const excerpt = description.substring(0,100);
 
         const result = await db.insert(posts).values({
             userId:userId,
-            title:body.title,
-            description:body.description,
+            title:title,
+            description:description,
             excerpt:excerpt,
-            coverImage:body.coverImage,
+            coverImage:coverImage,
             //重点：images是数组，入库前转成JSON字符串
-            images:JSON.stringify(body.images || []),
-            category:body.category,
-            location:body.location,
+            images:JSON.stringify(normalizedImages),
+            category:category,
+            location:location,
             createdAt:new Date()
         });
 
-        return NextResponse.json({
-            success:true,
-            message:"发布成功",
-            postId:result.insertId
-        })
+        return ApiResponse.created({postId:result.insertId}, "发布成功")
     }catch(error){
+            if(error instanceof ApiValidationError){
+                return toApiValidationResponse(error)
+            }
             console.error("Post error:",error);
-            return NextResponse.json({
-                success:false,
-                message:"发布失败"
-            },{status:500})
+            return ApiResponse.error(ErrorCode.DATABASE_ERROR, "发布失败")
     }
 }

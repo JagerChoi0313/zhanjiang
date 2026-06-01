@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import RankingCard from './RankingCard'
-import { getRankingData } from '../../API/FoodRanking/route'
+import { getRankingData } from '../../../lib/food-ranking.mjs'
 
 const FoodRankingPage = () => {
   const [list, setList] = useState([])

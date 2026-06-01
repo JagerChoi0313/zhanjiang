@@ -1,12 +1,12 @@
 "use client"
-import React, { useEffect, useState,useRef } from 'react';
-import FavoriteFilter from './FavoriteFilter/page';
-import FavoriteCard from './FavoriteCard/page';
-import Pagination from './Pagination/page';
+import React, { Suspense, useEffect, useState,useRef } from 'react';
+import FavoriteFilter from './components/FavoriteFilter';
+import FavoriteCard from './components/FavoriteCard';
+import Pagination from './components/Pagination';
 import Link from "next/link"
 import { useSearchParams } from 'next/navigation';
 
-export default function MyFavorites() {
+function MyFavoritesContent() {
 
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || ''; // 提取搜索词
@@ -44,10 +44,11 @@ export default function MyFavorites() {
         setIsAuthorized(true);
         setFavorites(result.data);
 
-        if(result.pagination) {
+        const pageInfo = result.meta?.pagination;
+        if(pageInfo) {
            setPagination({
-             totalPages: result.pagination.totalPages || result.pagination.totalPage || 1, 
-             currentPage: result.pagination.currentPage
+             totalPages: pageInfo.totalPages || 1,
+             currentPage: pageInfo.currentPage
            });
         }
       }
@@ -127,5 +128,13 @@ export default function MyFavorites() {
         />
       )}
     </div>
+  );
+}
+
+export default function MyFavorites() {
+  return (
+    <Suspense fallback={<div className="w-full min-h-screen bg-[#FAFAFA] py-6 px-10 text-gray-400 text-sm">加载中...</div>}>
+      <MyFavoritesContent />
+    </Suspense>
   );
 }

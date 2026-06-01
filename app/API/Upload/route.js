@@ -1,21 +1,35 @@
 //投稿功能中“图片上传”的实现
 // 先把文件存到你的服务器 public/uploads 文件夹或者云存储，拿到 URL 后再塞进这个 POST 接口。
 
-import {NextResponse} from "next/server"
 import {writeFile} from 'fs/promises'   //专门用于异步写入文件的工具
 import {join} from 'path'               //用于智能拼接文件路径（兼容windows和Mac）
 import {v4 as uuidv4} from 'uuid'       //生成全球唯一标识符，防止文件名重复
+import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {ApiValidationError, toApiValidationResponse, validateUploadFile} from "../../../lib/api-validation.mjs"
+import {requireAuth} from "../../../lib/api-auth.mjs"
 
 export async function POST(request){
     try{
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
+        }
+
         const formData = await request.formData();  //解析前端传来的FormData格式数据（包含文件和其他文本）
         const file = formData.get('file');      //从表单中提取key为‘file’的内容
 
-        if(!file){
-            return NextResponse.json({
-                success:false,
-                message:"未找到文件"
-            },{status:400})
+        let uploadFile;
+        try{
+            uploadFile = validateUploadFile(file);
+        }catch(validationError){
+            if(validationError instanceof ApiValidationError){
+                return toApiValidationResponse(validationError)
+            }
+
+            throw validationError
         }
 
         //核心步骤：将文件转化为二进制数组缓冲区（ArrayBuffer）
@@ -25,8 +39,7 @@ export async function POST(request){
         const buffer  = Buffer.from(bytes);
 
         //文件名防重名处理
-        const originalName = file.name;     //获取原始文件名，如“my——food.jpg”
-        const fileExtension = originalName.split('.').pop();    //提取后缀，先按“.”进行分割，再取数组最后一个值，得到“jpg”
+        const fileExtension = uploadFile.extension;    //使用校验后的安全后缀，避免大小写或伪造扩展名
         const fileName = `${uuidv4()}.${fileExtension}`;       //拼接新名字：uuidv4()生成一串乱码 + 加上后缀
 
 
@@ -45,18 +58,14 @@ export async function POST(request){
 
         console.log(`文件已保存至：${path}`)
 
-        return NextResponse.json({
-            success:true,
+        return ApiResponse.success({
             url:fileUrl     //前端拿到这个后，再去提交给/API/Post接口
         })
 
 
     }catch(error){
         console.error('Upload Error:',error)
-        return NextResponse.json({
-            success:false,
-            message:'服务器上传失败'
-        },{status:500})
+        return ApiResponse.error(ErrorCode.UPLOAD_ERROR, '服务器上传失败')
     }
 }
 

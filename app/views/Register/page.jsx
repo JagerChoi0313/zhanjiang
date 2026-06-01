@@ -53,7 +53,7 @@ const RegisterPage = () => {
         form.resetFields(); // 清空表单
         setImageUrl(null); // 清空头像预览
       } else {
-        message.error(data.error || '注册失败');
+        message.error(data.message || '注册失败');
       }
     } catch (error) {
       message.error('无法连接服务器，请检查网络');

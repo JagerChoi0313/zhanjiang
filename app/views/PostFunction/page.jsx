@@ -4,10 +4,10 @@ import {useState,useMemo,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
 
 // 导入刚才封装的四个组件
-import ActionHeader from './ActionHeader/page';
-import EditorSection from './EditorSection/page';
-import MediaUploader from './MediaUploader/page';
-import PostConfig from './PostConfig/page';
+import ActionHeader from './components/ActionHeader';
+import EditorSection from './components/EditorSection';
+import MediaUploader from './components/MediaUploader';
+import PostConfig from './components/PostConfig';
 import Link from 'next/link'
 
 const PostFunction=()=>{

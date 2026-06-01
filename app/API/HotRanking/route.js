@@ -4,7 +4,7 @@
 import {db} from '../../../database/index'
 import {HotRecommend} from '../../../database/schema'
 import {desc} from "drizzle-orm"        //这个是用来倒序的
-import {NextResponse} from "next/server"
+import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 
 export async function GET(){
     try{
@@ -14,18 +14,10 @@ export async function GET(){
         .orderBy(desc(HotRecommend.rank_score));
 
         //返回JSON响应
-        return NextResponse.json({
-            success:true,
-            data:data,
-        },
-        {status:200})
+        return ApiResponse.success(data)
     }catch(error){
         console.error("API Error:",error);
-        return NextResponse.json({
-            success:false,
-            message:"获取热门推荐内容失败"
-        },
-            {status:500})
+        return ApiResponse.error(ErrorCode.DATABASE_ERROR, "获取热门推荐内容失败")
        
     }
 

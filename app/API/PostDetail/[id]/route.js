@@ -1,9 +1,16 @@
 import {db} from "../../../../database/index"
 import {posts} from "../../../../database/schema"
 import {eq} from 'drizzle-orm'
-import {NextResponse} from "next/server"
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
-import {verifyToken} from "../../../../lib/jwt"
+import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
+import { requireAuth } from "../../../../lib/api-auth.mjs"
+import {
+    ApiValidationError,
+    positiveInt,
+    readJsonBody,
+    requiredString,
+    toApiValidationResponse,
+} from "../../../../lib/api-validation.mjs"
 
 
 //帖子详情以及包含所有评论
@@ -11,13 +18,14 @@ export async function GET(request,{params}){
     try{
         //后端也需要await解开params
         const {id:postId} = await params
+        const parsedPostId = positiveInt(postId, "帖子ID")
         
         //2.告诉drizzle去posts表里查：拿出id等于postId那行
         //使用db.query 既然再schema中写好了relations，这里就可以直接用with进行嵌套查询
 
         const result = await db.query.posts
         .findFirst({
-            where:eq(posts.id,parseInt(postId)),
+            where:eq(posts.id,parsedPostId),
             with:{
                 //把帖子的作者信息找出来
                 author:true,
@@ -37,23 +45,17 @@ export async function GET(request,{params}){
 
         //防御性判断：如果数据库里没有这个ID，返回404
         if(!result){
-            return NextResponse.json({
-                success:false,
-                message:"未找到帖子"
-            },{status:404})
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到帖子")
         }
 
         //4,成功找到，返回这条帖子的完整数据对象
-        return NextResponse.json({
-            success:true,
-            data:result
-        })
+        return ApiResponse.success(result)
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch post detail error:",error);
-        return NextResponse.json({
-            success:false,
-            message:"服务器读取数据失败"
-        },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "服务器读取数据失败")
     }
 }
 
@@ -62,50 +64,43 @@ export async function GET(request,{params}){
 export async function POST(request,{params}){
     try{
         const {id:postId} = await params
+        const parsedPostId = positiveInt(postId, "帖子ID")
 
-        const token = request.cookies.get('auth_token')?.value
-
-        if(!token){
-            return NextResponse.json({
-                success:false,
-                message:"未登录，请先登录后再发表评论"
-            },{status:401})
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录后再发表评论",
+            invalidMessage: "登录失效，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return NextResponse({
-                success:false,
-                message:"登录失效，请重新登录"
-            },{status:401})
-        }
-
-        const userId = payload.userId
+        const userId = auth.userId
 
         //解析前端发来的JSON数据体
-        const body = await request.json()
-        const {content} = body; //坚决不结构前端传来的userId
+        const body = await readJsonBody(request)
+        const content = requiredString(body.content, "评论内容") //坚决不结构前端传来的userId
 
-        //基础防御：防空值提交
-        if(!content || !content.trim()){
-            return NextResponse.json({
-                success:false,
-                message:"评论内容不能为空"
-            },{status:400})
+        const targetPost = await db.query.posts.findFirst({
+            where:eq(posts.id,parsedPostId)
+        })
+        if(!targetPost){
+            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到帖子")
         }
 
         //执行插入数据库操作
         await db.insert(Comments).values({
-            postId:parseInt(postId),
+            postId:parsedPostId,
             userId:userId,  //插入正确的Uerid
-            content:content.trim()
+            content:content
         })
 
         //插入成功后返回给前端
-        return NextResponse.json({success:true,message:"评论发表成功"})
+        return ApiResponse.success(undefined, "评论发表成功")
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Submit comment error",error)
-        return NextResponse.json({success:false,message:"评论发表失败"},{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "评论发表失败")
     }
 }

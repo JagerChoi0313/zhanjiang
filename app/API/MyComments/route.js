@@ -3,29 +3,32 @@
 import {db} from '../../../database/index'
 import {Comments, posts, Users} from '../../../database/schema'
 import {eq, desc, sql, and, like, or} from 'drizzle-orm' 
-import {NextResponse} from 'next/server'
-import {verifyToken} from "../../../lib/jwt" 
+import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
+import { requireAuth } from '../../../lib/api-auth.mjs'
+import {
+    ApiValidationError,
+    positiveInt,
+    toApiValidationResponse,
+} from '../../../lib/api-validation.mjs'
 
 
 
 export async function GET(request){
     try{
-        const token = request.cookies.get('auth_token')?.value
-        if(!token){
-            return NextResponse.json({ success:false, message:"未登录，请先登录" },{status:401})
+        const auth = await requireAuth(request, {
+            missingMessage: "未登录，请先登录",
+            invalidMessage: "登录过期，请重新登录",
+        })
+        if(!auth.ok){
+            return auth.response
         }
 
-        const payload = await verifyToken(token)
-
-        if(!payload){
-            return NextResponse.json({ success:false, message:"登录过期，请重新登录" },{status:401})
-        }
-
-        const userId = payload.userId;
+        const userId = auth.userId;
 
         const {searchParams} = new URL(request.url);
         const keyword = searchParams.get('q'); 
-        const page = parseInt(searchParams.get("page")) || 1;  
+        const pageParam = searchParams.get("page");
+        const page = pageParam === null ? 1 : positiveInt(pageParam, "页码");
         const pageSize = 4;
         const offset = (page-1) * pageSize;
 
@@ -78,18 +81,20 @@ export async function GET(request){
             .limit(pageSize) 
             .offset(offset); 
 
-        return NextResponse.json({
-            success:true,
-            data:data,
-            pagination:{
+        return ApiResponse.paginated(
+            data,
+            {
                 totalCount:totalCount,
                 pageSize:pageSize,
                 totalPages:Math.ceil(totalCount / pageSize),
                 currentPage:page
             }
-        },{status:200});
+        );
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error("Fetch Comments Error:",error);
-        return NextResponse.json({ success:false, message:"获取评论信息失败" },{status:500})
+        return ApiResponse.error(ErrorCode.INTERNAL_ERROR, "获取评论信息失败")
     }
 }
