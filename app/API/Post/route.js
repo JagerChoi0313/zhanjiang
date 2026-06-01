@@ -6,6 +6,7 @@ import {eq,sql} from "drizzle-orm"
 import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
 import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
+import {ensureUserExists} from '../../../lib/referential-integrity.mjs'
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -143,6 +144,13 @@ export async function POST(request){
             return image.trim()
         })
 
+        const userExists = await ensureUserExists(userId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if(!userExists.ok){
+            return userExists.response
+        }
+
         //自动生成摘要：取描述的前100字
         const excerpt = description.substring(0,100);
 
@@ -152,8 +160,7 @@ export async function POST(request){
             description:description,
             excerpt:excerpt,
             coverImage:coverImage,
-            //重点：images是数组，入库前转成JSON字符串
-            images:JSON.stringify(normalizedImages),
+            images:normalizedImages,
             category:category,
             location:location,
             createdAt:new Date()

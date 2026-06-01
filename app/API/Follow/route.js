@@ -4,6 +4,7 @@ import {eq,and} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
 import {isDuplicateKeyError} from "../../../lib/db-errors.mjs"
+import {ensureUserExists} from "../../../lib/referential-integrity.mjs"
 import {
     ApiValidationError,
     positiveInt,
@@ -67,6 +68,13 @@ export async function POST(request){
 
         if(Number(currentUserId) === targetId){
             return ApiResponse.error(ErrorCode.VALIDATION_ERROR, "不能关注自己哦")
+        }
+
+        const currentUserExists = await ensureUserExists(currentUserId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if(!currentUserExists.ok){
+            return currentUserExists.response
         }
 
         const targetUser = await db

@@ -3,6 +3,7 @@ import { Users } from '../../../../database/schema'
 import { eq } from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
+import {ensureUserExists} from "../../../../lib/referential-integrity.mjs"
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -37,6 +38,13 @@ export async function POST(request) {
             throw new ApiValidationError("手机号格式不正确")
         }
         const introduction = optionalString(body.introduction, "个人简介", { maxLength: 500 })
+
+        const userExists = await ensureUserExists(currentUserId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if (!userExists.ok) {
+            return userExists.response
+        }
 
         // 3. 写入数据库
         await db.update(Users)

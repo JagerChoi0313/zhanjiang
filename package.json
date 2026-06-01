@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --experimental-test-module-mocks --test"
+    "test": "node --experimental-test-module-mocks --test",
+    "db:generate": "drizzle-kit generate --config drizzle.config.js",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.js",
+    "db:check": "drizzle-kit check --config drizzle.config.js",
+    "db:export": "drizzle-kit export --config drizzle.config.js"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",

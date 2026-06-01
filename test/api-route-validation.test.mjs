@@ -103,6 +103,7 @@ await mock.module("../lib/jwt.js", {
 const LoginRoute = await import("../app/API/auth/Login/route.js");
 const LogoutRoute = await import("../app/API/auth/Logout/route.js");
 const RegisterRoute = await import("../app/API/auth/Register/route.js");
+const UpdateProfileRoute = await import("../app/API/auth/UpdateProfile/route.js");
 const FollowRoute = await import("../app/API/Follow/route.js");
 const MyFavoritesRoute = await import("../app/API/MyFavorites/route.js");
 const MyCommentsRoute = await import("../app/API/MyComments/route.js");
@@ -383,6 +384,25 @@ test("Register rejects short passwords and duplicate emails with stable codes", 
   );
 });
 
+test("UpdateProfile rejects stale auth users before updating profile data", async () => {
+  resetState();
+  dbState.selectRows = [];
+
+  await assertApiError(
+    await UpdateProfileRoute.POST(jsonRequest({
+      nickname: "食客",
+      gender: "secret",
+    })),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "登录失效，请重新登录",
+    },
+  );
+
+  assert.equal(dbState.updateSets.length, 0);
+});
+
 test("Follow rejects invalid target ids and self-follow requests", async () => {
   resetState();
 
@@ -424,7 +444,7 @@ test("Follow removes all duplicate follow rows when toggling off", async () => {
 
 test("Follow rejects missing target users before writing relationships", async () => {
   resetState();
-  dbState.selectQueue = [[]];
+  dbState.selectQueue = [[{ userId: 7 }], []];
 
   await assertApiError(
     await FollowRoute.POST(jsonRequest({ targetId: 8 })),
@@ -441,7 +461,7 @@ test("Follow rejects missing target users before writing relationships", async (
 
 test("Follow treats duplicate relation insert races as already followed", async () => {
   resetState();
-  dbState.selectQueue = [[{ userId: 8 }], []];
+  dbState.selectQueue = [[{ userId: 7 }], [{ userId: 8 }], []];
   dbState.insertError = { code: "ER_DUP_ENTRY" };
 
   const response = await FollowRoute.POST(jsonRequest({ targetId: 8 }));
@@ -505,7 +525,7 @@ test("MyFavorites removes all duplicate favorite rows when toggling off", async 
 
 test("MyFavorites rejects missing posts before writing relationships", async () => {
   resetState();
-  dbState.selectQueue = [[]];
+  dbState.selectQueue = [[{ userId: 7 }], []];
 
   await assertApiError(
     await MyFavoritesRoute.POST(jsonRequest({ postId: 9 })),
@@ -522,7 +542,7 @@ test("MyFavorites rejects missing posts before writing relationships", async () 
 
 test("MyFavorites treats duplicate relation insert races as already favorited", async () => {
   resetState();
-  dbState.selectQueue = [[{ id: 9 }], []];
+  dbState.selectQueue = [[{ userId: 7 }], [{ id: 9 }], []];
   dbState.insertError = { errno: 1062 };
 
   const response = await MyFavoritesRoute.POST(jsonRequest({ postId: 9 }));
@@ -590,7 +610,7 @@ test("PostDetail comments reject invalid post ids and blank content", async () =
 
 test("PostDetail comments reject comments for missing posts", async () => {
   resetState();
-  dbState.queryPost = null;
+  dbState.selectQueue = [[{ userId: 7 }], []];
 
   await assertApiError(
     await PostDetailRoute.POST(
@@ -728,6 +748,89 @@ test("Post rejects category and location values outside the publishing options",
       message: "地点不正确",
     },
   );
+});
+
+test("Post stores uploaded image URLs as a JSON array value", async () => {
+  resetState();
+  dbState.selectRows = [{ userId: 7 }];
+
+  const response = await PostRoute.POST(jsonRequest({
+    title: "白切鸡",
+    description: "好吃",
+    category: "菜谱",
+    location: "赤坎区",
+    images: [" /upload/one.png ", "/upload/two.webp"],
+  }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 201);
+  assert.equal(result.body.success, true);
+  assert.equal(dbState.insertValues.length, 1);
+  assert.deepEqual(dbState.insertValues[0].images, ["/upload/one.png", "/upload/two.webp"]);
+  assert.notEqual(typeof dbState.insertValues[0].images, "string");
+});
+
+test("write routes reject stale auth users before creating dependent records", async () => {
+  resetState();
+  dbState.selectRows = [];
+
+  await assertApiError(
+    await PostRoute.POST(jsonRequest({
+      title: "白切鸡",
+      description: "好吃",
+      category: "菜谱",
+      location: "赤坎区",
+      images: [],
+    })),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "登录失效，请重新登录",
+    },
+  );
+  assert.equal(dbState.insertValues.length, 0);
+
+  resetState();
+  dbState.selectRows = [];
+
+  await assertApiError(
+    await PostDetailRoute.POST(
+      jsonRequest({ content: "好吃" }),
+      { params: Promise.resolve({ id: "1" }) },
+    ),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "登录失效，请重新登录",
+    },
+  );
+  assert.equal(dbState.insertValues.length, 0);
+
+  resetState();
+  dbState.selectRows = [];
+
+  await assertApiError(
+    await MyFavoritesRoute.POST(jsonRequest({ postId: 9 })),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "登录失效，请重新登录",
+    },
+  );
+  assert.equal(dbState.insertValues.length, 0);
+
+  resetState();
+  dbState.selectRows = [];
+
+  await assertApiError(
+    await FollowRoute.POST(jsonRequest({ targetId: 8 })),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "登录失效，请重新登录",
+    },
+  );
+  assert.equal(dbState.insertValues.length, 0);
 });
 
 test("Upload rejects missing files invalid MIME oversized files and invalid extensions", async () => {

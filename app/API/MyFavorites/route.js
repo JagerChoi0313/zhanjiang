@@ -6,6 +6,7 @@ import {like,or} from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
 import {isDuplicateKeyError} from '../../../lib/db-errors.mjs'
+import {ensurePostExists, ensureUserExists} from '../../../lib/referential-integrity.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -143,13 +144,18 @@ export async function POST(request){
         const body = await readJsonBody(request);
         const postId = positiveInt(body.postId, "帖子ID")      //千万不要相信前端传过来userid
 
-        const targetPost = await db
-            .select({id: posts.id})
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-        if(targetPost.length === 0){
-            return ApiResponse.error(ErrorCode.NOT_FOUND, "帖子不存在")
+        const userExists = await ensureUserExists(userId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if(!userExists.ok){
+            return userExists.response
+        }
+
+        const postExists = await ensurePostExists(postId, {
+            missingMessage: "帖子不存在",
+        })
+        if(!postExists.ok){
+            return postExists.response
         }
 
         //去数据库里查一下看看有没有这个帖子
