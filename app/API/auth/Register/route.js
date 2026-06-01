@@ -37,7 +37,6 @@ export async function POST(request){
         }
         const gender=assertAllowedValue(body.gender,["male","female","secret"],"性别");
         const age=optionalIntRange(body.age,1,120,"年龄");
-        const avatar=optionalString(body.avatar,"头像");
 
         const existingUsers=await db.select({userId:Users.userId})
         .from(Users)
@@ -58,7 +57,6 @@ export async function POST(request){
             phoneNumber:phoneNumber ?? null,
             gender:gender ?? null,
             age:age ?? null,
-            avatar:avatar ?? null
         })
 
         // 3. 返回成功响应

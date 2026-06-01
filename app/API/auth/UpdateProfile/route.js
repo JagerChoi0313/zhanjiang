@@ -9,6 +9,7 @@ import {
     assertAllowedValue,
     isPhone,
     optionalIntRange,
+    optionalAvatarUrl,
     optionalString,
     readJsonBody,
     requiredString,
@@ -38,6 +39,8 @@ export async function POST(request) {
             throw new ApiValidationError("手机号格式不正确")
         }
         const introduction = optionalString(body.introduction, "个人简介", { maxLength: 500 })
+        const hasAvatar = Object.prototype.hasOwnProperty.call(body, "avatar")
+        const avatar = hasAvatar ? optionalAvatarUrl(body.avatar) : undefined
 
         const userExists = await ensureUserExists(currentUserId, {
             missingMessage: "登录失效，请重新登录",
@@ -47,14 +50,19 @@ export async function POST(request) {
         }
 
         // 3. 写入数据库
+        const updateValues = {
+            nickname,
+            gender: gender ?? null,
+            age: age ?? null,
+            phoneNumber: phoneNumber ?? null,
+            introduction: introduction ?? null // ✅ 存入个人简介
+        }
+        if (hasAvatar) {
+            updateValues.avatar = avatar
+        }
+
         await db.update(Users)
-            .set({
-                nickname,
-                gender: gender ?? null,
-                age: age ?? null,
-                phoneNumber: phoneNumber ?? null,
-                introduction: introduction ?? null // ✅ 存入个人简介
-            })
+            .set(updateValues)
             .where(eq(Users.userId, currentUserId))
 
         return ApiResponse.success(undefined, "资料保存成功！")

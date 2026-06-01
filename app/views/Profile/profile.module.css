@@ -100,8 +100,15 @@
   border-radius: 50%;
   background: #fff;
   color: #4b5563;
+  cursor: pointer;
   font-size: 16px;
+  padding: 0;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.13);
+}
+
+.avatarBadge:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .heroContent {

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
+import sharp from "sharp";
+
 import { ErrorCode } from "../lib/api-response.mjs";
 import { MAX_UPLOAD_BYTES } from "../lib/api-validation.mjs";
 import { hashPassword, verifyPassword } from "../lib/password.mjs";
@@ -87,6 +89,7 @@ await mock.module("../database/index.js", {
 
 await mock.module("fs/promises", {
   namedExports: {
+    mkdir: async () => {},
     writeFile: async (path, buffer) => {
       dbState.uploadWrites.push({ path, buffer });
     },
@@ -153,9 +156,31 @@ const formRequest = (file, options = {}) => ({
     if (file !== undefined) {
       formData.set("file", file);
     }
+    if (options.purpose !== undefined) {
+      formData.set("purpose", options.purpose);
+    }
     return formData;
   },
 });
+
+const imageFile = async ({
+  name = "food.png",
+  type = "image/png",
+  format = "png",
+  width = 32,
+  height = 24,
+} = {}) => {
+  const buffer = await sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: "#b84a2f",
+    },
+  }).toFormat(format).toBuffer();
+
+  return new File([buffer], name, { type });
+};
 
 const readBody = async (response) => ({
   status: response.status,
@@ -197,12 +222,14 @@ test("Register stores a BCrypt password hash instead of plaintext", async () => 
     email: "new-user@example.com",
     password: "123456",
     gender: "secret",
+    avatar: "data:image/png;base64,legacy-avatar",
   }));
   const result = await readBody(response);
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
   assert.equal(dbState.insertValues.length, 1);
+  assert.equal("avatar" in dbState.insertValues[0], false);
   assert.notEqual(dbState.insertValues[0].password, "123456");
   assert.match(dbState.insertValues[0].password, /^\$2[aby]\$10\$/);
   assert.deepEqual(await verifyPassword("123456", dbState.insertValues[0].password), {
@@ -417,6 +444,37 @@ test("UpdateProfile rejects stale auth users before updating profile data", asyn
   );
 
   assert.equal(dbState.updateSets.length, 0);
+});
+
+test("UpdateProfile validates and stores avatar upload URLs", async () => {
+  resetState();
+  dbState.selectRows = [{ userId: 7 }];
+
+  await assertApiError(
+    await UpdateProfileRoute.POST(jsonRequest({
+      nickname: "食客",
+      gender: "secret",
+      avatar: "https://example.com/avatar.webp",
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "头像地址不正确",
+    },
+  );
+  assert.equal(dbState.updateSets.length, 0);
+
+  const response = await UpdateProfileRoute.POST(jsonRequest({
+    nickname: "食客",
+    gender: "secret",
+    avatar: "/upload/avatar.webp",
+  }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.equal(dbState.updateSets.length, 1);
+  assert.equal(dbState.updateSets[0].avatar, "/upload/avatar.webp");
 });
 
 test("Follow rejects invalid target ids and self-follow requests", async () => {
@@ -866,7 +924,7 @@ test("Upload rejects missing files invalid MIME oversized files and invalid exte
     {
       status: 400,
       code: ErrorCode.VALIDATION_ERROR,
-      message: "仅支持上传JPG、PNG或WEBP图片",
+      message: "文件不是有效图片",
     },
   );
 
@@ -886,7 +944,16 @@ test("Upload rejects missing files invalid MIME oversized files and invalid exte
     {
       status: 400,
       code: ErrorCode.VALIDATION_ERROR,
-      message: "文件扩展名不正确",
+      message: "文件不是有效图片",
+    },
+  );
+
+  await assertApiError(
+    await UploadRoute.POST(formRequest(await imageFile(), { purpose: "cover" })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "上传用途不正确",
     },
   );
 });
@@ -914,13 +981,45 @@ test("Upload requires auth before reading multipart bodies", async () => {
 test("Upload returns data.url for authenticated image uploads", async () => {
   resetState();
 
-  const response = await UploadRoute.POST(formRequest(new File(["image-bytes"], "food.png", {
+  const response = await UploadRoute.POST(formRequest(await imageFile({
+    name: "food.png",
     type: "image/png",
+    format: "png",
+    width: 32,
+    height: 24,
   })));
   const result = await readBody(response);
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
   assert.match(result.body.data?.url, /^\/upload\/.+\.png$/);
+  assert.equal(result.body.data?.mimeType, "image/png");
+  assert.equal(result.body.data?.width, 32);
+  assert.equal(result.body.data?.height, 24);
+  assert.equal(dbState.uploadWrites.length, 1);
+});
+
+test("Upload returns webp metadata for avatar uploads", async () => {
+  resetState();
+
+  const response = await UploadRoute.POST(formRequest(await imageFile({
+    name: "avatar.jpg",
+    type: "image/jpeg",
+    format: "jpeg",
+    width: 900,
+    height: 600,
+  }), { purpose: "avatar" }));
+  const result = await readBody(response);
+  const storedImage = await sharp(dbState.uploadWrites[0].buffer).metadata();
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.match(result.body.data?.url, /^\/upload\/.+\.webp$/);
+  assert.equal(result.body.data?.mimeType, "image/webp");
+  assert.equal(result.body.data?.width, 512);
+  assert.equal(result.body.data?.height, 512);
+  assert.equal(storedImage.format, "webp");
+  assert.equal(storedImage.width, 512);
+  assert.equal(storedImage.height, 512);
   assert.equal(dbState.uploadWrites.length, 1);
 });

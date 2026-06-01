@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Spin, Button, message, Modal, Form, Input, Select } from 'antd';
 import {
   UserOutlined, LogoutOutlined, CalendarOutlined, MailOutlined, 
@@ -20,6 +20,8 @@ const ProfilePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const avatarInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const normalizeGender = (gender) => gender === 'unknown' ? 'secret' : gender;
 
@@ -35,12 +37,13 @@ const ProfilePage = () => {
           gender: normalizeGender(currentUser.gender),
           age: currentUser.age,
           phoneNumber: currentUser.phoneNumber,
-          introduction: currentUser.introduction // 获取个人简介
+          introduction: currentUser.introduction, // 获取个人简介
+          avatar: currentUser.avatar
         });
       } else {
         setUser(null);
       }
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -62,20 +65,24 @@ const ProfilePage = () => {
       } else {
         message.error(data.message || '退出失败');
       }
-    } catch (error) {
+    } catch {
       message.error("网络异常，请稍后再尝试");
     }
+  };
+
+  const saveProfile = async (values) => {
+    const res = await fetch('/API/auth/UpdateProfile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values)
+    });
+    return res.json();
   };
 
   const handleUpdate = async (values) => {
     setSubmitLoading(true);
     try {
-      const res = await fetch('/API/auth/UpdateProfile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values)
-      });
-      const data = await res.json();
+      const data = await saveProfile(values);
       
       if (data.success) {
         message.success(data.message);
@@ -84,10 +91,58 @@ const ProfilePage = () => {
       } else {
         message.error(data.message || "更新失败");
       }
-    } catch (error) {
+    } catch {
       message.error("网络错误，请稍后再试");
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('purpose', 'avatar');
+
+      const uploadRes = await fetch('/API/Upload', {
+        method: 'POST',
+        body: formData
+      });
+      const uploadData = await uploadRes.json();
+
+      if (!uploadData.success) {
+        message.error(uploadData.message || '头像上传失败');
+        return;
+      }
+
+      const avatar = uploadData.data?.url;
+      const nextProfile = {
+        nickname: form.getFieldValue('nickname') || user.nickname,
+        gender: form.getFieldValue('gender') || normalizeGender(user.gender),
+        age: form.getFieldValue('age') ?? user.age,
+        phoneNumber: form.getFieldValue('phoneNumber') ?? user.phoneNumber,
+        introduction: form.getFieldValue('introduction') ?? user.introduction,
+        avatar,
+      };
+
+      const updateData = await saveProfile(nextProfile);
+      if (!updateData.success) {
+        message.error(updateData.message || '头像保存失败');
+        return;
+      }
+
+      form.setFieldsValue({ avatar });
+      setUser(prev => prev ? { ...prev, avatar } : prev);
+      message.success('头像已更新');
+    } catch {
+      message.error('头像上传失败，请稍后再试');
+    } finally {
+      setAvatarUploading(false);
+      event.target.value = '';
     }
   };
 
@@ -129,7 +184,22 @@ const ProfilePage = () => {
               <div className={styles.avatarInner}>
                 {user.avatar ? <img src={user.avatar} alt="avatar" className={styles.avatarImg} /> : <UserOutlined className={styles.avatarFallback} />}
               </div>
-              <div className={styles.avatarBadge}><CameraOutlined /></div>
+              <button
+                type="button"
+                className={styles.avatarBadge}
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                title="上传头像"
+              >
+                <CameraOutlined spin={avatarUploading} />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                onChange={handleAvatarUpload}
+                style={{ display: 'none' }}
+              />
             </div>
 
             <div className={styles.heroContent}>
@@ -258,6 +328,9 @@ const ProfilePage = () => {
           </div>
           <Form.Item name="introduction" label="个人简介">
             <Input.TextArea size="large" rows={4} style={{ resize: 'none' }} placeholder="向大家介绍一下你自己吧，比如你的探店风格、最爱的街头小吃..." />
+          </Form.Item>
+          <Form.Item name="avatar" hidden>
+            <Input />
           </Form.Item>
         </Form>
       </Modal>
