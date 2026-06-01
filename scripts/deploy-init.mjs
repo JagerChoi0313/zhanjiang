@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { randomBytes } from "node:crypto";
-import { spawnSync } from "node:child_process";
 import { constants } from "node:fs";
 import { access, chmod, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -116,45 +115,9 @@ const writeSecret = async (name, value) => {
   return true;
 };
 
-const ensureSelfSignedCertificate = async () => {
-  const certDir = path.join(runtimeDir, "nginx", "certs");
-  const certPath = path.join(certDir, "fullchain.pem");
-  const keyPath = path.join(certDir, "privkey.pem");
-  if (!force && await exists(certPath) && await exists(keyPath)) {
-    console.log("保留已有 HTTPS 证书: deploy/runtime/nginx/certs");
-    return;
-  }
-
-  const result = spawnSync("openssl", [
-    "req",
-    "-x509",
-    "-nodes",
-    "-newkey",
-    "rsa:2048",
-    "-days",
-    "365",
-    "-keyout",
-    keyPath,
-    "-out",
-    certPath,
-    "-subj",
-    "/CN=localhost",
-  ], { stdio: "ignore" });
-
-  if (result.status !== 0) {
-    console.warn("未能自动生成自签名 HTTPS 证书，请手动放置 fullchain.pem 和 privkey.pem 到 deploy/runtime/nginx/certs。");
-    return;
-  }
-
-  await chmod(keyPath, 0o600);
-  await chmod(certPath, 0o644);
-  console.log("生成自签名 HTTPS 证书: deploy/runtime/nginx/certs");
-};
-
 await mkdir(path.join(runtimeDir, "mysql"), { recursive: true });
 await mkdir(path.join(runtimeDir, "uploads"), { recursive: true });
 await mkdir(path.join(runtimeDir, "logs"), { recursive: true });
-await mkdir(path.join(runtimeDir, "nginx", "certs"), { recursive: true });
 await mkdir(secretsDir, { recursive: true, mode: 0o700 });
 await chmod(secretsDir, 0o700);
 await chmod(path.join(runtimeDir, "uploads"), 0o777);
@@ -177,11 +140,11 @@ await writeSecret("admin_email", adminEmail);
 await writeSecret("admin_nickname", adminNickname);
 await writeSecret("admin_password", adminPassword);
 await writeSecret("jwt_secret", jwtSecret);
-await ensureSelfSignedCertificate();
 
 console.log("");
 console.log("部署初始化完成。下一步建议执行：");
 console.log("  docker compose -f deploy/docker-compose.yml up -d mysql");
 console.log("  docker compose -f deploy/docker-compose.yml run --rm migrate");
 console.log("  docker compose -f deploy/docker-compose.yml run --rm admin-seed");
-console.log("  docker compose -f deploy/docker-compose.yml up -d app nginx");
+console.log("  docker compose -f deploy/docker-compose.yml up -d app");
+console.log("Nginx 可参考 deploy/nginx/http.conf 或 deploy/nginx/https.conf 单独部署。");

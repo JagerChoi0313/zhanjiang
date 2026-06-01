@@ -44,28 +44,14 @@ services:
       - jwt_secret
     volumes:
       - ./runtime/uploads:/app/public/upload
-    expose:
-      - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/API/Health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
       retries: 8
       start_period: 30s
-
-  nginx:
-    image: nginx:1.27-alpine
-    restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_healthy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./runtime/uploads:/usr/share/nginx/html/upload:ro
-      - ./runtime/nginx/certs:/etc/nginx/certs:ro
 
   migrate:
     build:
