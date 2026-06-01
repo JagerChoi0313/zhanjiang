@@ -33,7 +33,7 @@ test("drizzle schema and export do not declare database foreign keys", () => {
 
   assert.doesNotMatch(schema, /\.references\(/);
   assert.doesNotMatch(sql, /FOREIGN KEY/i);
-  assert.doesNotMatch(sql, /REFERENCES/i);
+  assert.doesNotMatch(sql, /\bREFERENCES\s+[`"\w]/i);
   assert.doesNotMatch(sql, /ON DELETE cascade/i);
 });
 
@@ -53,6 +53,20 @@ test("drizzle export contains indexes for common query paths", () => {
   assert.match(sql, /CREATE INDEX `talk_ranking_created_at_idx` ON `talk_ranking` \(`create_at`\)/i);
   assert.match(sql, /CREATE INDEX `talk_ranking_user_avatar_idx` ON `talk_ranking` \(`user_name`,`avatar`\)/i);
 });
+
+test("drizzle export contains upload asset governance tables without foreign keys", () => {
+  const sql = exportSchemaSql();
+
+  assert.match(sql, /CREATE TABLE `upload_assets`/i);
+  assert.match(sql, /`content_hash`\s+varchar\(64\)\s+NOT NULL/i);
+  assert.match(sql, /CONSTRAINT\s+`upload_assets_content_hash_unique`\s+UNIQUE\(`content_hash`\)/i);
+  assert.match(sql, /CREATE TABLE `upload_claims`/i);
+  assert.match(sql, /CREATE INDEX `upload_claims_user_status_idx` ON `upload_claims` \(`user_id`,`status`,`expires_at`\)/i);
+  assert.match(sql, /CREATE TABLE `upload_references`/i);
+  assert.match(sql, /CONSTRAINT\s+`upload_references_entity_asset_unique`\s+UNIQUE\(`entity_type`,`entity_id`,`asset_id`\)/i);
+  assert.doesNotMatch(sql, /upload_assets[\s\S]*FOREIGN KEY/i);
+}
+);
 
 test("database scripts do not initialize from full backup dumps", () => {
   const packageJson = readFileSync("package.json", "utf8");

@@ -13,15 +13,24 @@ const dbState = {
   queryPost: { id: 1 },
   selectCalls: 0,
   queryPostFinds: 0,
+  insertTables: [],
   insertValues: [],
   insertError: null,
+  upsertSets: [],
+  updateTables: [],
   updateSets: [],
   deleteCalls: [],
   uploadWrites: [],
 };
 
+const tableName = (table) => table?.[Symbol.for("drizzle:Name")] ?? "unknown";
+
 const createSelectQuery = () => ({
-  from() {
+  from(table) {
+    this.table = tableName(table);
+    return this;
+  },
+  innerJoin() {
     return this;
   },
   where() {
@@ -36,22 +45,39 @@ const createSelectQuery = () => ({
 });
 
 const db = {
+  transaction(callback) {
+    return callback(db);
+  },
   select() {
     dbState.selectCalls += 1;
     return createSelectQuery();
   },
-  insert() {
+  insert(table) {
     return {
       values(values) {
+        dbState.insertTables.push(tableName(table));
         dbState.insertValues.push(values);
         if (dbState.insertError) {
           return Promise.reject(dbState.insertError);
         }
-        return Promise.resolve({ insertId: 1 });
+        const promise = Promise.resolve({ insertId: dbState.insertValues.length });
+        return {
+          onDuplicateKeyUpdate(config) {
+            dbState.upsertSets.push(config.set);
+            return this;
+          },
+          $returningId() {
+            return Promise.resolve([{ id: dbState.insertValues.length }]);
+          },
+          then(resolve, reject) {
+            return promise.then(resolve, reject);
+          },
+        };
       },
     };
   },
-  update() {
+  update(table) {
+    dbState.updateTables.push(tableName(table));
     return {
       set(values) {
         dbState.updateSets.push(values);
@@ -66,7 +92,7 @@ const db = {
   delete(table) {
     return {
       where(condition) {
-        dbState.deleteCalls.push({ table, condition });
+        dbState.deleteCalls.push({ table: tableName(table), condition });
         return Promise.resolve();
       },
     };
@@ -90,8 +116,16 @@ await mock.module("../database/index.js", {
 await mock.module("fs/promises", {
   namedExports: {
     mkdir: async () => {},
-    writeFile: async (path, buffer) => {
+    writeFile: async (path, buffer, options) => {
+      if (options?.flag === "wx" && dbState.uploadWrites.some((write) => write.path === path)) {
+        const error = new Error("File exists");
+        error.code = "EEXIST";
+        throw error;
+      }
       dbState.uploadWrites.push({ path, buffer });
+    },
+    unlink: async (path) => {
+      dbState.deleteCalls.push({ table: "fs", path });
     },
   },
 });
@@ -124,8 +158,11 @@ const resetState = () => {
   dbState.queryPost = { id: 1 };
   dbState.selectCalls = 0;
   dbState.queryPostFinds = 0;
+  dbState.insertTables = [];
   dbState.insertValues = [];
   dbState.insertError = null;
+  dbState.upsertSets = [];
+  dbState.updateTables = [];
   dbState.updateSets = [];
   dbState.deleteCalls = [];
   dbState.uploadWrites = [];
@@ -448,7 +485,7 @@ test("UpdateProfile rejects stale auth users before updating profile data", asyn
 
 test("UpdateProfile validates and stores avatar upload URLs", async () => {
   resetState();
-  dbState.selectRows = [{ userId: 7 }];
+  dbState.selectQueue = [[{ userId: 7, avatar: null }], []];
 
   await assertApiError(
     await UpdateProfileRoute.POST(jsonRequest({
@@ -464,17 +501,44 @@ test("UpdateProfile validates and stores avatar upload URLs", async () => {
   );
   assert.equal(dbState.updateSets.length, 0);
 
+  const avatarUrl = `/upload/blob/${"a".repeat(64)}.webp`;
+  dbState.selectQueue = [
+    [{ userId: 7, avatar: null }],
+    [{ id: 31, assetId: 41 }],
+    [],
+  ];
   const response = await UpdateProfileRoute.POST(jsonRequest({
     nickname: "食客",
     gender: "secret",
-    avatar: "/upload/avatar.webp",
+    avatar: avatarUrl,
   }));
   const result = await readBody(response);
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
-  assert.equal(dbState.updateSets.length, 1);
-  assert.equal(dbState.updateSets[0].avatar, "/upload/avatar.webp");
+  assert.equal(dbState.updateSets.some((values) => values.avatar === avatarUrl), true);
+  assert.equal(dbState.insertTables.includes("upload_references"), true);
+  assert.equal(dbState.updateTables.includes("upload_claims"), true);
+});
+
+test("UpdateProfile rejects managed avatar URLs without a current user claim", async () => {
+  resetState();
+  dbState.selectQueue = [[{ userId: 7, avatar: null }], []];
+
+  await assertApiError(
+    await UpdateProfileRoute.POST(jsonRequest({
+      nickname: "食客",
+      gender: "secret",
+      avatar: `/upload/blob/${"b".repeat(64)}.webp`,
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "上传凭证无效或已过期",
+    },
+  );
+
+  assert.equal(dbState.updateSets.length, 0);
 });
 
 test("Follow rejects invalid target ids and self-follow requests", async () => {
@@ -826,22 +890,53 @@ test("Post rejects category and location values outside the publishing options",
 
 test("Post stores uploaded image URLs as a JSON array value", async () => {
   resetState();
-  dbState.selectRows = [{ userId: 7 }];
+  const coverImage = `/upload/blob/${"c".repeat(64)}.png`;
+  const bodyImage = `/upload/blob/${"d".repeat(64)}.webp`;
+  dbState.selectQueue = [
+    [{ userId: 7 }],
+    [{ id: 51, assetId: 61 }],
+    [{ id: 52, assetId: 62 }],
+  ];
 
   const response = await PostRoute.POST(jsonRequest({
     title: "白切鸡",
     description: "好吃",
     category: "菜谱",
     location: "赤坎区",
-    images: [" /upload/one.png ", "/upload/two.webp"],
+    coverImage,
+    images: [` ${bodyImage} `],
   }));
   const result = await readBody(response);
 
   assert.equal(result.status, 201);
   assert.equal(result.body.success, true);
-  assert.equal(dbState.insertValues.length, 1);
-  assert.deepEqual(dbState.insertValues[0].images, ["/upload/one.png", "/upload/two.webp"]);
-  assert.notEqual(typeof dbState.insertValues[0].images, "string");
+  const postInsert = dbState.insertValues.find((values, index) => dbState.insertTables[index] === "posts");
+  assert.deepEqual(postInsert.images, [bodyImage]);
+  assert.equal(postInsert.coverImage, coverImage);
+  assert.notEqual(typeof postInsert.images, "string");
+  assert.equal(dbState.insertTables.filter((name) => name === "upload_references").length, 2);
+});
+
+test("Post rejects managed upload URLs without a current user claim", async () => {
+  resetState();
+  dbState.selectQueue = [[{ userId: 7 }], []];
+
+  await assertApiError(
+    await PostRoute.POST(jsonRequest({
+      title: "白切鸡",
+      description: "好吃",
+      category: "菜谱",
+      location: "赤坎区",
+      images: [`/upload/blob/${"e".repeat(64)}.png`],
+    })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "上传凭证无效或已过期",
+    },
+  );
+
+  assert.equal(dbState.insertTables.includes("posts"), false);
 });
 
 test("write routes reject stale auth users before creating dependent records", async () => {
@@ -980,6 +1075,9 @@ test("Upload requires auth before reading multipart bodies", async () => {
 
 test("Upload returns data.url for authenticated image uploads", async () => {
   resetState();
+  dbState.selectQueue = [
+    [{ id: 71 }],
+  ];
 
   const response = await UploadRoute.POST(formRequest(await imageFile({
     name: "food.png",
@@ -992,15 +1090,20 @@ test("Upload returns data.url for authenticated image uploads", async () => {
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
-  assert.match(result.body.data?.url, /^\/upload\/.+\.png$/);
+  assert.match(result.body.data?.url, /^\/upload\/blob\/[a-f0-9]{64}\.png$/);
   assert.equal(result.body.data?.mimeType, "image/png");
   assert.equal(result.body.data?.width, 32);
   assert.equal(result.body.data?.height, 24);
   assert.equal(dbState.uploadWrites.length, 1);
+  assert.equal(dbState.insertTables.includes("upload_assets"), true);
+  assert.equal(dbState.insertTables.includes("upload_claims"), true);
 });
 
 test("Upload returns webp metadata for avatar uploads", async () => {
   resetState();
+  dbState.selectQueue = [
+    [{ id: 81 }],
+  ];
 
   const response = await UploadRoute.POST(formRequest(await imageFile({
     name: "avatar.jpg",
@@ -1014,7 +1117,7 @@ test("Upload returns webp metadata for avatar uploads", async () => {
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
-  assert.match(result.body.data?.url, /^\/upload\/.+\.webp$/);
+  assert.match(result.body.data?.url, /^\/upload\/blob\/[a-f0-9]{64}\.webp$/);
   assert.equal(result.body.data?.mimeType, "image/webp");
   assert.equal(result.body.data?.width, 512);
   assert.equal(result.body.data?.height, 512);
@@ -1022,4 +1125,62 @@ test("Upload returns webp metadata for avatar uploads", async () => {
   assert.equal(storedImage.width, 512);
   assert.equal(storedImage.height, 512);
   assert.equal(dbState.uploadWrites.length, 1);
+});
+
+test("Upload reuses the same physical asset for identical processed images", async () => {
+  resetState();
+  dbState.selectQueue = [
+    [{ id: 91 }],
+    [{ id: 91 }],
+  ];
+  const file = await imageFile({
+    name: "same.png",
+    type: "image/png",
+    format: "png",
+    width: 32,
+    height: 24,
+  });
+
+  const first = await readBody(await UploadRoute.POST(formRequest(file)));
+  const second = await readBody(await UploadRoute.POST(formRequest(file)));
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+  assert.equal(first.body.data.url, second.body.data.url);
+  assert.equal(dbState.uploadWrites.length, 1);
+  assert.equal(dbState.insertTables.filter((name) => name === "upload_claims").length, 2);
+});
+
+test("Upload restores assets that were marked for deletion during instant upload", async () => {
+  resetState();
+  dbState.selectQueue = [
+    [{ id: 101 }],
+  ];
+
+  const response = await UploadRoute.POST(formRequest(await imageFile()));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.equal(dbState.upsertSets.length > 0, true);
+  assert.equal(typeof dbState.upsertSets[0].status, "object");
+  assert.equal(typeof dbState.upsertSets[0].deleteAfter, "object");
+});
+
+test("Upload refuses to create claims while an asset is locked for physical deletion", async () => {
+  resetState();
+  dbState.selectQueue = [
+    [{ id: 111, status: "deleting_locked" }],
+  ];
+
+  await assertApiError(
+    await UploadRoute.POST(formRequest(await imageFile())),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "文件正在清理，请稍后重试",
+    },
+  );
+
+  assert.equal(dbState.insertTables.filter((name) => name === "upload_claims").length, 0);
 });

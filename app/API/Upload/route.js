@@ -1,10 +1,8 @@
-import {mkdir, writeFile} from 'fs/promises'
-import {join} from 'path'               //用于智能拼接文件路径（兼容windows和Mac）
-import {v4 as uuidv4} from 'uuid'       //生成全球唯一标识符，防止文件名重复
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {ApiValidationError, toApiValidationResponse, validateUploadFile} from "../../../lib/api-validation.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
 import {normalizeUploadPurpose, processUploadImage} from "../../../lib/upload-image.mjs"
+import {createUploadClaimForProcessedImage} from "../../../lib/upload-assets.mjs"
 
 export async function POST(request){
     try{
@@ -47,33 +45,19 @@ export async function POST(request){
             throw validationError
         }
 
-        const fileName = `${uuidv4()}.${processedImage.extension}`;
-
-        //确定存储路径（存储在public/upload）
-        // process.cwd() 获取项目根目录
-        // join 拼接出物理路径：D:\project\zhanjiang\public\uploads\a1b2.jpg
-        const uploadDir = join(process.cwd(),'public','upload')
-        const path = join(uploadDir,fileName)
-
-        //写入文件
-        // 真正将二进制数据写入到硬盘里
-        await mkdir(uploadDir, { recursive: true })
-        await writeFile(path,processedImage.buffer)
-
-        //返回前端可直接访问的URL
-        //因为Next.js默认将public映射到根，所以不需要加“public”
-        const fileUrl = `/upload/${fileName}`;
-
-        return ApiResponse.success({
-            url:fileUrl,
-            mimeType:processedImage.mimeType,
-            width:processedImage.width,
-            height:processedImage.height,
-            size:processedImage.size,
+        const upload = await createUploadClaimForProcessedImage({
+            userId: auth.userId,
+            purpose,
+            processedImage,
         })
+
+        return ApiResponse.success(upload)
 
 
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error('Upload Error:',error)
         return ApiResponse.error(ErrorCode.UPLOAD_ERROR, '服务器上传失败')
     }

@@ -83,7 +83,11 @@ const ProfilePage = () => {
   const handleUpdate = async (values) => {
     setSubmitLoading(true);
     try {
-      const data = await saveProfile(values);
+      const payload = { ...values };
+      if (payload.avatar === user?.avatar) {
+        delete payload.avatar;
+      }
+      const data = await saveProfile(payload);
       
       if (data.success) {
         message.success(data.message);

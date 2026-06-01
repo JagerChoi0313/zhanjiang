@@ -240,6 +240,52 @@ export const Follows = mysqlTable("follows",{
   index("follows_following_idx").on(table.followingId),
 ])
 
+export const UploadAssets = mysqlTable("upload_assets", {
+  id: int("id").autoincrement().primaryKey(),
+  contentHash: varchar("content_hash", { length: 64 }).notNull(),
+  publicUrl: varchar("public_url", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 50 }).notNull(),
+  extension: varchar("extension", { length: 10 }).notNull(),
+  size: int("size", { unsigned: true }).notNull(),
+  width: int("width", { unsigned: true }).notNull(),
+  height: int("height", { unsigned: true }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  deleteAfter: timestamp("delete_after"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("upload_assets_content_hash_unique").on(table.contentHash),
+  uniqueIndex("upload_assets_public_url_unique").on(table.publicUrl),
+  index("upload_assets_status_delete_idx").on(table.status, table.deleteAfter),
+])
+
+export const UploadClaims = mysqlTable("upload_claims", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("asset_id").notNull(),
+  userId: int("user_id").notNull(),
+  purpose: varchar("purpose", { length: 20 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("temporary"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("upload_claims_user_status_idx").on(table.userId, table.status, table.expiresAt),
+  index("upload_claims_asset_status_idx").on(table.assetId, table.status),
+])
+
+export const UploadReferences = mysqlTable("upload_references", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("asset_id").notNull(),
+  userId: int("user_id").notNull(),
+  entityType: varchar("entity_type", { length: 30 }).notNull(),
+  entityId: int("entity_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("upload_references_entity_asset_unique").on(table.entityType, table.entityId, table.assetId),
+  index("upload_references_asset_idx").on(table.assetId),
+  index("upload_references_user_idx").on(table.userId),
+])
+
 //定义Follows表和Users表的关系
 export const followRelations = relations(Follows,({one})=>({
   //关注主动关注的人

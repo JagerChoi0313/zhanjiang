@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
 import {ensureUserExists} from "../../../../lib/referential-integrity.mjs"
+import {findCurrentUploadClaim, replaceAvatarUploadReference} from "../../../../lib/upload-assets.mjs"
 import {
     ApiValidationError,
     assertAllowedValue,
@@ -49,6 +50,14 @@ export async function POST(request) {
             return userExists.response
         }
 
+        const avatarClaim = hasAvatar && avatar
+            ? await findCurrentUploadClaim({
+                userId: currentUserId,
+                purpose: "avatar",
+                url: avatar,
+            })
+            : null
+
         // 3. 写入数据库
         const updateValues = {
             nickname,
@@ -61,9 +70,21 @@ export async function POST(request) {
             updateValues.avatar = avatar
         }
 
-        await db.update(Users)
-            .set(updateValues)
-            .where(eq(Users.userId, currentUserId))
+        await db.transaction(async (tx) => {
+            await tx.update(Users)
+                .set(updateValues)
+                .where(eq(Users.userId, currentUserId))
+
+            if (hasAvatar) {
+                await replaceAvatarUploadReference({
+                    userId: currentUserId,
+                    avatarUrl: avatar,
+                    previousAvatarUrl: userExists.user?.avatar,
+                    claim: avatarClaim,
+                    client: tx,
+                })
+            }
+        })
 
         return ApiResponse.success(undefined, "资料保存成功！")
 
