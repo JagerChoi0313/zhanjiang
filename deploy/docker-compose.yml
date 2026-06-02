@@ -38,10 +38,13 @@ services:
       DATABASE_USER: zhanjiang
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
       JWT_SECRET_FILE: /run/secrets/jwt_secret
+      DIFY_API_KEY_FILE: /run/secrets/dify_api_key
+      DIFY_API_URL: https://api.dify.ai/v1
       UPLOAD_DIR: /app/public/upload
     secrets:
       - mysql_app_password
       - jwt_secret
+      - dify_api_key
     volumes:
       - ./runtime/uploads:/app/public/upload
     ports:
@@ -127,6 +130,8 @@ secrets:
     file: ./runtime/secrets/mysql_app_password
   jwt_secret:
     file: ./runtime/secrets/jwt_secret
+  dify_api_key:
+    file: ./runtime/secrets/dify_api_key
   admin_email:
     file: ./runtime/secrets/admin_email
   admin_password:

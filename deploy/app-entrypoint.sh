@@ -25,6 +25,7 @@ read_secret_file MYSQL_PASSWORD
 read_secret_file ADMIN_EMAIL
 read_secret_file ADMIN_PASSWORD
 read_secret_file ADMIN_NICKNAME
+read_secret_file DIFY_API_KEY
 
 if [ -z "${DATABASE_URL:-}" ]; then
   : "${DATABASE_HOST:=mysql}"

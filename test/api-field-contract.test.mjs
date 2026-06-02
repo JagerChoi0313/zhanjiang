@@ -66,6 +66,7 @@ test("hardened api routes use shared validation helpers", () => {
     "app/API/TasteCard/[id]/route.js",
     "app/API/UserInfo/route.js",
     "app/API/Upload/route.js",
+    "app/API/Dify/Chat/route.js",
   ];
 
   const missingImports = routes.filter((route) => !rg("api-validation\\.mjs", [route]));
@@ -84,6 +85,7 @@ test("hardened json routes parse request bodies through readJsonBody", () => {
       "app/API/PostDetail/[id]/route.js",
       "app/API/Follow/route.js",
       "app/API/MyFavorites/route.js",
+      "app/API/Dify/Chat/route.js",
     ],
   );
 
@@ -127,6 +129,7 @@ test("authenticated api routes use the shared auth helper", () => {
     "app/API/Post/route.js",
     "app/API/PostDetail/[id]/route.js",
     "app/API/Upload/route.js",
+    "app/API/Dify/Chat/route.js",
   ];
 
   const matches = rg(
@@ -166,6 +169,7 @@ test("state-changing api routes enforce csrf before mutating", () => {
     "app/API/Upload/route.js",
     "app/API/Admin/Posts/[id]/route.js",
     "app/API/Admin/Comments/[id]/route.js",
+    "app/API/Dify/Chat/route.js",
   ];
 
   const missingCsrf = unsafeRoutes.filter((route) => !rg("requireCsrf\\(", [route]));
@@ -195,6 +199,26 @@ test("frontend internal unsafe requests go through csrfFetch", () => {
   }
 
   assert.deepEqual(bareInternalUnsafeFetches, []);
+});
+
+test("Dify proxy keeps secrets server-side", () => {
+  assert.equal(
+    rg("NEXT_PUBLIC_DIFY_API_KEY|NEXT_PUBLIC_DIFY_API_URL|/chat-messages", ["app/views", "app/page.tsx"]),
+    "",
+  );
+
+  assert.match(
+    rg("DIFY_API_KEY_FILE", ["deploy/docker-compose.yml"]),
+    /\d+:      DIFY_API_KEY_FILE: \/run\/secrets\/dify_api_key/,
+  );
+  assert.match(
+    rg("dify_api_key", ["deploy/docker-compose.yml"]),
+    /\d+:  dify_api_key:/,
+  );
+  assert.match(
+    rg("read_secret_file DIFY_API_KEY", ["deploy/app-entrypoint.sh"]),
+    /\d+:read_secret_file DIFY_API_KEY/,
+  );
 });
 
 test("relationship toggle tables declare compound uniqueness", () => {

@@ -102,6 +102,10 @@ const askSecret = async (rl, label) => {
   return value || randomSecret(32);
 };
 
+const askOptionalSecret = async (rl, label) => (
+  await readHidden(rl, `${label}，留空跳过配置: `)
+);
+
 const writeSecret = async (name, value) => {
   const filePath = path.join(secretsDir, name);
   if (!force && await exists(filePath)) {
@@ -132,6 +136,7 @@ const mysqlAppPassword = await askSecret(rl, "应用数据库密码");
 const adminEmail = await askVisible(rl, "超级管理员邮箱", "admin@example.com");
 const adminNickname = await askVisible(rl, "超级管理员昵称", "系统管理员");
 const adminPassword = await askSecret(rl, "超级管理员密码");
+const difyApiKey = await askOptionalSecret(rl, "Dify API Key");
 rl.close();
 const jwtSecret = randomSecret(64);
 
@@ -141,6 +146,7 @@ await writeSecret("admin_email", adminEmail);
 await writeSecret("admin_nickname", adminNickname);
 await writeSecret("admin_password", adminPassword);
 await writeSecret("jwt_secret", jwtSecret);
+await writeSecret("dify_api_key", difyApiKey);
 
 console.log("");
 console.log("部署初始化完成。下一步建议执行：");

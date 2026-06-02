@@ -155,6 +155,7 @@ const RegisterRoute = await import("../app/API/auth/Register/route.js");
 const UpdateProfileRoute = await import("../app/API/auth/UpdateProfile/route.js");
 const FollowRoute = await import("../app/API/Follow/route.js");
 const HealthRoute = await import("../app/API/Health/route.js");
+const DifyChatRoute = await import("../app/API/Dify/Chat/route.js");
 const MyFavoritesRoute = await import("../app/API/MyFavorites/route.js");
 const MyCommentsRoute = await import("../app/API/MyComments/route.js");
 const MyPostRoute = await import("../app/API/MyPost/route.js");
@@ -179,6 +180,9 @@ const resetState = () => {
   dbState.deleteCalls = [];
   dbState.uploadWrites = [];
   authPayload = { userId: 7 };
+  delete process.env.DIFY_API_KEY;
+  delete process.env.DIFY_API_URL;
+  DifyChatRoute.__resetDifyChatRateLimit?.();
 };
 
 const cookies = (token = "valid-token", csrf = csrfToken()) => ({
@@ -314,7 +318,161 @@ test("state-changing routes reject missing csrf before reading request bodies", 
     },
   );
 
+  await assertApiError(
+    await DifyChatRoute.POST({
+      ...jsonRequest({}, { csrfToken: null }),
+      async json() {
+        throw new Error("json should not be read before csrf validation");
+      },
+    }),
+    {
+      status: 403,
+      code: ErrorCode.FORBIDDEN,
+      message: "CSRF校验失败，请刷新页面后重试",
+    },
+  );
+
   assert.equal(dbState.uploadWrites.length, 0);
+});
+
+test("Dify Chat requires auth validates query and handles missing configuration", async () => {
+  resetState();
+  process.env.DIFY_API_KEY = "";
+  const fetchMock = mock.method(globalThis, "fetch", async () => {
+    throw new Error("Dify should not be called without configuration");
+  });
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "赤坎老街有什么好吃的？" }, { token: null })),
+    {
+      status: 401,
+      code: ErrorCode.UNAUTHORIZED,
+      message: "未登录，请先登录",
+    },
+  );
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "   " })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "问题不能为空",
+    },
+  );
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "湛".repeat(501) })),
+    {
+      status: 400,
+      code: ErrorCode.VALIDATION_ERROR,
+      message: "问题长度不能超过500个字符",
+    },
+  );
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "湛江生蚝哪里好吃？" })),
+    {
+      status: 502,
+      code: ErrorCode.EXTERNAL_SERVICE_ERROR,
+      message: "AI服务未配置",
+    },
+  );
+
+  assert.equal(fetchMock.mock.callCount(), 0);
+  fetchMock.mock.restore();
+});
+
+test("Dify Chat proxies successful responses without exposing the API key", async () => {
+  resetState();
+  process.env.DIFY_API_KEY = "dify-secret";
+  process.env.DIFY_API_URL = "https://dify.example/v1";
+  let outboundBody;
+
+  const fetchMock = mock.method(globalThis, "fetch", async (url, options) => {
+    outboundBody = JSON.parse(options.body);
+
+    assert.equal(url, "https://dify.example/v1/chat-messages");
+    assert.equal(options.method, "POST");
+    assert.equal(options.headers.Authorization, "Bearer dify-secret");
+    assert.equal(options.headers["Content-Type"], "application/json");
+    assert.equal(outboundBody.query, "赤坎老街有什么好吃的？");
+    assert.equal(outboundBody.response_mode, "blocking");
+    assert.equal(outboundBody.user, "zhanjiang_user_7");
+    assert.deepEqual(outboundBody.inputs, {});
+
+    return new Response(JSON.stringify({
+      answer: "可以试试赤坎老街的本地小吃。",
+      metadata: {
+        suggested_questions: ["附近还有什么甜品？"],
+      },
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const response = await DifyChatRoute.POST(jsonRequest({ query: "赤坎老街有什么好吃的？" }));
+  const result = await readBody(response);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.success, true);
+  assert.equal(result.body.code, ErrorCode.SUCCESS);
+  assert.deepEqual(result.body.data, {
+    answer: "可以试试赤坎老街的本地小吃。",
+    suggestedQuestions: ["附近还有什么甜品？"],
+  });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(JSON.stringify(result.body).includes("dify-secret"), false);
+  assert.equal(JSON.stringify(outboundBody).includes("食客"), false);
+  assert.equal(fetchMock.mock.callCount(), 1);
+  fetchMock.mock.restore();
+});
+
+test("Dify Chat hides upstream failures and rate limits per user", async () => {
+  resetState();
+  process.env.DIFY_API_KEY = "dify-secret";
+  const fetchMock = mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({
+    message: "upstream secret details",
+  }), {
+    status: 500,
+    headers: { "content-type": "application/json" },
+  }));
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "推荐湛江早餐" })),
+    {
+      status: 502,
+      code: ErrorCode.EXTERNAL_SERVICE_ERROR,
+      message: "AI服务暂时不可用",
+    },
+  );
+  assert.equal(fetchMock.mock.callCount(), 1);
+  fetchMock.mock.restore();
+
+  DifyChatRoute.__resetDifyChatRateLimit?.();
+  const successFetchMock = mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({
+    answer: "可以安排海鲜路线。",
+    metadata: {},
+  }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  }));
+
+  for (let index = 0; index < 20; index += 1) {
+    const response = await DifyChatRoute.POST(jsonRequest({ query: `第${index}个问题` }));
+    assert.equal(response.status, 200);
+  }
+
+  await assertApiError(
+    await DifyChatRoute.POST(jsonRequest({ query: "第21个问题" })),
+    {
+      status: 429,
+      code: ErrorCode.RATE_LIMITED,
+      message: "请求过于频繁，请稍后再试",
+    },
+  );
+  assert.equal(successFetchMock.mock.callCount(), 20);
+  successFetchMock.mock.restore();
 });
 
 test("Register stores a BCrypt password hash instead of plaintext", async () => {
