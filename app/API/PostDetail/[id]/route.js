@@ -1,9 +1,12 @@
 import {db} from "../../../../database/index"
 import {posts} from "../../../../database/schema"
-import {eq} from 'drizzle-orm'
+import {and, eq} from 'drizzle-orm'
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
+import { requireCsrf } from "../../../../lib/csrf.mjs"
+import {ensurePostExists, ensureUserExists} from "../../../../lib/referential-integrity.mjs"
+import {CONTENT_STATUS} from "../../../../lib/content-status.mjs"
 import {
     ApiValidationError,
     positiveInt,
@@ -25,12 +28,13 @@ export async function GET(request,{params}){
 
         const result = await db.query.posts
         .findFirst({
-            where:eq(posts.id,parsedPostId),
+            where:and(eq(posts.id,parsedPostId), eq(posts.status, CONTENT_STATUS.ACTIVE)),
             with:{
                 //把帖子的作者信息找出来
                 author:true,
                 //把这条帖子下的所有评论带出来
                 comments:{
+                    where:eq(Comments.status, CONTENT_STATUS.ACTIVE),
                     with:{
                         //3,把每一条评论发布者的信息也带出来（展示头像和昵称）
                         author:true
@@ -63,6 +67,11 @@ export async function GET(request,{params}){
 //2.Post接口，接收前端发来的评论并存入数据库
 export async function POST(request,{params}){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const {id:postId} = await params
         const parsedPostId = positiveInt(postId, "帖子ID")
 
@@ -80,11 +89,18 @@ export async function POST(request,{params}){
         const body = await readJsonBody(request)
         const content = requiredString(body.content, "评论内容") //坚决不结构前端传来的userId
 
-        const targetPost = await db.query.posts.findFirst({
-            where:eq(posts.id,parsedPostId)
+        const userExists = await ensureUserExists(userId, {
+            missingMessage: "登录失效，请重新登录",
         })
-        if(!targetPost){
-            return ApiResponse.error(ErrorCode.NOT_FOUND, "未找到帖子")
+        if(!userExists.ok){
+            return userExists.response
+        }
+
+        const postExists = await ensurePostExists(parsedPostId, {
+            missingMessage: "未找到帖子",
+        })
+        if(!postExists.ok){
+            return postExists.response
         }
 
         //执行插入数据库操作

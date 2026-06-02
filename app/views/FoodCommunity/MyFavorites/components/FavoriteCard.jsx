@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
+import IdenticonAvatar from '../../../../components/IdenticonAvatar';
 
 export default function FavoriteCard({ data = {} }) {
   const formatDate = (dateStr) => {
@@ -49,7 +50,7 @@ export default function FavoriteCard({ data = {} }) {
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden">
                 {/* 🔗 【数据绑定】：真实头像，无头像时使用占位 */}
-                <img src={data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username || 'Jason'}`} alt="avatar" className="w-full h-full object-cover" />
+                <IdenticonAvatar src={data.avatar} seed={data.username || data.postTitle} alt="avatar" className="w-full h-full object-cover" />
               </div>
               {/* 🔗 【数据绑定】：真实作者名 */}
               <span className="text-gray-600 text-[12px] font-medium">{data.username || "未知吃货"}</span>

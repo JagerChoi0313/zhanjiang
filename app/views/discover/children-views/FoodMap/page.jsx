@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import AIAgentLayout from './Component/AIAgentLayout';
 import LeftSider from './Component/LeftSider';
 import ChatArea from './Component/ChatArea';
+import { csrfFetch } from '../../../../../lib/csrf-client';
 
 const FoodMap = () => {
   const [messages, setMessages] = useState([
@@ -30,33 +31,26 @@ const FoodMap = () => {
     setLoading(true);     //亮起红灯，告诉页面去请求数据
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_DIFY_API_URL}/chat-messages`, {
+      const response = await csrfFetch('/API/Dify/Chat', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DIFY_API_KEY}`,
           'Content-Type': 'application/json'
-        },    //fetch带着API密钥和用户问的问题，按照Dify的格式进行POST请求，敲开Dify的大门
+        },
         body: JSON.stringify({
-          inputs: {},
-          query: query,
-          response_mode: 'blocking',
-          user: 'zhanjiang_explorer'
+          query
         })
       });
+      const payload = await response.json();
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Dify 详细报错:', errorData);
-        const exactReason = errorData.message || errorData.code || `HTTP ${response.status}`;
-        throw new Error(exactReason);
+      if (!response.ok || !payload.success) {
+        throw new Error(response.status === 401 ? '请先登录后使用 AI 寻味助手' : (payload.message || 'AI服务暂时不可用'));
       }
 
-      const data = await response.json();
       //请求成功
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.answer }]);
+      setMessages((prev) => [...prev, { role: 'assistant', text: payload.data?.answer || '暂时没有生成有效回复，请换个问法试试。' }]);
 
-      if (data.metadata?.suggested_questions) {
-        setSuggestions(data.metadata.suggested_questions);
+      if (payload.data?.suggestedQuestions?.length) {
+        setSuggestions(payload.data.suggestedQuestions);
       }
     } catch (error) {
       console.error('完整报错:', error);

@@ -6,6 +6,8 @@ import React from 'react'
 import {useState,useEffect} from 'react'
 import {useRouter} from 'next/navigation'
 import Link from 'next/link'
+import IdenticonAvatar from '../../../components/IdenticonAvatar';
+import {csrfFetch} from '../../../../lib/csrf-client';
 
 const PostDetail=({params})=>{
     const router = useRouter();
@@ -76,7 +78,7 @@ const PostDetail=({params})=>{
         setIsFavoriteLoading(true);
         try{
             //访问收藏专属API
-            const res = await fetch(`/API/MyFavorites`,{
+            const res = await csrfFetch(`/API/MyFavorites`,{
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({
@@ -110,7 +112,7 @@ const PostDetail=({params})=>{
     setIsSubmitting(true)
 
     try{
-        const res = await fetch(`/API/PostDetail/${postId}`,{
+        const res = await csrfFetch(`/API/PostDetail/${postId}`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
@@ -217,7 +219,7 @@ const PostDetail=({params})=>{
                                 href={`/views/User/${post.userId || post.author?.userId}`}
                                 className="author-card">
                                     
-                                    <img src={post.author?.avatar || "/upload/default-avatar.png"} alt="avatar" className="author-avatar" />
+                                    <IdenticonAvatar src={post.author?.avatar} seed={post.author?.nickname || post.userId || post.id} alt="avatar" className="author-avatar" />
                                     <div className="author-meta">
                                         <div className="author-name-line">
                                             <span className="author-name">{post.author?.nickname || "未知吃货"}</span>
@@ -291,7 +293,7 @@ const PostDetail=({params})=>{
                     <div className="comment-list">
                         {CommentsList.map((item) => (
                             <div key={item.id} className="comment-item">
-                                <img src={item.author?.avatar || "/upload/default-avatar.png"} alt="user" className="comment-avatar" />
+                                <IdenticonAvatar src={item.author?.avatar} seed={item.author?.nickname || item.userId || item.id} alt="user" className="comment-avatar" />
                                 <div className="comment-main">
                                     <div className="comment-name-line">
                                         <span className="comment-name">{item.author?.nickname || "匿名用户"}</span>

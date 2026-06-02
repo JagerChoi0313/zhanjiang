@@ -9,6 +9,7 @@ import EditorSection from './components/EditorSection';
 import MediaUploader from './components/MediaUploader';
 import PostConfig from './components/PostConfig';
 import Link from 'next/link'
+import {csrfFetch} from '../../../lib/csrf-client'
 
 const PostFunction=()=>{
     const router = useRouter();
@@ -60,7 +61,7 @@ const PostFunction=()=>{
         if(!isReady) return;
 
         try{
-            const response = await fetch('/API/Post',{
+            const response = await csrfFetch('/API/Post',{
                 method:'POST',
                 headers:{
                     'Content-Type':'application/json'

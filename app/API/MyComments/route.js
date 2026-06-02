@@ -5,6 +5,7 @@ import {Comments, posts, Users} from '../../../database/schema'
 import {eq, desc, sql, and, like, or} from 'drizzle-orm' 
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import { requireAuth } from '../../../lib/api-auth.mjs'
+import {CONTENT_STATUS} from '../../../lib/content-status.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -33,7 +34,11 @@ export async function GET(request){
         const offset = (page-1) * pageSize;
 
         
-        const baseCondition = eq(Comments.userId, userId);
+        const baseCondition = and(
+            eq(Comments.userId, userId),
+            eq(Comments.status, CONTENT_STATUS.ACTIVE),
+            eq(posts.status, CONTENT_STATUS.ACTIVE)
+        );
         
         // 如果有关键字，就把 baseCondition 和搜索条件用 AND 绑在一起；否则就只用 baseCondition
         const finalCondition = (keyword && keyword.trim() !== '')
@@ -70,7 +75,7 @@ export async function GET(request){
                 username:Users.nickname,
                 avatar:Users.avatar,
                 favoriteCount:sql`(SELECT COUNT(*) FROM favorites WHERE favorites.post_id = ${posts.id})`.mapWith(Number),
-                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id})`.mapWith(Number)
+                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id} AND comments.status = ${CONTENT_STATUS.ACTIVE})`.mapWith(Number)
             })
             .from(Comments)
             .innerJoin(posts,eq(Comments.postId,posts.id))  

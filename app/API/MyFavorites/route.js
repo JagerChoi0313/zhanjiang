@@ -5,7 +5,10 @@ import {eq,desc,sql,and} from 'drizzle-orm'
 import {like,or} from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
+import {requireCsrf} from '../../../lib/csrf.mjs'
 import {isDuplicateKeyError} from '../../../lib/db-errors.mjs'
+import {ensurePostExists, ensureUserExists} from '../../../lib/referential-integrity.mjs'
+import {CONTENT_STATUS} from '../../../lib/content-status.mjs'
 import {
     ApiValidationError,
     positiveInt,
@@ -38,10 +41,12 @@ export async function GET(request){
             const existingFavorite = await db
             .select()
             .from(Favorites)
+            .innerJoin(posts, eq(Favorites.postId, posts.id))
             .where(
                 and(
                     eq(Favorites.postId,postId),
-                    eq(Favorites.userId,userId)
+                    eq(Favorites.userId,userId),
+                    eq(posts.status, CONTENT_STATUS.ACTIVE)
                 )
             );
             //查到了就是true，没查到就是false
@@ -57,7 +62,7 @@ export async function GET(request){
         const offset = (page-1)*pageSize;       // 计算跳过多少条。比如第2页，就跳过前4条。
 
         //动态拼装查询条件
-        const baseCondition = eq(Favorites.userId,userId)
+        const baseCondition = and(eq(Favorites.userId,userId), eq(posts.status, CONTENT_STATUS.ACTIVE))
         const searchCondition = keyword
             ?and(
                 baseCondition,
@@ -73,7 +78,8 @@ export async function GET(request){
         const totalResult = await db
             .select({count:sql`count(*)`})  // 使用原生 SQL 语法进行计数
             .from(Favorites)
-            .where(eq(Favorites.userId,userId))     // 只数当前这个用户的收藏
+            .innerJoin(posts,eq(Favorites.postId,posts.id))
+            .where(searchCondition)     // 只数当前这个用户可见的收藏
         const totalCount = Number(totalResult[0].count);    // 把查到的结果转成纯数字
 
         //执行多表联查
@@ -92,7 +98,7 @@ export async function GET(request){
                 username:Users.nickname,
                 avatar:Users.avatar,
                 favoriteCount:sql`(SELECT COUNT(*) FROM favorites WHERE favorites.post_id= ${posts.id})`.mapWith(Number),
-                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id})`.mapWith(Number)
+                commentCount:sql`(SELECT COUNT(*) FROM comments WHERE comments.post_id = ${posts.id} AND comments.status = ${CONTENT_STATUS.ACTIVE})`.mapWith(Number)
             })
 
             .from(Favorites)
@@ -128,6 +134,11 @@ export async function GET(request){
 //POST接口：处理帖子的“收藏/取消收藏”的功能
 export async function POST(request){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录",
             invalidMessage: "登录已失效，请重新登录",
@@ -143,13 +154,18 @@ export async function POST(request){
         const body = await readJsonBody(request);
         const postId = positiveInt(body.postId, "帖子ID")      //千万不要相信前端传过来userid
 
-        const targetPost = await db
-            .select({id: posts.id})
-            .from(posts)
-            .where(eq(posts.id, postId))
-            .limit(1)
-        if(targetPost.length === 0){
-            return ApiResponse.error(ErrorCode.NOT_FOUND, "帖子不存在")
+        const userExists = await ensureUserExists(userId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if(!userExists.ok){
+            return userExists.response
+        }
+
+        const postExists = await ensurePostExists(postId, {
+            missingMessage: "帖子不存在",
+        })
+        if(!postExists.ok){
+            return postExists.response
         }
 
         //去数据库里查一下看看有没有这个帖子
