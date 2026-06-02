@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import {useEffect,useState} from 'react'
 import Link from 'next/link'
+import { createIdenticonDataUrl } from '../../../../../../../../lib/identicon.mjs'
 
 // 1. 定义样式对象，确保与“热门推荐”视觉对齐
 const ContainerStyle = {
@@ -101,7 +102,7 @@ const RightTalkRanking = () => {
             {/* 用户头像 - 使用数据库字段 avatar */}
             <div style={AvatarStyle}>
               <Image
-                src={item.avatar || '/Image/default-avatar.png'} // 增加兜底图
+                src={item.avatar || createIdenticonDataUrl(item.user_name || item.id)}
                 alt={item.user_name || 'User'}
                 fill
                 style={{ objectFit: 'cover' }}

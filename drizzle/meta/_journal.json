@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1780306018818,
+      "tag": "0000_schema_alignment_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780306291943,
+      "tag": "0001_query_index_optimization",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1780325447553,
+      "tag": "0002_upload_asset_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1780328778357,
+      "tag": "0003_admin_content_governance",
+      "breakpoints": true
+    }
+  ]
+}

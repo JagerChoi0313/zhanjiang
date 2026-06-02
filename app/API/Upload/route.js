@@ -1,15 +1,17 @@
-//投稿功能中“图片上传”的实现
-// 先把文件存到你的服务器 public/uploads 文件夹或者云存储，拿到 URL 后再塞进这个 POST 接口。
-
-import {writeFile} from 'fs/promises'   //专门用于异步写入文件的工具
-import {join} from 'path'               //用于智能拼接文件路径（兼容windows和Mac）
-import {v4 as uuidv4} from 'uuid'       //生成全球唯一标识符，防止文件名重复
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
 import {ApiValidationError, toApiValidationResponse, validateUploadFile} from "../../../lib/api-validation.mjs"
 import {requireAuth} from "../../../lib/api-auth.mjs"
+import {requireCsrf} from "../../../lib/csrf.mjs"
+import {normalizeUploadPurpose, processUploadImage} from "../../../lib/upload-image.mjs"
+import {createUploadClaimForProcessedImage} from "../../../lib/upload-assets.mjs"
 
 export async function POST(request){
     try{
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         const auth = await requireAuth(request, {
             missingMessage: "未登录，请先登录",
             invalidMessage: "登录过期，请重新登录",
@@ -21,9 +23,10 @@ export async function POST(request){
         const formData = await request.formData();  //解析前端传来的FormData格式数据（包含文件和其他文本）
         const file = formData.get('file');      //从表单中提取key为‘file’的内容
 
-        let uploadFile;
+        let purpose;
         try{
-            uploadFile = validateUploadFile(file);
+            purpose = normalizeUploadPurpose(formData.get('purpose'))
+            validateUploadFile(file);
         }catch(validationError){
             if(validationError instanceof ApiValidationError){
                 return toApiValidationResponse(validationError)
@@ -35,35 +38,32 @@ export async function POST(request){
         //核心步骤：将文件转化为二进制数组缓冲区（ArrayBuffer）
         const bytes = await file.arrayBuffer();
 
-        //进一步转化为Node.js标准的Buffer对象，这样writeFile才能识别
-        const buffer  = Buffer.from(bytes);
+        const buffer = Buffer.from(bytes);
 
-        //文件名防重名处理
-        const fileExtension = uploadFile.extension;    //使用校验后的安全后缀，避免大小写或伪造扩展名
-        const fileName = `${uuidv4()}.${fileExtension}`;       //拼接新名字：uuidv4()生成一串乱码 + 加上后缀
+        let processedImage;
+        try {
+            processedImage = await processUploadImage(buffer, { purpose })
+        } catch (validationError) {
+            if (validationError instanceof ApiValidationError) {
+                return toApiValidationResponse(validationError)
+            }
 
+            throw validationError
+        }
 
-        //确定存储路径（存储在public/upload）
-        // process.cwd() 获取项目根目录
-        // join 拼接出物理路径：D:\project\zhanjiang\public\uploads\a1b2.jpg
-        const path = join(process.cwd(),'public','upload',fileName)
-
-        //写入文件
-        // 真正将二进制数据写入到硬盘里
-        await writeFile(path,buffer)
-
-        //返回前端可直接访问的URL
-        //因为Next.js默认将public映射到根，所以不需要加“public”
-        const fileUrl = `/upload/${fileName}`;
-
-        console.log(`文件已保存至：${path}`)
-
-        return ApiResponse.success({
-            url:fileUrl     //前端拿到这个后，再去提交给/API/Post接口
+        const upload = await createUploadClaimForProcessedImage({
+            userId: auth.userId,
+            purpose,
+            processedImage,
         })
+
+        return ApiResponse.success(upload)
 
 
     }catch(error){
+        if(error instanceof ApiValidationError){
+            return toApiValidationResponse(error)
+        }
         console.error('Upload Error:',error)
         return ApiResponse.error(ErrorCode.UPLOAD_ERROR, '服务器上传失败')
     }

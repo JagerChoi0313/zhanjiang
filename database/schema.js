@@ -1,23 +1,27 @@
-import {mysqlTable, serial, varchar, timestamp, float, int,text,boolean,json, uniqueIndex} from 'drizzle-orm/mysql-core';
+import {mysqlTable, varchar, timestamp, float, int, tinyint, text, boolean, json, uniqueIndex, index} from 'drizzle-orm/mysql-core';
 import {relations} from "drizzle-orm"
 
 export const Users = mysqlTable("users",{
-    userId: serial("user_id").primaryKey(), // 对应数据库里改名后的 user_id
+    userId: int("user_id").autoincrement().primaryKey(), // 对应数据库里改名后的 user_id
     nickname: varchar("nickname", { length: 255 }).notNull(),
     avatar: text("avatar"),
     email:varchar("email",{length:255}).notNull().unique(),
     password:varchar("password",{length:255}).notNull(),
     phoneNumber: varchar("phoneNumber", { length: 20 }),
     gender: varchar("gender", { length: 10 }), 
-    age: int("age"),
+    age: tinyint("age", { unsigned: true }),
+    userRole: varchar("user_role", { length: 20 }).notNull().default("user"),
+    userStatus: varchar("user_status", { length: 20 }).notNull().default("active"),
     createdAt:timestamp("createAt").defaultNow(),
     introduction:text('introduction')
-})
+}, (table) => [
+    index("users_role_status_idx").on(table.userRole, table.userStatus),
+])
 
 
 
 export const HotRecommend=mysqlTable("hot_recommend",{
-    id:serial("id").primaryKey(),   //唯一主键
+    id:int("id").autoincrement().primaryKey(),   //唯一主键
     title:varchar("title",{length:255}).notNull(),  //美食标题：如“湛江白切鸡”
 
     //图片路径：存储如“/Image/Hot1.png”的字符串
@@ -25,6 +29,7 @@ export const HotRecommend=mysqlTable("hot_recommend",{
 
     //浏览量和评论量建议用int，方便以后做“由高到低”的数学排序
     views:int("views").default(0),
+    comments:int("comments").default(0),
 
     //权重分，可以手动设置，也可以根据算法计算，用于决定排名
     rank_score:int("rank_score").default(0),
@@ -37,21 +42,26 @@ export const HotRecommend=mysqlTable("hot_recommend",{
     category: varchar("category", { length: 100 }).default('全部'), // 分类标签
 
     createAt:timestamp("create_at").defaultNow(),
-})
+}, (table) => [
+    index("hot_recommend_rank_score_idx").on(table.rank_score),
+])
 
 export const TalkRanking = mysqlTable("talk_ranking",{
-    id:serial("id").primaryKey(),
+    id:int("id").autoincrement().primaryKey(),
     user_name:varchar("user_name",{length:100}).notNull(),
     comment:varchar("comment",{length:500}).notNull(),
     avatar:varchar("avatar",{length:500}),
     rating:int("rating").default(5),
     create_at:timestamp("create_at").defaultNow(),
-})
+}, (table) => [
+    index("talk_ranking_created_at_idx").on(table.create_at),
+    index("talk_ranking_user_avatar_idx").on(table.user_name, table.avatar),
+])
 
 
 // 1. 点位位置表 (父表)
 export const ExploreSpots = mysqlTable("explore_spots", {
-  id: serial("id").primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   
   // 区域标识
   areaSlug: varchar("area_slug", { length: 50 }).notNull(),
@@ -67,13 +77,15 @@ export const ExploreSpots = mysqlTable("explore_spots", {
   svgPath: varchar("svg_path", { length: 500 }),
   
   createdAt: timestamp("create_at").defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("explore_spots_area_slug_unique").on(table.areaSlug),
+]);
 
 // 2. 轮播内容表 (子表)
 export const ExploreCarousel = mysqlTable("explore_carousel", {
-  id: serial("id").primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   
-  // 关联 ExploreSpots 表的 id
+  // 逻辑关联 ExploreSpots 表的 id，由代码层保证一致性
   spotId: int("spot_id").notNull(),
   
   // 具体图文内容
@@ -83,7 +95,9 @@ export const ExploreCarousel = mysqlTable("explore_carousel", {
   
   // 排序字段
   sortOrder: int("sort_order").default(0),
-});
+}, (table) => [
+  index("explore_carousel_spot_sort_idx").on(table.spotId, table.sortOrder),
+]);
 
 
 
@@ -126,34 +140,39 @@ export const TasteCardTable = mysqlTable("taste_card", {
 });
 
 export const posts = mysqlTable("posts",{
-  id: serial("id").primaryKey(), // 帖子的自增 ID 保持不变
-  userId: int("user_id").notNull().references(()=>Users.userId,{onDelete:'cascade'}),
+  id: int("id").autoincrement().primaryKey(), // 帖子的自增 ID 保持不变
+  userId: int("user_id").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   excerpt: varchar("excerpt", { length: 500 }),
   coverImage: text("cover_image"),
-  // images 建议在 Drizzle 中用 text 存储，代码逻辑里进行 JSON.parse
-  images: text("images"), 
+  images: json("images"),
   category: varchar("category", { length: 50 }),
   location: varchar("location", { length: 100 }),
   likes: int("likes").default(0),
   comments: int("comments").default(0),
   isHot: boolean("is_hot").default(false), // 修正为下划线对应关系，防止报错
   createdAt: timestamp("create_at").defaultNow(),
-
-});
+  status: tinyint("status", { unsigned: true }).notNull().default(1),
+}, (table) => [
+  index("posts_created_at_idx").on(table.createdAt),
+  index("posts_user_created_at_idx").on(table.userId, table.createdAt),
+  index("posts_status_created_at_idx").on(table.status, table.createdAt),
+]);
 
 
 
 export const hotTopics = mysqlTable("hot_topics",{
-  id:serial('id').primaryKey(),
+  id:int('id').autoincrement().primaryKey(),
   name:varchar('name',{length:255}).notNull(),  //话题名称
   viewCourt:varchar('view_court',{length:50}).default(0),   // 阅读量，存字符串方便显示
   rank:int('rank'),   //排名序号
   isHot:boolean('ishot').default(false),  //判断是否带火苗标志
   createAt:timestamp('create_at').defaultNow(),
 
-})
+}, (table) => [
+  index("hot_topics_rank_idx").on(table.rank),
+])
 
 
 // 为什么不在 posts 表里加评论字段？
@@ -170,61 +189,109 @@ export const hotTopics = mysqlTable("hot_topics",{
 
 export const Comments = mysqlTable("comments",{
   //评论唯一id
-  id:serial("id").primaryKey(),
+  id:int("id").autoincrement().primaryKey(),
 
   //评论的具体文字内容
   content:text("content").notNull(),
   
-  //外键：关联到Users表的id
+  //逻辑关联到Users表的id
   //注意：这里引用的是Users表
   userId:int("user_id")
-    .notNull()
-    .references(()=>Users.userId,{onDelete:'cascade'}),
+    .notNull(),
 
-  //外键：关联到posts表的id
+  //逻辑关联到posts表的id
   //注意：这里引用的的是截图中的host表
   postId:int("post_id")
-    .notNull()
-    .references(()=>posts.id,{onDelete:'cascade'}),
+    .notNull(),
 
-    //评论时间，对应评论日期
-    createAt:timestamp("created_at").defaultNow(),
-})
+  //评论时间，对应评论日期
+  createAt:timestamp("created_at").defaultNow(),
+  status: tinyint("status", { unsigned: true }).notNull().default(1),
+}, (table) => [
+  index("comments_post_created_at_idx").on(table.postId, table.createAt),
+  index("comments_user_created_at_idx").on(table.userId, table.createAt),
+  index("comments_status_created_at_idx").on(table.status, table.createAt),
+])
 
 export const Favorites = mysqlTable("favorites",{
-  id:serial("id").primaryKey(),
+  id:int("id").autoincrement().primaryKey(),
   userId:int('user_id')
-  .notNull()
-  .references(()=>Users.userId,{onDelete:'cascade'}),
+  .notNull(),
 
   postId:int('post_id')
-  .notNull()
-  .references(()=>posts.id,{onDelete:'cascade'}),
+  .notNull(),
 
   createdAt:timestamp('created_at').defaultNow(),   //收藏时间，方便排序
 }, (table) => [
-  uniqueIndex("favorites_user_post_unique").on(table.userId, table.postId)
+  uniqueIndex("favorites_user_post_unique").on(table.userId, table.postId),
+  index("favorites_user_created_at_idx").on(table.userId, table.createdAt),
+  index("favorites_post_idx").on(table.postId),
 ])
 
 //核心逻辑：记录谁（followerId)关注了谁（followingId）
 export const Follows = mysqlTable("follows",{
-  id:serial("id").primaryKey(),
+  id:int("id").autoincrement().primaryKey(),
 
   //关注者（主动点击关注的人）
   followerId:int("follower_id")
-    .notNull()
-    .references(()=>Users.userId,{onDelete:"cascade"}),
+    .notNull(),
 
   //被关注者（被关注的食客）
   followingId:int("following_id")
-    .notNull()
-    .references(()=>Users.userId,{onDelete:"cascade"}),
+    .notNull(),
 
   //关注的时间
   createdAt:timestamp("created_at").defaultNow()
     
 }, (table) => [
-  uniqueIndex("follows_follower_following_unique").on(table.followerId, table.followingId)
+  uniqueIndex("follows_follower_following_unique").on(table.followerId, table.followingId),
+  index("follows_following_idx").on(table.followingId),
+])
+
+export const UploadAssets = mysqlTable("upload_assets", {
+  id: int("id").autoincrement().primaryKey(),
+  contentHash: varchar("content_hash", { length: 64 }).notNull(),
+  publicUrl: varchar("public_url", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 50 }).notNull(),
+  extension: varchar("extension", { length: 10 }).notNull(),
+  size: int("size", { unsigned: true }).notNull(),
+  width: int("width", { unsigned: true }).notNull(),
+  height: int("height", { unsigned: true }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  deleteAfter: timestamp("delete_after"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("upload_assets_content_hash_unique").on(table.contentHash),
+  uniqueIndex("upload_assets_public_url_unique").on(table.publicUrl),
+  index("upload_assets_status_delete_idx").on(table.status, table.deleteAfter),
+])
+
+export const UploadClaims = mysqlTable("upload_claims", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("asset_id").notNull(),
+  userId: int("user_id").notNull(),
+  purpose: varchar("purpose", { length: 20 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("temporary"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("upload_claims_user_status_idx").on(table.userId, table.status, table.expiresAt),
+  index("upload_claims_asset_status_idx").on(table.assetId, table.status),
+])
+
+export const UploadReferences = mysqlTable("upload_references", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("asset_id").notNull(),
+  userId: int("user_id").notNull(),
+  entityType: varchar("entity_type", { length: 30 }).notNull(),
+  entityId: int("entity_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("upload_references_entity_asset_unique").on(table.entityType, table.entityId, table.assetId),
+  index("upload_references_asset_idx").on(table.assetId),
+  index("upload_references_user_idx").on(table.userId),
 ])
 
 //定义Follows表和Users表的关系

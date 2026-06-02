@@ -3,11 +3,15 @@ import { Users } from '../../../../database/schema'
 import { eq } from 'drizzle-orm'
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
+import { requireCsrf } from "../../../../lib/csrf.mjs"
+import {ensureUserExists} from "../../../../lib/referential-integrity.mjs"
+import {findCurrentUploadClaim, replaceAvatarUploadReference} from "../../../../lib/upload-assets.mjs"
 import {
     ApiValidationError,
     assertAllowedValue,
     isPhone,
     optionalIntRange,
+    optionalAvatarUrl,
     optionalString,
     readJsonBody,
     requiredString,
@@ -16,6 +20,11 @@ import {
 
 export async function POST(request) {
     try {
+        const csrf = await requireCsrf(request)
+        if(!csrf.ok){
+            return csrf.response
+        }
+
         // 1. 鉴权：查验身份
         const auth = await requireAuth(request, {
             missingMessage: "未登录，无法修改资料",
@@ -37,17 +46,51 @@ export async function POST(request) {
             throw new ApiValidationError("手机号格式不正确")
         }
         const introduction = optionalString(body.introduction, "个人简介", { maxLength: 500 })
+        const hasAvatar = Object.prototype.hasOwnProperty.call(body, "avatar")
+        const avatar = hasAvatar ? optionalAvatarUrl(body.avatar) : undefined
+
+        const userExists = await ensureUserExists(currentUserId, {
+            missingMessage: "登录失效，请重新登录",
+        })
+        if (!userExists.ok) {
+            return userExists.response
+        }
+
+        const avatarClaim = hasAvatar && avatar
+            ? await findCurrentUploadClaim({
+                userId: currentUserId,
+                purpose: "avatar",
+                url: avatar,
+            })
+            : null
 
         // 3. 写入数据库
-        await db.update(Users)
-            .set({
-                nickname,
-                gender: gender ?? null,
-                age: age ?? null,
-                phoneNumber: phoneNumber ?? null,
-                introduction: introduction ?? null // ✅ 存入个人简介
-            })
-            .where(eq(Users.userId, currentUserId))
+        const updateValues = {
+            nickname,
+            gender: gender ?? null,
+            age: age ?? null,
+            phoneNumber: phoneNumber ?? null,
+            introduction: introduction ?? null // ✅ 存入个人简介
+        }
+        if (hasAvatar) {
+            updateValues.avatar = avatar
+        }
+
+        await db.transaction(async (tx) => {
+            await tx.update(Users)
+                .set(updateValues)
+                .where(eq(Users.userId, currentUserId))
+
+            if (hasAvatar) {
+                await replaceAvatarUploadReference({
+                    userId: currentUserId,
+                    avatarUrl: avatar,
+                    previousAvatarUrl: userExists.user?.avatar,
+                    claim: avatarClaim,
+                    client: tx,
+                })
+            }
+        })
 
         return ApiResponse.success(undefined, "资料保存成功！")
 

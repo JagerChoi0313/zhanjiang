@@ -1,7 +1,8 @@
 import {db} from "../../../database/index"
 import {Users,posts,Comments,Favorites,Follows} from "../../../database/schema"
-import {eq,count} from "drizzle-orm"
+import {and, eq, count} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from "../../../lib/api-response.mjs"
+import {CONTENT_STATUS} from "../../../lib/content-status.mjs"
 import {
     ApiValidationError,
     positiveInt,
@@ -51,9 +52,11 @@ export async function GET(request){
             followerCount,
             followingCount
         ] = await Promise.all([
-            db.select({value:count()}).from(posts).where(eq(posts.userId,parseId)),
-            db.select({value:count()}).from(Comments).where(eq(Comments.userId,parseId)),
-            db.select({value:count()}).from(Favorites).where(eq(Favorites.userId,parseId)),
+            db.select({value:count()}).from(posts).where(and(eq(posts.userId,parseId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
+            db.select({value:count()}).from(Comments).where(and(eq(Comments.userId,parseId), eq(Comments.status, CONTENT_STATUS.ACTIVE))),
+            db.select({value:count()}).from(Favorites)
+                .innerJoin(posts, eq(Favorites.postId, posts.id))
+                .where(and(eq(Favorites.userId,parseId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
             db.select({value:count()}).from(Follows).where(eq(Follows.followingId,parseId)),
             db.select({value:count()}).from(Follows).where(eq(Follows.followerId,parseId))
         ])

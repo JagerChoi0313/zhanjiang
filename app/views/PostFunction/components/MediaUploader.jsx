@@ -2,6 +2,7 @@
 import React from 'react'
 import {useState,useRef} from 'react'
 import {v4 as uuidv4} from 'uuid'
+import {csrfFetch} from '../../../../lib/csrf-client'
 
 /**
  * MediaUploader - 多图上传与预览组件
@@ -55,7 +56,7 @@ const MediaUploader=({images,setImages})=>{
         formData.append('file',previewItem.file);
 
         try{
-            const res = await fetch('/API/Upload',{
+            const res = await csrfFetch('/API/Upload',{
                 method:'POST',
                 body:formData
             })

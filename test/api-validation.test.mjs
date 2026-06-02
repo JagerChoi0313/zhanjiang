@@ -73,21 +73,17 @@ test("readJsonBody rejects invalid JSON bodies", async () => {
 
 test("validateUploadFile allows image files up to five megabytes", () => {
   const file = { name: "food.webp", type: "image/webp", size: MAX_UPLOAD_BYTES };
-  assert.deepEqual(validateUploadFile(file), { extension: "webp" });
+  assert.equal(validateUploadFile(file), undefined);
 });
 
-test("validateUploadFile rejects missing oversized and non-image files", () => {
+test("validateUploadFile rejects missing empty and oversized files before image decoding", () => {
   assert.throws(() => validateUploadFile(null), /未找到文件/);
   assert.throws(
-    () => validateUploadFile({ name: "food.txt", type: "text/plain", size: 10 }),
-    /仅支持上传JPG、PNG或WEBP图片/,
+    () => validateUploadFile({ name: "food.txt", type: "text/plain", size: 0 }),
+    /文件内容不能为空/,
   );
   assert.throws(
     () => validateUploadFile({ name: "food.jpg", type: "image/jpeg", size: MAX_UPLOAD_BYTES + 1 }),
     /图片大小不能超过5MB/,
-  );
-  assert.throws(
-    () => validateUploadFile({ name: "food", type: "image/jpeg", size: 10 }),
-    /文件扩展名不正确/,
   );
 });

@@ -1,0 +1,140 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: zhanjiang
+      MYSQL_USER: zhanjiang
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    secrets:
+      - mysql_app_password
+      - mysql_root_password
+    volumes:
+      - ./runtime/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$(cat /run/secrets/mysql_root_password) --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: zhanjiang
+      DATABASE_USER: zhanjiang
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      DIFY_API_KEY_FILE: /run/secrets/dify_api_key
+      DIFY_API_URL: https://api.dify.ai/v1
+      UPLOAD_DIR: /app/public/upload
+    secrets:
+      - mysql_app_password
+      - jwt_secret
+      - dify_api_key
+    volumes:
+      - ./runtime/uploads:/app/public/upload
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/API/Health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: tooling
+    profiles: ["tools"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: zhanjiang
+      DATABASE_USER: zhanjiang
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
+    secrets:
+      - mysql_app_password
+    command: ["pnpm", "db:migrate"]
+
+  admin-seed:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: tooling
+    profiles: ["tools"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: zhanjiang
+      DATABASE_USER: zhanjiang
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
+      ADMIN_EMAIL_FILE: /run/secrets/admin_email
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+      ADMIN_NICKNAME_FILE: /run/secrets/admin_nickname
+      ADMIN_UPSERT: "false"
+    secrets:
+      - mysql_app_password
+      - admin_email
+      - admin_password
+      - admin_nickname
+    command: ["pnpm", "admin:seed"]
+
+  uploads-cleanup:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: tooling
+    profiles: ["tools"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: zhanjiang
+      DATABASE_USER: zhanjiang
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
+      UPLOAD_DIR: /app/public/upload
+    secrets:
+      - mysql_app_password
+    volumes:
+      - ./runtime/uploads:/app/public/upload
+    command: ["pnpm", "uploads:cleanup"]
+
+secrets:
+  mysql_root_password:
+    file: ./runtime/secrets/mysql_root_password
+  mysql_app_password:
+    file: ./runtime/secrets/mysql_app_password
+  jwt_secret:
+    file: ./runtime/secrets/jwt_secret
+  dify_api_key:
+    file: ./runtime/secrets/dify_api_key
+  admin_email:
+    file: ./runtime/secrets/admin_email
+  admin_password:
+    file: ./runtime/secrets/admin_password
+  admin_nickname:
+    file: ./runtime/secrets/admin_nickname

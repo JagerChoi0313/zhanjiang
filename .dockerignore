@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+deploy/runtime
+coverage
+.DS_Store
+*.log
+.env*
+db_backup
+tsconfig.tsbuildinfo
+next-env.d.ts

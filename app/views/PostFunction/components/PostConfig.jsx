@@ -2,6 +2,7 @@
 
 import React from 'react'
 import {useState,useRef} from 'react'
+import {csrfFetch} from '../../../../lib/csrf-client'
 
 /**
  * PostConfig - 发帖页面的右侧配置模块
@@ -51,7 +52,7 @@ const PostConfig = ({category,setCategory,location,setLocation,coverImage,setCov
 
 
      try{
-    const res = await fetch('/API/Upload',{method:'POST',body:formData})
+    const res = await csrfFetch('/API/Upload',{method:'POST',body:formData})
     const data = await res.json();
     if(data.success){
       setCoverImage(data.data?.url)
