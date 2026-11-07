@@ -5,7 +5,7 @@ import MessageBubble from './MessageBubble';
 import SuggestionTag from './SuggestionTag';
 import InputController from './InputController';
 
-const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading }) => {
+const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading, photo, setPhoto }) => {
   const chatScrollRef = useRef(null);
 
   useEffect(() => {
@@ -30,10 +30,11 @@ const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading 
       boxShadow: '0 20px 52px rgba(58, 38, 24, 0.07)',
       overflow: 'hidden'
     }}>
-      <div style={{
+      <div className="px-3 sm:px-[30px]" style={{
         minHeight: 0,
         overflowY: 'auto',
-        padding: '26px 30px 10px',
+        paddingTop: '26px',
+        paddingBottom: '10px',
         scrollBehavior: 'smooth',
         overscrollBehavior: 'contain'
       }}
@@ -64,17 +65,16 @@ const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading 
               border: '1px solid #e8e8e8',
               boxShadow: '0 10px 26px rgba(64, 45, 31, 0.04)'
             }}>
-              正在为你规划路线...
+              {photo && messages.at(-1)?.text?.startsWith("📷") ? "正在识别照片里的美食…" : "正在为你寻味…"}
             </div>
           </div>
         )}
       </div>
 
-      <div style={{
-        padding: '8px 30px 18px',
+      <div className="px-3 pb-3 pt-2 sm:px-[30px]" style={{
         backgroundColor: 'rgba(255,255,255,0.72)'
       }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+        <div className="mb-3 flex gap-2 overflow-x-auto sm:flex-wrap">
           {suggestions.map((tag, i) => (
             <SuggestionTag key={i} text={tag} onClick={() => handleSend(tag)} />
           ))}
@@ -85,6 +85,8 @@ const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading 
           setInput={setInput}
           handleSend={handleSend}
           loading={loading}
+          photo={photo}
+          setPhoto={setPhoto}
         />
 
         <div style={{ textAlign: 'center', fontSize: '12px', color: '#aeb3bc', marginTop: '10px' }}>

@@ -87,7 +87,7 @@ const RouteCard = () => (
 const MessageBubble = ({ msg, index }) => {
   const isUser = msg.role === 'user';
   const cleanText = String(msg.text || '').replace(/\*\*/g, '');
-  const showRouteCard = !isUser && index > 0 && /路线|赤坎|老街|推荐/.test(cleanText);
+  const showRouteCard = !isUser && !msg.isPhotoReply && index > 0 && /路线|赤坎|老街|推荐/.test(cleanText);
 
   return (
     <div style={{
@@ -110,9 +110,7 @@ const MessageBubble = ({ msg, index }) => {
         {isUser ? <UserRound size={23} /> : <Bot size={23} />}
       </div>
 
-      <div style={{
-        maxWidth: isUser ? '34%' : '68%',
-        minWidth: isUser ? '260px' : '0',
+      <div className="min-w-0 max-w-[85%] lg:max-w-[68%]" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: isUser ? 'flex-end' : 'flex-start'
@@ -127,6 +125,7 @@ const MessageBubble = ({ msg, index }) => {
           fontSize: '15px',
           lineHeight: 1.75,
           whiteSpace: 'pre-wrap',
+          overflowWrap: 'anywhere',
           boxShadow: index === 0 ? 'none' : '0 10px 26px rgba(64, 45, 31, 0.04)'
         }}>
           {index === 0 && !isUser ? (

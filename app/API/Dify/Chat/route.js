@@ -1,7 +1,9 @@
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs";
 import { requireAuth } from "../../../../lib/api-auth.mjs";
-import { ApiValidationError, readJsonBody, requiredString, toApiValidationResponse } from "../../../../lib/api-validation.mjs";
+import { ApiValidationError, MAX_UPLOAD_BYTES, readJsonBody, requiredString, toApiValidationResponse } from "../../../../lib/api-validation.mjs";
 import { requireCsrf } from "../../../../lib/csrf.mjs";
+
+import { processUploadImage } from "../../../../lib/upload-image.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -41,21 +43,39 @@ const checkRateLimit = (userId, now = Date.now()) => {
   return true;
 };
 
-const callDifyChat = async ({ query, userId }) => {
-  const apiKey = process.env.DIFY_API_KEY?.trim();
+const callDifyChat = async ({ query, userId, image }) => {
+  const apiKey = (image ? process.env.DIFY_VISION_API_KEY : process.env.DIFY_API_KEY)?.trim();
   if (!apiKey) {
     return {
       ok: false,
-      response: ApiResponse.error(ErrorCode.EXTERNAL_SERVICE_ERROR, "AI服务未配置", {
+      response: ApiResponse.error(ErrorCode.EXTERNAL_SERVICE_ERROR, image ? "拍照识美食服务未配置" : "AI服务未配置", {
         headers: { "Cache-Control": "no-store" },
       }),
     };
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DIFY_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), image ? 45_000 : DIFY_TIMEOUT_MS);
 
   try {
+    const user = `zhanjiang_user_${userId}`;
+    let files;
+    if (image) {
+      const form = new FormData();
+      form.set("file", new Blob([image.buffer], { type: image.mimeType }), `food.${image.extension}`);
+      form.set("user", user);
+      const upload = await fetch(`${normalizeDifyApiUrl()}/files/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: form,
+        signal: controller.signal,
+      });
+      if (!upload.ok) throw new Error("Dify image upload failed");
+      const { id } = await upload.json();
+      if (typeof id !== "string" || !id) throw new Error("Missing Dify file ID");
+      files = [{ type: "image", transfer_method: "local_file", upload_file_id: id }];
+    }
+
     const response = await fetch(`${normalizeDifyApiUrl()}/chat-messages`, {
       method: "POST",
       headers: {
@@ -66,7 +86,8 @@ const callDifyChat = async ({ query, userId }) => {
         inputs: {},
         query,
         response_mode: "blocking",
-        user: `zhanjiang_user_${userId}`,
+        user,
+        ...(files ? { files } : {}),
       }),
       signal: controller.signal,
     });
@@ -122,8 +143,29 @@ export async function POST(request) {
       return withNoStore(auth.response);
     }
 
-    const body = await readJsonBody(request);
-    const query = requiredString(body.query, "问题");
+    const multipart = request.headers.get("content-type")?.startsWith("multipart/form-data");
+    let photo;
+    let query;
+    if (multipart) {
+      const form = await request.formData().catch(() => {
+        throw new ApiValidationError("无法读取图片上传请求");
+      });
+      const images = form.getAll("image");
+      [photo] = images;
+      if (images.length !== 1 || !(photo instanceof File) || !photo.size) {
+        throw new ApiValidationError("请选择一张美食照片");
+      }
+      if (photo.size > MAX_UPLOAD_BYTES) {
+        throw new ApiValidationError("图片大小不能超过5MB");
+      }
+      const prompt = form.get("query");
+      query = prompt === null || (typeof prompt === "string" && !prompt.trim())
+        ? "这是什么？"
+        : requiredString(prompt, "问题");
+    } else {
+      const body = await readJsonBody(request);
+      query = requiredString(body.query, "问题");
+    }
     if (query.length > 500) {
       throw new ApiValidationError("问题长度不能超过500个字符");
     }
@@ -137,6 +179,7 @@ export async function POST(request) {
     const dify = await callDifyChat({
       query,
       userId: auth.userId,
+      image: photo ? await processUploadImage(Buffer.from(await photo.arrayBuffer())) : undefined,
     });
     if (!dify.ok) {
       return dify.response;
