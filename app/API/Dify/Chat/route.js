@@ -8,7 +8,7 @@ import { processUploadImage } from "../../../../lib/upload-image.mjs";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_DIFY_API_URL = "https://api.dify.ai/v1";
-const DIFY_TIMEOUT_MS = 15_000;
+const DIFY_TIMEOUT_MS = 45_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 
@@ -55,7 +55,7 @@ const callDifyChat = async ({ query, userId, image }) => {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), image ? 45_000 : DIFY_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), DIFY_TIMEOUT_MS);
 
   try {
     const user = `zhanjiang_user_${userId}`;
@@ -106,7 +106,9 @@ const callDifyChat = async ({ query, userId, image }) => {
     return {
       ok: true,
       data: {
-        answer: typeof payload.answer === "string" ? payload.answer : "",
+        answer: typeof payload.answer === "string"
+          ? payload.answer.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, "").trim()
+          : "",
         suggestedQuestions: Array.isArray(payload.metadata?.suggested_questions)
           ? payload.metadata.suggested_questions.filter((question) => typeof question === "string")
           : [],
@@ -119,7 +121,9 @@ const callDifyChat = async ({ query, userId, image }) => {
     });
     return {
       ok: false,
-      response: ApiResponse.error(ErrorCode.EXTERNAL_SERVICE_ERROR, "AI服务暂时不可用", {
+      response: ApiResponse.error(ErrorCode.EXTERNAL_SERVICE_ERROR, error?.name === "AbortError"
+        ? "AI回复超时，请稍后再试"
+        : "AI服务暂时不可用", {
         headers: { "Cache-Control": "no-store" },
       }),
     };
