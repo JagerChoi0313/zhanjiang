@@ -365,3 +365,13 @@ export const favoritesRelation = relations(Favorites,({one})=>({
 // 终端应该会显示类似 [✓] Changes applied successfully 的提示。
 
 // 去你的 DataGrip 刷新一下，你会发现 zhanjiang_db 数据库里自动多出了一个叫 users 的表
+
+// Browser visits are deduplicated per post and UTC+8 calendar day.
+export const PostViews = mysqlTable("post_views", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("post_id").notNull(),
+  visitorHash: varchar("visitor_hash", { length: 64 }).notNull(),
+  visitDay: varchar("visit_day", { length: 10 }).notNull(),
+}, (table) => [
+  uniqueIndex("post_views_post_visitor_day_unique").on(table.postId, table.visitorHash, table.visitDay),
+]);

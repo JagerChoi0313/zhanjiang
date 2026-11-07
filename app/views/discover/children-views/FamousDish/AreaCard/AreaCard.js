@@ -1,5 +1,6 @@
 import {Carousel} from 'antd'
 import Image from 'next/image'
+import Link from 'next/link'
 
 // --- 样式定义 (保持你喜欢的集成式写法) ---
 const CardContainer = {
@@ -30,7 +31,7 @@ const ImageWrapper = {
 const AreaCard = ({ areaName, areaSlug, carouselData }) => {
     // 这里的 carouselData 是从后端接口获取的数组
     return (
-        <div style={CardContainer}>
+        <Link href="/views/FoodCommunity" style={CardContainer} className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9c4b38]">
             <div style={LeftContentStyle}>
                 <div style={TitleAreaStyle}>
                     <span>{areaName}</span>
@@ -72,7 +73,7 @@ const AreaCard = ({ areaName, areaSlug, carouselData }) => {
                     ))}
                 </Carousel>
             </div>
-        </div>
+        </Link>
     );
 };
 

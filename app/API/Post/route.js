@@ -3,47 +3,54 @@ import {posts} from '../../../database/schema'
 import {and, desc} from 'drizzle-orm'
 import {Comments,Favorites,Users} from "../../../database/schema"
 import {eq,sql} from "drizzle-orm"
-import {like,or} from "drizzle-orm"     //引入like和or这两个用于搜索功能的模糊匹配神器
+import {or} from "drizzle-orm"
 import {ApiResponse, ErrorCode} from '../../../lib/api-response.mjs'
 import {requireAuth} from '../../../lib/api-auth.mjs'
 import {requireCsrf} from '../../../lib/csrf.mjs'
 import {ensureUserExists} from '../../../lib/referential-integrity.mjs'
 import {attachPostUploadReferences, findCurrentUploadClaims} from '../../../lib/upload-assets.mjs'
+import { POST_CATEGORIES, POST_LOCATIONS, COMMUNITY_VIEWS } from "../../../lib/community.mjs";
+import { assertPostContent } from "../../../lib/post-moderation.mjs";
 import {CONTENT_STATUS} from '../../../lib/content-status.mjs'
 import {
     ApiValidationError,
     assertAllowedValue,
     optionalString,
+    positiveInt,
     readJsonBody,
     requiredString,
     toApiValidationResponse,
 } from '../../../lib/api-validation.mjs'
 
-const POST_CATEGORIES = ["菜谱", "探店", "攻略", "美食分享", "其他"];
-const POST_LOCATIONS = ["赤坎区", "霞山区", "坡头区", "麻章区", "遂溪县", "徐闻县", "廉江市", "雷州市", "吴川市"];
-
 // GET请求，获取所有的帖子
 export async function GET(request){
     try {
-        //监听前端传来的搜索关键字
-        const {searchParams} = new URL(request.url)
-        const keyword = searchParams.get('q');
+        const { searchParams } = new URL(request.url);
+        const keyword = searchParams.get("q")?.trim().slice(0, 80);
+        const userId = searchParams.has("userId") ? positiveInt(searchParams.get("userId"), "用户ID") : undefined;
+        const category = searchParams.get("category");
+        const location = searchParams.get("location");
+        const view = searchParams.get("view");
+        if (category) assertAllowedValue(category, POST_CATEGORIES, "分类");
+        if (location) assertAllowedValue(location, POST_LOCATIONS, "地区");
+        if (view) assertAllowedValue(view, COMMUNITY_VIEWS, "排序");
 
-        //2.构建基础的查询条件
-        //如果有关键字，就要求标题（title）或描述(description)里包含这个词，否则就是undefined(查全部)
-        const searchCondition = keyword
-            ? and(
-                eq(posts.status, CONTENT_STATUS.ACTIVE),
-                or(
-                like(posts.title,`%${keyword}%`),
-                like(posts.description,`%${keyword}%`)
-                )
-            )
-            :eq(posts.status, CONTENT_STATUS.ACTIVE);
+        const searchPattern = keyword ? '%' + keyword.replace(/[!%_]/g, char => '!' + char) + '%' : null;
+        const searchCondition = and(
+            eq(posts.status, CONTENT_STATUS.ACTIVE),
+            userId ? eq(posts.userId, userId) : undefined,
+            category ? eq(posts.category, category) : undefined,
+            location ? eq(posts.location, location) : undefined,
+            searchPattern ? or(...[posts.title, posts.description, posts.location, Users.nickname]
+                .map(column => sql`${column} LIKE ${searchPattern} ESCAPE '!'`)) : undefined,
+        );
 
-        
-        //构建不需要where的基础连接车厢
-        let queryBuilder = db
+        const favorites = sql`count(distinct ${Favorites.id})`;
+        const comments = sql`count(distinct ${Comments.id})`;
+        const freshness = sql`1 / (1 + greatest(0, coalesce(timestampdiff(hour, ${posts.createdAt}, now()), 720)) / 168)`;
+        const score = sql`(1 + ln(1 + 2 * ${favorites} + ${comments})) * ${freshness}`;
+
+        const queryBuilder = db
         .select({
             id:posts.id,
             title:posts.title,
@@ -80,14 +87,16 @@ export async function GET(request){
         .where(searchCondition)
 
         // 关键：只要用了 count() 这类聚合函数，必须按主表 id 进行分组隔离
-        .groupBy(posts.id, Users.nickname, Users.avatar)
+        .groupBy(posts.id, posts.isHot, Users.nickname, Users.avatar)
+        .having(view === "featured" ? sql`(${posts.isHot} = true OR ${favorites} >= 2 OR ${comments} >= 3)` : undefined)
         //按时间倒序排列
-        .orderBy(desc(posts.createdAt)) 
+        .orderBy(...(view === "recommended" ? [desc(score)] : []), desc(posts.createdAt), desc(posts.id))
         
         const allPosts = await queryBuilder
 
         return ApiResponse.success(allPosts);
     } catch(error) {
+        if (error instanceof ApiValidationError) return toApiValidationResponse(error);
         console.error("Fetch error:", error)
         return ApiResponse.error(ErrorCode.DATABASE_ERROR, "数据库读取失败")
     }
@@ -115,7 +124,8 @@ export async function POST(request){
 
         const body = await readJsonBody(request);
         const title = requiredString(body.title, "标题", {maxLength:255})
-        const description = requiredString(body.description, "描述")
+        const description = requiredString(body.description, "描述", {maxLength: 5000})
+        assertPostContent(title, description);
         const category = assertAllowedValue(
             requiredString(body.category, "分类", {maxLength:50}),
             POST_CATEGORIES,
@@ -134,6 +144,8 @@ export async function POST(request){
         if(!Array.isArray(images)){
             throw new ApiValidationError("图片列表必须是数组")
         }
+
+        if (images.length > 9) throw new ApiValidationError("最多上传9张正文图片");
 
         const normalizedImages = images.map((image) => {
             if(typeof image !== "string"){

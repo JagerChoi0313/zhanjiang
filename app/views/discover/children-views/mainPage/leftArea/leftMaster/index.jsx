@@ -2,11 +2,12 @@
 
 import {Card} from 'antd'
 import Image from 'next/image'
+import Link from 'next/link'
 
 
 // 卡片外层容器样式要求
 const CardContainerStyle = {
-  flex: 1,                    // 让卡片在 Flex 布局中等分宽度
+  height: '100%',
   borderRadius: '16px',       // 匹配设计稿的圆角
   overflow: 'hidden',         // 确保图片不超出圆角
   border: 'none',             // 移除 AntD 默认边框，更显现代感
@@ -33,40 +34,45 @@ const cardImageStyle = {
 const LeftMaster=()=>{
 
   return(
-    <Card
-      hoverable
-      style={CardContainerStyle}
-      // Ant Design 5.x 废弃了 bodyStyle，改用 styles.body
-      styles={{
-        body: {
-          padding: '16px',
-          background: '#fff',
-        }
-      }}
-      cover={
-        <div style={ImageWrapperStyle}>
-          <Image
-            src="/Image/Left2.png"
-            alt="匠心传承"
-            fill
-            style={cardImageStyle}
-            //鼠标悬停有缩放效果
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          />
-        </div>
-      }
+    <Link
+      href="/views/discover/children-views/TasteCard"
+      className="block min-w-0 flex-1 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#a63d2d]"
     >
-      {/* 底部文案部分 */}
-      <div style={{ marginBottom: '4px' }}>
-        <span style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
-          匠心传承：聚焦老店传承人
-        </span>
-      </div>
-      <div style={{ fontSize: '12px', color: '#999' }}>
-        一代代对秘方的传承
-      </div>
-    </Card>
+      <Card
+        hoverable
+        style={CardContainerStyle}
+        // Ant Design 5.x 废弃了 bodyStyle，改用 styles.body
+        styles={{
+          body: {
+            padding: '16px',
+            background: '#fff',
+          }
+        }}
+        cover={
+          <div style={ImageWrapperStyle}>
+            <Image
+              src="/Image/Left2.png"
+              alt=""
+              fill
+              style={cardImageStyle}
+              //鼠标悬停有缩放效果
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            />
+          </div>
+        }
+      >
+        {/* 底部文案部分 */}
+        <div style={{ marginBottom: '4px' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+            味觉卡片：读懂每一道湛江好味
+          </span>
+        </div>
+        <div style={{ fontSize: '12px', color: '#999' }}>
+          了解特色菜的产地、时节和做法
+        </div>
+      </Card>
+    </Link>
   )
 }
 

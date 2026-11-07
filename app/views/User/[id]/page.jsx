@@ -13,6 +13,7 @@ import {
   CameraOutlined
 } from '@ant-design/icons';
 import IdenticonAvatar from '../../../components/IdenticonAvatar';
+import FoodList from '../../FoodCommunity/MainPage/components/FoodList';
 import {csrfFetch} from '../../../../lib/csrf-client';
 
 const UserProfilePage=()=>{
@@ -93,7 +94,7 @@ const UserProfilePage=()=>{
 
   if (!targetUser) return null;
 
-  const joinDate = targetUser.createdAt || targetUser.createTime;
+  const joinDate = targetUser.createAt || targetUser.createdAt || targetUser.createTime;
   const displayJoinDate = joinDate ? String(joinDate).slice(0, 10) : '暂未记录'
   const pageStyle = {
     minHeight: 'calc(100vh - 80px)',
@@ -281,7 +282,7 @@ const UserProfilePage=()=>{
           </section>
 
           <section style={statGridStyle}>
-            <div style={postMetric.card}>
+            <a href="#public-posts" style={{ ...postMetric.card, color: "inherit", textDecoration: "none" }} className="focus-visible:outline-2 focus-visible:outline-[#a63d2d]">
               <div style={postMetric.icon}>
                 <FileTextOutlined />
               </div>
@@ -289,7 +290,7 @@ const UserProfilePage=()=>{
                 <p style={{ margin: 0, color: '#0f172a', fontSize: 28, lineHeight: 1, fontWeight: 800 }}>{targetUser.stats?.posts || 0}</p>
                 <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>他的帖子</p>
               </div>
-            </div>
+            </a>
 
             <div style={commentMetric.card}>
               <div style={commentMetric.icon}>
@@ -334,6 +335,11 @@ const UserProfilePage=()=>{
           </section>
           
         </div>
+        <section id="public-posts" className="mt-6 scroll-mt-24 rounded-[22px] border border-[#eee9e3] bg-white p-4 sm:p-6">
+          <h2 className="text-xl font-bold text-[#0f172a]">公开帖子</h2>
+          <p className="mt-1 text-sm text-gray-500">按最新发布时间排列</p>
+          <FoodList key={id} userId={id} view="latest" />
+        </section>
       </div>
     </div>
     )

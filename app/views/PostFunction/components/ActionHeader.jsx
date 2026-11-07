@@ -8,7 +8,7 @@ import {useRouter} from 'next/navigation'
  * @param {function} onPublish - 点击发布时的回调函数
  */
 
-const ActionHeader =({isReady = false,onPublish})=>{
+const ActionHeader =({isReady = false,onPublish,publishing})=>{
     const router = useRouter();
     return(
     <header style={{height:46, borderBottom:'1px solid #eee9e3', background:'rgba(255,255,255,.94)', zIndex:50, backdropFilter:'blur(12px)'}}>
@@ -39,11 +39,6 @@ const ActionHeader =({isReady = false,onPublish})=>{
 
         {/* 右侧：动作按钮组 */}
         <div style={{display:'flex', alignItems:'center', gap:9}}>
-          <button 
-            style={{border:0, background:'transparent', color:'#4b5563', fontSize:12, fontWeight:600, cursor:'pointer'}}
-          >
-            存草稿
-          </button>
           
           <button 
             onClick={onPublish}
@@ -59,7 +54,7 @@ const ActionHeader =({isReady = false,onPublish})=>{
               cursor:isReady ? 'pointer' : 'not-allowed'
             }}
           >
-            发布
+            {publishing ? "发布中…" : "发布"}
           </button>
         </div>
 
