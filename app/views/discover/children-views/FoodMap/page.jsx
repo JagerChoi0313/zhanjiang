@@ -28,7 +28,8 @@ const FoodMap = () => {
     const query = (queryText ?? input).trim() || (image ? '这是什么？' : '');
     if (!query || loading) return;
 
-    setMessages((prev) => [...prev, { role: 'user', text: image ? `📷 美食照片\n${query}` : query }]);//一有内容，立刻把你的话追加到聊天记录里面
+    setMessages((prev) => [...prev, { role: 'user', hasPhoto: Boolean(image), text: image ? `📷 美食照片\n${query}` : query }]);//一有内容，立刻把你的话追加到聊天记录里面
+    if (image) setPhoto(null);
     setInput('');   //清空输入框
     setLoading(true);     //亮起红灯，告诉页面去请求数据
 
@@ -50,14 +51,12 @@ const FoodMap = () => {
         throw new Error(response.status === 401 ? '请先登录后使用 AI 寻味助手' : (payload?.message || 'AI服务暂时不可用'));
       }
 
-      if (image) setPhoto(null);
       setMessages((prev) => [...prev, { role: 'assistant', isPhotoReply: Boolean(image), text: payload.data?.answer || '暂时没有生成有效回复，请换个问法试试。' }]);
 
       if (payload.data?.suggestedQuestions?.length) {
         setSuggestions(payload.data.suggestedQuestions);
       }
     } catch (error) {
-      console.error('完整报错:', error);
       setMessages((prev) => [
         ...prev,
         {

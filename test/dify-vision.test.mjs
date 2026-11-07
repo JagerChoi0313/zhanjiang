@@ -39,7 +39,7 @@ test("Dify photo chat uploads and references the image using the vision app", as
     assert.deepEqual(body.files, [
       { type: "image", transfer_method: "local_file", upload_file_id: "uploaded-photo" },
     ]);
-    return Response.json({ answer: "A shrimp cake." });
+    return Response.json({ answer: "<think>Internal reasoning</think> A shrimp cake." });
   });
 
   const response = await POST(request);

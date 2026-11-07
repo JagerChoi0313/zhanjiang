@@ -65,7 +65,7 @@ const ChatArea = ({ messages, suggestions, input, setInput, handleSend, loading,
               border: '1px solid #e8e8e8',
               boxShadow: '0 10px 26px rgba(64, 45, 31, 0.04)'
             }}>
-              {photo && messages.at(-1)?.text?.startsWith("📷") ? "正在识别照片里的美食…" : "正在为你寻味…"}
+              {messages.at(-1)?.hasPhoto ? "正在识别照片里的美食…" : "正在为你寻味…"}
             </div>
           </div>
         )}
