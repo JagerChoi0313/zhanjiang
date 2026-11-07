@@ -14,6 +14,8 @@ import {csrfFetch} from '../../../lib/csrf-client'
 const PostFunction=()=>{
     const router = useRouter();
     //统一表单状态管理
+    const [publishing, setPublishing] = useState(false);
+    const [publishError, setPublishError] = useState('');
     const [title,setTitle] = useState('')
     const [description,setDescription] = useState('')
     const [category,setCategory] = useState('')
@@ -58,7 +60,9 @@ const PostFunction=()=>{
 
     //最终发布逻辑
     const handlePublish = async()=>{
-        if(!isReady) return;
+        if (!isReady || publishing) return;
+        setPublishing(true);
+        setPublishError('');
 
         try{
             const response = await csrfFetch('/API/Post',{
@@ -79,7 +83,8 @@ const PostFunction=()=>{
             //双保险：如果用户在写文章时token刚好过期了，
             if(response.status === 401){
               alert("登录已失效，请重新登录后再发布")
-              router.push('/views/Login')
+              router.push('/views/Login');
+              return;
             }
 
             const data = await response.json();
@@ -88,11 +93,13 @@ const PostFunction=()=>{
                 alert("发布成功！")
                 router.push('/views/FoodCommunity') //假设跳转回社区主页
             }else{
-                alert("发布失败:" + data.message)
+                setPublishError(data.message || "发布失败，请稍后重试。");
             }
         }catch(error){
             console.error("Publish error:",error)
-            alert("网络错误，请稍后重试")
+            setPublishError("网络错误，请稍后重试。");
+        } finally {
+            setPublishing(false);
         }
     }
     
@@ -130,7 +137,8 @@ const PostFunction=()=>{
     return(
     <div style={{height:'100vh', overflow:'hidden', background:'#f7f5f2', color:'#1f2937'}}>
       {/* 顶部导航与发布动作 */}
-      <ActionHeader isReady={isReady} onPublish={handlePublish} />
+      <ActionHeader isReady={isReady && !publishing} publishing={publishing} onPublish={handlePublish} />
+      {publishError && <p role="alert" className="mx-auto max-w-[1180px] px-5 py-2 text-sm text-[#a63d2d]">{publishError}</p>}
 
       <main style={{height:'calc(100vh - 46px)', maxWidth:1180, margin:'0 auto', padding:'14px 18px 12px', boxSizing:'border-box'}}>
         <div

@@ -3,7 +3,7 @@
 // 这个 Promise 才能拿到里面的 id。因为拿不到正确的 id，前端发给后端的请求就乱了，最后就只能显示“帖子不见啦”。
 import {use} from 'react'
 import React from 'react'
-import {useState,useEffect} from 'react'
+import {useState,useEffect,useRef} from 'react'
 import {useRouter} from 'next/navigation'
 import Link from 'next/link'
 import IdenticonAvatar from '../../../components/IdenticonAvatar';
@@ -15,6 +15,7 @@ const PostDetail=({params})=>{
     const resolvedParams=use(params)
     const postId = resolvedParams.id;
 
+    const recordedPosts = useRef(new Set());
     const [post,setPost] = useState(null)
     const [loading,setLoading] = useState(true)
     const [currentImgIndex, setCurrentImgIndex] = useState(0);
@@ -73,6 +74,18 @@ const PostDetail=({params})=>{
         CheckFavoriteStatus()  // 页面加载时，除了拿帖子，顺便查一下星星该不该亮
     },[postId])
     
+    useEffect(() => {
+        if (post?.id !== Number(postId) || recordedPosts.current.has(postId)) return;
+        recordedPosts.current.add(postId);
+        csrfFetch(`/API/PostDetail/${postId}/View`, { method: 'POST' })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) setPost(current => current?.id === Number(postId)
+              ? { ...current, viewCount: result.data.viewCount } : current);
+          })
+          .catch(() => {});
+    }, [post?.id, postId]);
+
     //处理点击收藏，取消收藏的逻辑
     const handleFavorite = async()=>{
         setIsFavoriteLoading(true);
@@ -243,8 +256,8 @@ const PostDetail=({params})=>{
                         <div className="stats-card">
                             <div className="stat-item">
                                 <span className="stat-icon">◎</span>
-                                <strong>2.3k</strong>
-                                <small>浏览</small>
+                                <strong>{post.viewCount ?? 0}</strong>
+                                <small title="同一浏览器对同一帖子每天计一次，从功能上线起累计">浏览</small>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-icon">□</span>
@@ -500,15 +513,15 @@ const PostDetail=({params})=>{
                     gap: 10px;
                 }
 
-                .author-avatar,
-                .comment-avatar {
+                .post-detail-page :global(.author-avatar),
+                .post-detail-page :global(.comment-avatar) {
                     flex: 0 0 auto;
                     border-radius: 50%;
                     object-fit: cover;
                     background: #efe9e3;
                 }
 
-                .author-avatar {
+                .post-detail-page :global(.author-avatar) {
                     width: 34px;
                     height: 34px;
                 }
@@ -760,7 +773,7 @@ const PostDetail=({params})=>{
                     gap: 14px;
                 }
 
-                .comment-avatar {
+                .post-detail-page :global(.comment-avatar) {
                     width: 38px;
                     height: 38px;
                 }

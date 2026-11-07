@@ -2,11 +2,12 @@
 
 import {Card} from 'antd'
 import Image from 'next/image'
+import Link from 'next/link'
 
 
 // 卡片外层容器样式要求
 const CardContainerStyle = {
-  flex: 1,                    // 让卡片在 Flex 布局中等分宽度
+  height: '100%',
   borderRadius: '16px',       // 匹配设计稿的圆角
   overflow: 'hidden',         // 确保图片不超出圆角
   border: 'none',             // 移除 AntD 默认边框，更显现代感
@@ -33,40 +34,45 @@ const cardImageStyle = {
 const LeftCustomerComment=()=>{
 
   return(
-    <Card
-      hoverable
-      style={CardContainerStyle}
-      // Ant Design 5.x 废弃了 bodyStyle，改用 styles.body
-      styles={{
-        body: {
-          padding: '16px',
-          background: '#fff',
-        }
-      }}
-      cover={
-        <div style={ImageWrapperStyle}>
-          <Image
-            src="/Image/Left3.png"
-            alt="美食特色"
-            fill
-            style={cardImageStyle}
-            //鼠标悬停有缩放效果
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          />
-        </div>
-      }
+    <Link
+      href="/views/discover/children-views/FoodMap"
+      className="block min-w-0 flex-1 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#a63d2d]"
     >
-      {/* 底部文案部分 */}
-      <div style={{ marginBottom: '4px' }}>
-        <span style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
-          食客评价：分享记忆中的味道
-        </span>
-      </div>
-      <div style={{ fontSize: '12px', color: '#999' }}>
-        从普通街坊到探店博主
-      </div>
-    </Card>
+      <Card
+        hoverable
+        style={CardContainerStyle}
+        // Ant Design 5.x 废弃了 bodyStyle，改用 styles.body
+        styles={{
+          body: {
+            padding: '16px',
+            background: '#fff',
+          }
+        }}
+        cover={
+          <div style={ImageWrapperStyle}>
+            <Image
+              src="/Image/Left3.png"
+              alt=""
+              fill
+              style={cardImageStyle}
+              //鼠标悬停有缩放效果
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            />
+          </div>
+        }
+      >
+        {/* 底部文案部分 */}
+        <div style={{ marginBottom: '4px' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+            寻味路线：让 AI 带你逛吃湛江
+          </span>
+        </div>
+        <div style={{ fontSize: '12px', color: '#999' }}>
+          问路线、找美食，也能拍照识菜
+        </div>
+      </Card>
+    </Link>
   )
 }
 

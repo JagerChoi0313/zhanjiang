@@ -56,7 +56,7 @@ export async function GET(request){
             db.select({value:count()}).from(Comments).where(and(eq(Comments.userId,parseId), eq(Comments.status, CONTENT_STATUS.ACTIVE))),
             db.select({value:count()}).from(Favorites)
                 .innerJoin(posts, eq(Favorites.postId, posts.id))
-                .where(and(eq(Favorites.userId,parseId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
+                .where(and(eq(posts.userId,parseId), eq(posts.status, CONTENT_STATUS.ACTIVE))),
             db.select({value:count()}).from(Follows).where(eq(Follows.followingId,parseId)),
             db.select({value:count()}).from(Follows).where(eq(Follows.followerId,parseId))
         ])

@@ -68,10 +68,10 @@ const NavBar=()=>{
             {/* 4. 底部用户信息 (保持不变) */}
             <div className="mt-auto pt-6 space-y-4 border-t border-gray-50">
                 {/* ... 用户资料代码 ... */}
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-gray-700 transition-colors group">
+                <Link href="/views/Profile" className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-gray-700 transition-colors group">
                     <span className="group-hover:rotate-45 transition-transform duration-500">⚙️</span>
-                    <span className="text-sm font-medium">设置</span>
-                </button>
+                    <span className="text-sm font-medium">个人资料</span>
+                </Link>
             </div>
         </div>
     )

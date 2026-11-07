@@ -29,6 +29,13 @@
       "when": 1780328778357,
       "tag": "0003_admin_content_governance",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1794025575906,
+      "tag": "0004_lucky_jack_murdock",
+      "breakpoints": true
     }
   ]
 }

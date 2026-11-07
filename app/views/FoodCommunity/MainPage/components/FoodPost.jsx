@@ -7,7 +7,6 @@ const FoodPost = ({ data }) => {
 
   const styles = {
     card: {
-      display: 'flex', // 关键：水平排列
       gap: '20px',
       backgroundColor: '#fff',
       padding: '20px',
@@ -17,13 +16,13 @@ const FoodPost = ({ data }) => {
       transition: 'all 0.3s ease',
     },
     imgWrapper: {
-      width: '260px', // 固定宽度
       height: '160px',
       borderRadius: '12px',
       overflow: 'hidden',
       flexShrink: 0,
     },
     contentWrapper: {
+      minWidth: 0,
       flex: 1, // 占据剩余空间
       display: 'flex',
       flexDirection: 'column',
@@ -38,11 +37,16 @@ const FoodPost = ({ data }) => {
   const authorName = data.username || data.author?.nickname || "未知吃货";
 
   return (
- <div style={styles.card}>
-      <div style={styles.imgWrapper}>
-        <img src={data.coverImage} 
+ <article className="flex flex-col xl:flex-row" style={styles.card}>
+      <div className="w-full xl:w-[clamp(145px,18vw,260px)]" style={styles.imgWrapper}>
+        <img src={data.coverImage || '/Image/slider1.png'}
+            loading="lazy"
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (!image.src.endsWith('/Image/slider1.png')) image.src = '/Image/slider1.png';
+            }}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-            alt="cover" />
+            alt="" />
       </div>
       <div style={styles.contentWrapper}>
         <div>
@@ -51,8 +55,8 @@ const FoodPost = ({ data }) => {
             <IdenticonAvatar src={data.avatar || data.author?.avatar} seed={authorName} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', background: '#eee9e3' }} alt="avatar" />
             <span style={{ fontSize: '13px', fontWeight: '500' }}>{authorName}</span>
           </div>
-          <h3 style={styles.title}>{data.title}</h3>
-          <p style={styles.desc}>{data.description}</p>
+          <h3 className="break-words" style={styles.title}>{data.title}</h3>
+          <p className="line-clamp-3 break-words" style={styles.desc}>{data.description}</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#86868b', fontSize: '13px' }}>
           <span>📍 {data.location || '湛江市'}</span>
@@ -67,7 +71,7 @@ const FoodPost = ({ data }) => {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

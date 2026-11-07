@@ -6,36 +6,30 @@ import HotTopicsPannel from './components/HotTopicsPannel';
 import Promotion from './components/Promotion';
 import ActiveUserPannel from './components/ActiveUserPannel';
 //引入next.js强大的路由和参数提取工具
-import {useRouter,useSearchParams} from 'next/navigation'
-import {useState,useEffect} from 'react'
+import {usePathname,useRouter,useSearchParams} from 'next/navigation'
+import {useRef} from 'react'
+import { POST_CATEGORIES, COMMUNITY_VIEWS } from '../../../../lib/community.mjs'
 
 const MainPageContent = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  //提取URL里的q参数（如果有的话）
   const currentQuery = searchParams.get('q') || '';
+  const category = searchParams.get('category') || '';
+  const location = searchParams.get('location') || '';
+  const requestedView = searchParams.get('view');
+  const view = COMMUNITY_VIEWS.includes(requestedView) ? requestedView : 'recommended';
+  const scrollArea = useRef(null);
 
-  //本地状态：控制搜索框里的文字
-  const [inputValue,setInputValue] = useState(currentQuery);
-
-  //监听回车键触发URL跳转
-  const handleKeyDown = (e) =>{
-    if(e.key === 'Enter'){
-      if(inputValue.trim()){
-        //带着静默参数改变URL
-        router.push(`?q=${encodeURIComponent(inputValue.trim())}`);
-      }else{
-        //如果清空了输入框按回车就清空了参数，显示全部的帖子
-        router.push(`?`)
-      }
+  const updateFeed = (changes) => {
+    const params = new URLSearchParams(searchParams);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
     }
+    scrollArea.current?.scrollTo({ top: 0 });
+    router.push(params.size ? `${pathname}?${params}` : pathname, { scroll: false });
   };
-
-  //如果用户点击了浏览器的后退按钮，我们要确保搜索框里的字也跟着变回原样
-  useEffect(()=>{
-    setInputValue(currentQuery);
-  },[currentQuery])
 
   const styles = {
     pageContainer: {
@@ -55,7 +49,8 @@ const MainPageContent = () => {
     },
     // 右侧固定区域
   rightFixedPanel: {
-  width: '350px',
+  width: 'min(32%, 350px)',
+  overflowY: 'auto',
   height: '100%',
   padding: '24px',
   borderLeft: '1px solid #f2f2f2',
@@ -107,50 +102,59 @@ const MainPageContent = () => {
     }
   };
 
-  // 分类标签数据（对应模板图 2）
-  const tabs = ["推荐", "最新", "精华", "问答", "探店", "家常菜", "地方小吃"];
+  const tabs = [
+    ...['推荐', '最新', '精华'].map((label, index) => ({ label, view: COMMUNITY_VIEWS[index] })),
+    ...POST_CATEGORIES.map(label => ({ label, category: label, view: 'latest' })),
+  ];
 
   return (
   <div style={styles.pageContainer}>
       {/* 1. 中间：滚动内容流 */}
-      <div style={styles.scrollArea}>
+      <div ref={scrollArea} style={{ ...styles.scrollArea, minWidth: 0 }}>
         {/* 顶部粘性搜索和分类区 */}
         <div style={styles.headerSection}>
-          <input 
-            type="text" 
-            placeholder="🔍 搜索美食、话题或用户..." 
-            style={styles.searchBar} 
-            // 👇 绑定状态和回车事件
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <div style={styles.tabGroup}>
-            {tabs.map((tab, index) => (
-              <div 
-                key={tab} 
-                style={{
-                  ...styles.tab, 
-                  ...(index === 0 ? styles.activeTab : {}) 
-                }}
-              >
-                {tab}
-              </div>
-            ))}
+          <form key={currentQuery} className="flex gap-2" onSubmit={(event) => {
+            event.preventDefault();
+            updateFeed({ q: new FormData(event.currentTarget).get('q').trim() });
+          }}>
+            <input name="q" aria-label="搜索帖子" defaultValue={currentQuery} maxLength={80}
+              placeholder="搜索美食、地区或作者…" style={styles.searchBar} />
+            <button className="shrink-0 rounded-xl bg-[#805741] px-4 text-sm text-white" type="submit">搜索</button>
+          </form>
+          <div style={styles.tabGroup} aria-label="帖子分类">
+            {tabs.map(tab => {
+              const active = tab.category ? tab.category === category : !category && tab.view === view;
+              return (
+                <button key={tab.label} type="button" aria-pressed={active}
+                  style={{ ...styles.tab, ...(active ? styles.activeTab : {}) }}
+                  onClick={() => updateFeed({ view: tab.view, category: tab.category })}>
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
+          {view === 'recommended' && !category && <p className="text-xs text-gray-500">近期发布、有收藏和讨论的帖子优先展示。</p>}
+          {view === 'featured' && <p className="text-xs text-gray-500">收录精选帖子，以及至少有 2 次收藏或 3 条评论的投稿。</p>}
+          {location && (
+            <button className="self-start rounded-full bg-[#f6ebe3] px-3 py-1 text-sm text-[#805741]"
+              type="button" onClick={() => updateFeed({ location: '' })}>
+              地区：{location} ×
+            </button>
+          )}
         </div>
 
         {/* 帖子列表组件 */}
         <div style={{ paddingBottom: '40px' }}>
           {/* 👇 最核心的一步：把解析出来的 URL 搜索关键字，传给 FoodList */}
-          <FoodList searchQuery={currentQuery} />
+          <FoodList key={JSON.stringify([currentQuery, view, category, location])}
+            searchQuery={currentQuery} view={view} category={category} location={location} />
         </div>
       </div>
 
       {/* 2. 右侧：固定榜单 */}
       <aside style={styles.rightFixedPanel}>
         <div style={{ marginBottom: '16px' }}>
-          <HotTopicsPannel />
+          <HotTopicsPannel location={location} onSelect={location => updateFeed({ location, q: '', category: '', view: 'recommended' })} />
         </div>
         <div style={{ marginBottom: '16px' }}>
           <Promotion />

@@ -1,118 +1,53 @@
-"use client"
-import {useState,useEffect} from 'react'
+"use client";
+import { useEffect, useState } from 'react';
 
-const styles = {
-    card: {
-      backgroundColor: '#fff',
-      borderRadius: '16px',
-      padding: '20px',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.04)', // 极其轻微的阴影，符合 Apple 简约风
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '16px',
-    },
-    title: {
-      fontSize: '17px',
-      fontWeight: '600',
-      color: '#1d1d1f',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-    },
-    more: {
-      fontSize: '13px',
-      color: '#999', 
-      cursor: 'pointer',
-    },
-    list: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '14px',
-    },
-    item: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      cursor: 'pointer',
-    },
-    leftPart: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-    },
-    rankNum: (rank) => ({
-      fontSize: '14px',
-      fontWeight: '700',
-      color: rank <= 3 ? '#ff3b30' : '#86868b', // 前三名红色，其余灰色
-      width: '18px',
-    }),
-    topicName: {
-      fontSize: '14px',
-      color: '#1d1d1f',
-      fontWeight: '500',
-    },
-    viewCount: {
-      fontSize: '12px',
-      color: '#86868b',
+export default function HotTopicsPannel({ location, onSelect }) {
+  const [topics, setTopics] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadTopics() {
+      try {
+        const response = await fetch('/API/HotTopics', { signal: controller.signal });
+        const result = await response.json();
+        if (!response.ok || !result.success || !Array.isArray(result.data)) throw new Error('Invalid topics');
+        if (!controller.signal.aborted) setTopics(result.data);
+      } catch {
+        if (!controller.signal.aborted) setFailed(true);
+      }
     }
-  };
+    loadTopics();
+    return () => controller.abort();
+  }, []);
 
-
-
-    const HotTopicsPannel=()=>{
-
- const [topics, setTopics] = useState([]);
-
-    useEffect(() => {
-        const fetchTopics = async () => {
-            try {
-                const res = await fetch('/API/HotTopics');
-                const result = await res.json();
-                const data = result.data;
-                
-                if (result.success && Array.isArray(data)) {
-                    setTopics(data);
-                } else {
-                    setTopics([]); 
-                    console.error("后端返回了错误格式:", result);
-                }
-            } catch (error) {
-                console.error("网络请求失败:", error);
-                setTopics([]);
-            }
-        };
-
-        fetchTopics(); // 在组件挂载时调用函数
-    }, []); // 空数组表示只在第一次加载时运行
-    // ------------------------------------------
-
-    
-    return(
-     <div style={styles.card}>
-      <div style={styles.header}>
-        <div style={styles.title}>
-          <span>🔥</span> 热门话题
-        </div>
-        <div style={styles.more}>查看全部 &gt;</div>
+  return (
+    <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="font-semibold">🔥 热门话题</h2>
+        {topics?.length > 5 && (
+          <button type="button" aria-expanded={expanded} className="text-xs text-[#805741]"
+            onClick={() => setExpanded(value => !value)}>{expanded ? '收起' : '查看全部'}</button>
+        )}
       </div>
-
-      
-      <div style={styles.list}>
-        {topics.map((topic) => (
-          <div key={topic.id} style={styles.item}>
-            <div style={styles.leftPart}>
-              <span style={styles.rankNum(topic.rank)}>{topic.rank}</span>
-              <span style={styles.topicName}># {topic.name}</span>
-            </div>
-            <span style={styles.viewCount}>{topic.viewCourt} 浏览</span>
-          </div>
+      <p className="mb-3 text-xs text-gray-500">按各区县的公开投稿数排行</p>
+      {failed && <p role="status" className="text-sm text-gray-500">话题暂时无法加载</p>}
+      {!failed && !topics && <p role="status" className="text-sm text-gray-500">正在加载话题…</p>}
+      {topics?.length === 0 && <p className="text-sm text-gray-500">有新投稿后，地区话题会出现在这里。</p>}
+      <ol className="space-y-1">
+        {topics?.slice(0, expanded ? undefined : 5).map((topic, index) => (
+          <li key={topic.location}>
+            <button type="button" aria-pressed={location === topic.location}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-[#faf4ef] aria-pressed:bg-[#f6ebe3]"
+              onClick={() => onSelect(topic.location)}>
+              <span className="w-4 shrink-0 font-semibold text-[#a63d2d]">{index + 1}</span>
+              <span className="flex-1"># {topic.location}寻味</span>
+              <span className="text-xs text-gray-500">{topic.postCount} 篇</span>
+            </button>
+          </li>
         ))}
-      </div>
-    </div>
-    )
+      </ol>
+    </section>
+  );
 }
-
-export default HotTopicsPannel

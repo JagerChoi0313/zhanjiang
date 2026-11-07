@@ -5,35 +5,36 @@ import FoodPost from './FoodPost'; // 引入我们刚才写的卡片组件
 import Link from "next/link"
 
 //接收Mainpage传下来的关键词
-const FoodList = ({searchQuery=""}) => {
-   const [postData,setPostData] = useState([]);
-   const [loading,setLoading] = useState(true);
-   
-   useEffect(()=>{
-    const fetchPosts = async()=>{
-      setLoading(true)
-      try{
+const FoodList = ({ searchQuery, view = "latest", category, location, userId }) => {
+  const [postData, setPostData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(12);
 
-        //动态拼装，有搜索词就加上？q=，没有就查全部
-        const url = searchQuery
-            ?`/API/Post?q=${encodeURIComponent(searchQuery)}`
-            :`/API/Post`
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams({ view });
+    if (searchQuery) params.set('q', searchQuery);
+    if (category) params.set('category', category);
+    if (userId) params.set('userId', userId);
+    if (location) params.set('location', location);
 
-        const response = await fetch(url, { cache: 'no-store' })
+    async function fetchPosts() {
+      try {
+        const response = await fetch(`/API/Post?${params}`, { cache: 'no-store', signal: controller.signal });
         const result = await response.json();
-        const data = result.data;
-
-        //防御性测试，确保拿到的是数组
-        setPostData(result.success && Array.isArray(data)?data:[])
-      }catch(error){
-          console.error("获取帖子失败：",error);
-      }finally{
-        setLoading(false);
+        if (!response.ok || !result.success || !Array.isArray(result.data)) throw new Error('Invalid feed response');
+        if (!controller.signal.aborted) setPostData(result.data);
+      } catch {
+        if (!controller.signal.aborted) setError(true);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     fetchPosts();
-    // 核心机制：把 searchQuery 变成监听依赖，只要它变了，马上重新执行查询！
-   },[searchQuery])
+    return () => controller.abort();
+  }, [searchQuery, view, category, location, userId, attempt]);
 
  const styles = {
   container: {
@@ -60,12 +61,23 @@ if (loading) {
     return <div style={styles.loadingText}>正在探索湛江美食...</div>;
   }
 
+  if (error) return (
+    <div style={styles.loadingText} role="alert">
+      帖子加载失败。
+      <button type="button" className="ml-2 underline" onClick={() => {
+        setLoading(true);
+        setError(false);
+        setAttempt(attempt + 1);
+      }}>重试</button>
+    </div>
+  );
+
   return (
 <div style={styles.container}>
       <div style={styles.listWrapper}>
         {/* 2. 将 mockData 替换为 postData */}
         {postData.length > 0 ? (
-          postData.map((item) => (
+          postData.slice(0, visibleCount).map((item) => (
             <Link
             href={`/views/PostDetail/${item.id}`}
             key={item.id}   //key必须移到最外层Link这里
@@ -75,7 +87,11 @@ if (loading) {
             </Link>
           ))
         ) : (
-          <div style={styles.loadingText}>暂时还没有发现美食投稿哦</div>
+          <div style={styles.loadingText}>{searchQuery || category || location || view === "featured" ? "没有符合条件的帖子，试试切换分类或搜索词。" : "暂时还没有美食投稿。"}</div>
+        )}
+        {visibleCount < postData.length && (
+          <button type="button" className="self-center rounded-full border px-4 py-2 text-sm text-[#805741]"
+            onClick={() => setVisibleCount(count => count + 12)}>加载更多</button>
         )}
       </div>
     </div>

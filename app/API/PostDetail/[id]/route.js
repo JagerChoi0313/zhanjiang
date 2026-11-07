@@ -1,6 +1,6 @@
 import {db} from "../../../../database/index"
-import {posts} from "../../../../database/schema"
-import {and, eq} from 'drizzle-orm'
+import {posts, PostViews} from "../../../../database/schema"
+import {and, eq, count} from 'drizzle-orm'
 import {Comments} from "../../../../database/schema"    //把Comment引进来，往里面插入评论
 import { ApiResponse, ErrorCode } from "../../../../lib/api-response.mjs"
 import { requireAuth } from "../../../../lib/api-auth.mjs"
@@ -53,7 +53,8 @@ export async function GET(request,{params}){
         }
 
         //4,成功找到，返回这条帖子的完整数据对象
-        return ApiResponse.success(result)
+        const [views] = await db.select({ value: count() }).from(PostViews).where(eq(PostViews.postId, parsedPostId));
+        return ApiResponse.success({ ...result, viewCount: views.value })
     }catch(error){
         if(error instanceof ApiValidationError){
             return toApiValidationResponse(error)

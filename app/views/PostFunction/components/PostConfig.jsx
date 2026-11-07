@@ -29,6 +29,8 @@ const PostConfig = ({category,setCategory,location,setLocation,coverImage,setCov
     { id: 'explore', label: '探店', icon: '📋' },
     { id: 'strategy', label: '攻略', icon: '📝' },
     { id: 'share', label: '美食分享', icon: '🥘' },
+    { id: 'qa', label: '问答', icon: '💬' },
+    { id: 'snacks', label: '地方小吃', icon: '🥟' },
     { id: 'other', label: '其他', icon: '···' },
   ];
 

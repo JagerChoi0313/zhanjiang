@@ -1,10 +1,11 @@
 "use client"
 import {useState,useEffect} from 'react'
+import Link from "next/link";
 import IdenticonAvatar from '../../../../components/IdenticonAvatar'
 
 const ActiveUserPannel=()=>{
 
-    const [loading,setLoading] = useState(false)
+    const [loading,setLoading] = useState(true)
     const [users,setUsers] = useState([])
 
     useEffect(()=>{
@@ -32,16 +33,14 @@ const ActiveUserPannel=()=>{
  <div className="w-full bg-white/70 backdrop-blur-md rounded-[24px] p-5 shadow-sm border border-gray-100/50">
       {/* 头部 */}
       <div className="flex justify-between items-center mb-5 px-1">
-        <h3 className="text-[16px] font-bold text-gray-800">活跃用户</h3>
-        <button className="text-[12px] text-gray-400 hover:text-[#8B5742] transition-colors">
-          查看全部 &gt;
-        </button>
+        <h3 className="text-[16px] font-bold text-gray-800">活跃作者</h3>
       </div>
 
       {/* 用户列表 */}
       <div className="space-y-5">
-        {users.map((user, index) => (
-          <div key={index} className="flex items-center justify-between group">
+        {users.length === 0 && <p className="text-sm text-gray-500">暂无活跃作者。</p>}
+        {users.map((user) => (
+          <div key={user.userId} className="flex items-center justify-between group">
             <div className="flex items-center gap-3">
               {/* 头像 */}
               <div className="relative">
@@ -59,15 +58,14 @@ const ActiveUserPannel=()=>{
                   {user.user_name}
                 </span>
                 <span className="text-[11px] text-gray-400">
-                   活跃值 {user.active_score}
+                   公开投稿 {user.active_score} 篇
                 </span>
               </div>
             </div>
 
-            {/* 关注按钮 */}
-            <button className="px-4 py-1.5 rounded-full border border-orange-100 bg-orange-50/30 text-[#8B5742] text-[12px] font-medium hover:bg-[#8B5742] hover:text-white transition-all duration-300 active:scale-95">
-              关注
-            </button>
+            <Link href={`/views/User/${user.userId}`} className="shrink-0 rounded-full border border-orange-100 px-3 py-1.5 text-xs text-[#8B5742] hover:bg-orange-50">
+              看主页
+            </Link>
           </div>
         ))}
       </div>

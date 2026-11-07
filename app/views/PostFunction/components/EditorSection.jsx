@@ -43,6 +43,7 @@ const EditorSection=({
       <div style={{...cardStyle, position:'relative', height:88, boxSizing:'border-box', padding:'15px 22px'}}>
         <label style={{display:'block', marginBottom:9, fontSize:13, fontWeight:700, color:'#111827'}}>标题 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
         <input
+          maxLength={255}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value.slice(0, 100))}
@@ -83,6 +84,7 @@ const EditorSection=({
         <div style={{position:'relative', flex:1, minHeight:0, padding:'17px 22px 14px', boxSizing:'border-box', display:'flex', flexDirection:'column'}}>
           <label style={{display:'block', marginBottom:10, fontSize:13, fontWeight:700, color:'#111827'}}>内容 <span style={{fontWeight:500, color:'#9ca3af'}}>(必填)</span></label>
           <textarea
+            maxLength={5000}
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 5000))}
             placeholder="分享你的美食体验、做法心得、探店经历..."
