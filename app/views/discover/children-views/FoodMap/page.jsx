@@ -20,34 +20,38 @@ const FoodMap = () => {
     '适合带家人吃的餐厅'
   ]);
   const [input, setInput] = useState('');
+  const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSend = async (queryText) => {
-    const query = queryText || input;   //判断用户是点击词条进来的（queryText），还是输入文字进来的（input）
-    if (!query || loading) return;      //如果什么都没输入，或者AI在思考就直接return
+    const image = queryText === undefined ? photo : null;
+    const query = (queryText ?? input).trim() || (image ? '这是什么？' : '');
+    if (!query || loading) return;
 
-    setMessages((prev) => [...prev, { role: 'user', text: query }]);//一有内容，立刻把你的话追加到聊天记录里面
+    setMessages((prev) => [...prev, { role: 'user', text: image ? `📷 美食照片\n${query}` : query }]);//一有内容，立刻把你的话追加到聊天记录里面
     setInput('');   //清空输入框
     setLoading(true);     //亮起红灯，告诉页面去请求数据
 
     try {
+      const form = image ? new FormData() : null;
+      if (form) {
+        form.set('query', query);
+        form.set('image', image);
+      }
       const response = await csrfFetch('/API/Dify/Chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query
-        })
+        ...(form
+          ? { body: form }
+          : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query }) })
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
 
-      if (!response.ok || !payload.success) {
-        throw new Error(response.status === 401 ? '请先登录后使用 AI 寻味助手' : (payload.message || 'AI服务暂时不可用'));
+      if (!response.ok || !payload?.success) {
+        throw new Error(response.status === 401 ? '请先登录后使用 AI 寻味助手' : (payload?.message || 'AI服务暂时不可用'));
       }
 
-      //请求成功
-      setMessages((prev) => [...prev, { role: 'assistant', text: payload.data?.answer || '暂时没有生成有效回复，请换个问法试试。' }]);
+      if (image) setPhoto(null);
+      setMessages((prev) => [...prev, { role: 'assistant', isPhotoReply: Boolean(image), text: payload.data?.answer || '暂时没有生成有效回复，请换个问法试试。' }]);
 
       if (payload.data?.suggestedQuestions?.length) {
         setSuggestions(payload.data.suggestedQuestions);
@@ -58,6 +62,7 @@ const FoodMap = () => {
         ...prev,
         {
           role: 'assistant',
+          isPhotoReply: Boolean(image),
           text: `请求失败了 😢 原因是：${error.message}`
         }
       ]);
@@ -81,6 +86,8 @@ const FoodMap = () => {
           setInput={setInput}
           handleSend={handleSend}
           loading={loading}
+          photo={photo}
+          setPhoto={setPhoto}
         />
       }
     />

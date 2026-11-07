@@ -5,14 +5,13 @@ const AIAgentLayout = ({ leftSidebar, mainChatArea }) => {
   const navOffset = 80;
 
   return (
-    <div style={{
+    <div className="px-3 py-3 sm:px-6 lg:px-[52px] lg:py-[18px]" style={{
       position: 'fixed',
       top: `${navOffset}px`,
       left: 0,
       right: 0,
       bottom: 0,
       background: 'linear-gradient(180deg, #fffdf9 0%, #fbf7f0 100%)',
-      padding: '18px 52px 20px',
       boxSizing: 'border-box',
       overflow: 'hidden',
       display: 'flex',
@@ -46,19 +45,18 @@ const AIAgentLayout = ({ leftSidebar, mainChatArea }) => {
         backgroundRepeat: 'no-repeat'
       }} />
 
-      <div style={{
+      <div className="grid-cols-[minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)]" style={{
         width: '100%',
         maxWidth: '1340px',
         height: '100%',
         minHeight: 0,
         display: 'grid',
-        gridTemplateColumns: '300px minmax(0, 1fr)',
         gap: '24px',
         position: 'relative',
         zIndex: 1,
         alignItems: 'stretch'
       }}>
-        <aside style={{ minWidth: 0, height: '100%', overflow: 'hidden' }}>
+        <aside className="hidden lg:block" style={{ minWidth: 0, height: '100%', overflow: 'hidden' }}>
           {leftSidebar}
         </aside>
         <main style={{ minWidth: 0, height: '100%', overflow: 'hidden' }}>

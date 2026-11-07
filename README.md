@@ -207,6 +207,8 @@ JWT_SECRET="replace-with-a-long-random-secret"
 
 > 不要把真实的 `.env.local` 提交到 GitHub。`DATABASE_URL` 用于 MySQL + Drizzle 连接，`JWT_SECRET` 用于签发和校验登录态。
 
+如需使用「拍照识美食」，在 Dify 的识图 Chatflow「访问入口」创建应用 API 密钥，在服务端 `.env.local` 设置 `DIFY_VISION_API_KEY`。原有文字助手继续使用 `DIFY_API_KEY`。Docker Compose 部署时，从部署环境提供 `DIFY_VISION_API_KEY` 并重建应用容器。Chatflow 需已发布并启用图片上传。
+
 ### 3. 初始化数据库结构
 
 ```bash
