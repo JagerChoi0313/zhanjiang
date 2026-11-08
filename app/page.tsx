@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Anchor, ArrowUpRight } from "lucide-react";
+import AnimatedHomeTitle from "./AnimatedHomeTitle";
 import HomeCarousel from "./HomeCarousel";
 import styles from "./home.module.css";
 
@@ -52,7 +53,7 @@ export default function Home() {
       <section className={styles.hero} aria-labelledby="home-title">
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>湛江本地美食指南</p>
-          <h1 id="home-title">今天，<br />去湛江吃点鲜。</h1>
+          <AnimatedHomeTitle as="h1" id="home-title" lines={["今天，", "去湛江吃点鲜。"]} />
           <p className={styles.description}>从老街的一口小吃，到海边的一桌好菜。</p>
           <SectionLink href={destinations.shops.href}>开始探店</SectionLink>
         </div>
@@ -65,7 +66,7 @@ export default function Home() {
         </div>
         <div>
           <p className={styles.eyebrow}>认识寻味湛江</p>
-          <h2 id="taste-title">一座城，有它<br />自己的味道。</h2>
+          <AnimatedHomeTitle id="taste-title" lines={["一座城，有它", "自己的味道。"]} />
           <p className={styles.description}>沙姜蘸白切鸡，米浆蒸成簸箕炊。翻开味觉卡片，看看湛江人平常吃什么、怎么吃。</p>
           <SectionLink href={destinations.tastes.href}>翻开味觉卡片</SectionLink>
         </div>
@@ -73,7 +74,7 @@ export default function Home() {
 
       <section className={styles.explore} aria-labelledby="explore-title">
         <p className={styles.eyebrow}>从这里开始</p>
-        <h2 id="explore-title">五种方式，逛吃湛江</h2>
+        <AnimatedHomeTitle id="explore-title" lines={["五种方式，逛吃湛江"]} />
         <ul className={styles.cards}>
           {Object.values(destinations).map(({ title, href, image, description }) => (
             <li key={href}>
@@ -97,7 +98,7 @@ export default function Home() {
         </div>
         <div className={styles.routeCopy}>
           <p className={styles.eyebrow}>寻味路线</p>
-          <h2 id="route-title">下一站，<br />去哪里吃？</h2>
+          <AnimatedHomeTitle id="route-title" lines={["下一站，", "去哪里吃？"]} />
           <p className={styles.description}>按时间、预算和口味，让 AI 帮你排一条初步路线。遇到叫不上名字的小吃，也能拍照问问。</p>
           <SectionLink href={destinations.routes.href}>打开寻味向导</SectionLink>
         </div>
@@ -106,7 +107,7 @@ export default function Home() {
       <section className={styles.story} aria-labelledby="community-title">
         <div>
           <p className={styles.eyebrow}>用户互动</p>
-          <h2 id="community-title">这一口，<br />值得跟大家聊聊。</h2>
+          <AnimatedHomeTitle id="community-title" lines={["这一口，", "值得跟大家聊聊。"]} />
           <p className={styles.description}>读读本地食客的探店日记，或者分享自己的逛吃发现。</p>
           <SectionLink href={destinations.community.href}>逛逛美食社区</SectionLink>
         </div>
