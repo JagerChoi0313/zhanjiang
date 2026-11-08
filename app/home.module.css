@@ -39,6 +39,17 @@
   letter-spacing: -.05em;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .playTitle .titleCharacter {
+    animation: title-reveal 4800ms ease-out infinite both;
+  }
+}
+
+@keyframes title-reveal {
+  0%, 85%, 100% { opacity: 0; }
+  4%, 79% { opacity: 1; }
+}
+
 .home h2 {
   margin: 12px 0 18px;
   font-size: clamp(32px, 3.4vw, 52px);
