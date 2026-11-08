@@ -1,0 +1,47 @@
+name: Build and deploy production
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: zhanjiang-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/master' && vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and publish immutable images
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build --target runner -t "ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA" .
+          docker build --target tooling -t "ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA" .
+          docker push "ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA"
+          docker push "ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA"
+      - name: Deploy via verified SSH connection
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ vars.DEPLOY_HOST }}
+          PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          trap 'rm -f "$HOME/.ssh/deploy_key"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          SSH_OPTS=(-i "$HOME/.ssh/deploy_key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          scp "${SSH_OPTS[@]}" -P "$PORT" deploy/cicd-deploy.sh "$DEPLOY_USER@$HOST:/home/caixypromise/apps/zhanjiang/deploy/cicd-deploy.sh"
+          printf '%s' "$GH_TOKEN" | ssh "${SSH_OPTS[@]}" -p "$PORT" "$DEPLOY_USER@$HOST" "bash /home/caixypromise/apps/zhanjiang/deploy/cicd-deploy.sh ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA $GITHUB_ACTOR"
