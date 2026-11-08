@@ -1,0 +1,213 @@
+.home {
+  --ink: #253125;
+  --cream: #faf8ee;
+  --content: 1180px;
+  padding-top: 80px;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.home a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.hero, .route {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  background: #dce8c7;
+}
+
+.heroCopy, .routeCopy {
+  align-self: center;
+  padding: clamp(28px, 5.8vw, 100px);
+}
+
+.heroCopy { padding-right: clamp(16px, 2.4vw, 40px); }
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.hero h1 {
+  margin: 18px 0;
+  font-size: clamp(30px, 4.65vw, 80px);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -.05em;
+}
+
+.home h2 {
+  margin: 12px 0 18px;
+  font-size: clamp(32px, 3.4vw, 52px);
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -.04em;
+}
+
+.description {
+  margin: 0 0 24px;
+  line-height: 1.8;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.action:hover {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.heroImage, .storyImage, .cardImage, .routeImage {
+  position: relative;
+  overflow: hidden;
+}
+
+.heroImage { min-height: clamp(390px, 39.2vw, 690px); }
+
+.heroImage :global(.ant-carousel) {
+  position: absolute;
+  inset: 0;
+}
+
+.heroCarousel,
+.heroCarousel :global(.slick-list),
+.heroCarousel :global(.slick-track),
+.heroCarousel :global(.slick-slide),
+.heroCarousel :global(.slick-slide > div) {
+  height: 100%;
+}
+
+.heroCarousel :global(.slick-slide > div > div) {
+  position: relative;
+  height: 100%;
+}
+
+.home img { object-fit: cover; }
+
+.story {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 4.5vw, 65px);
+  align-items: center;
+  width: min(var(--content), calc(100% - 64px));
+  margin-inline: auto;
+  padding-block: clamp(46px, 5.3vw, 76px);
+}
+
+.storyImage {
+  aspect-ratio: 1.72;
+  border-radius: 12px;
+}
+
+.explore {
+  padding: 56px 32px 65px;
+  background: #ebefde;
+  text-align: center;
+}
+
+.explore h2 {
+  margin-bottom: 24px;
+  font-size: clamp(30px, 3vw, 42px);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 15px;
+  max-width: var(--content);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.card {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fffdf6;
+}
+
+.card:hover { box-shadow: 0 5px 16px #25312525; }
+.cardImage { aspect-ratio: 1.5; }
+.cardCopy { padding: 12px 14px 14px; }
+
+.cardCopy h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.cardCopy p {
+  margin-top: 4px;
+  color: #555b4e;
+  font-size: 13px;
+}
+
+.route {
+  grid-template-columns: 56% 44%;
+  background: #eacb94;
+}
+
+.routeImage { min-height: clamp(350px, 29vw, 510px); }
+
+.footer {
+  padding: 32px;
+  background: #233326;
+  color: var(--cream);
+}
+
+.footerInner, .footer nav, .brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footerInner {
+  max-width: var(--content);
+  margin-inline: auto;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.footer nav {
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.brand {
+  gap: 8px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.brand svg { color: #81c5e6; }
+.footer a:hover { text-decoration: underline; }
+
+@media (max-width: 1000px) {
+  .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .hero, .route, .story { grid-template-columns: 1fr; }
+  .heroCopy, .routeCopy { padding: 34px 24px; }
+  .hero h1 { font-size: clamp(30px, 9vw, 64px); }
+  .heroImage, .routeImage { min-height: 0; aspect-ratio: 1.5; }
+  .story { width: calc(100% - 48px); }
+  .explore { padding: 42px 24px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer { padding: 28px 24px; }
+}
