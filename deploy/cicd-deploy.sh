@@ -36,7 +36,7 @@ YAML
 mv "$OVERRIDE.next" "$OVERRIDE"
 DC=(docker compose -f "$BASE" -f "$OVERRIDE")
 "${DC[@]}" config --quiet
-"${DC[@]}" run --rm --no-deps --no-build migrate
+"${DC[@]}" run --rm --no-deps --pull never migrate
 rollback() {
   echo 'Application update failed; restoring previous app image (database is not rolled back automatically)'
   sed "s|image: $APP_IMAGE|image: $ROLLBACK_IMAGE|" "$OVERRIDE" > "$OVERRIDE.next"
