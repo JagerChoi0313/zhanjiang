@@ -13,8 +13,12 @@ export DOCKER_CONFIG
 DOCKER_CONFIG=$(mktemp -d)
 trap 'rm -rf "$DOCKER_CONFIG"' EXIT
 docker login ghcr.io -u "$ACTOR" --password-stdin
-docker pull "$APP_IMAGE"
-docker pull "$TOOL_IMAGE"
+if [[ "${4:-false}" == "true" ]]; then
+  docker image inspect "$APP_IMAGE" "$TOOL_IMAGE" > /dev/null
+else
+  docker pull "$APP_IMAGE"
+  docker pull "$TOOL_IMAGE"
+fi
 BASE=deploy/docker-compose.yml
 OVERRIDE=deploy/docker-compose.ghcr.yml
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)

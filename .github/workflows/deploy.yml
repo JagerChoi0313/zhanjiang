@@ -34,6 +34,7 @@ jobs:
           PORT: ${{ vars.DEPLOY_PORT }}
           DEPLOY_USER: ${{ vars.DEPLOY_USER }}
           GH_TOKEN: ${{ github.token }}
+          TRANSFER_IMAGES: ${{ vars.DEPLOY_IMAGE_TRANSFER }}
         shell: bash
         run: |
           set -euo pipefail
@@ -43,5 +44,8 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/deploy_key"
           printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           SSH_OPTS=(-i "$HOME/.ssh/deploy_key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          if [[ "$TRANSFER_IMAGES" == "true" ]]; then
+            docker save "ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA" "ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA" | gzip -1 | ssh "${SSH_OPTS[@]}" -p "$PORT" "$DEPLOY_USER@$HOST" "bash -o pipefail -c 'gunzip | docker load'"
+          fi
           scp "${SSH_OPTS[@]}" -P "$PORT" deploy/cicd-deploy.sh "$DEPLOY_USER@$HOST:/home/caixypromise/apps/zhanjiang/deploy/cicd-deploy.sh"
-          printf '%s' "$GH_TOKEN" | ssh "${SSH_OPTS[@]}" -p "$PORT" "$DEPLOY_USER@$HOST" "bash /home/caixypromise/apps/zhanjiang/deploy/cicd-deploy.sh ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA $GITHUB_ACTOR"
+          printf '%s' "$GH_TOKEN" | ssh "${SSH_OPTS[@]}" -p "$PORT" "$DEPLOY_USER@$HOST" "bash /home/caixypromise/apps/zhanjiang/deploy/cicd-deploy.sh ghcr.io/jagerchoi0313/zhanjiang-app:$GITHUB_SHA ghcr.io/jagerchoi0313/zhanjiang-tooling:$GITHUB_SHA $GITHUB_ACTOR $TRANSFER_IMAGES"
