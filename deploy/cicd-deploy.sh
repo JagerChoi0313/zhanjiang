@@ -15,6 +15,10 @@ trap 'rm -rf "$DOCKER_CONFIG"' EXIT
 docker login ghcr.io -u "$ACTOR" --password-stdin
 if [[ "${4:-false}" == "true" ]]; then
   docker image inspect "$APP_IMAGE" "$TOOL_IMAGE" > /dev/null
+elif [[ "${4:-false}" == "direct" ]]; then
+  for image in "$APP_IMAGE" "$TOOL_IMAGE"; do
+    env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u http_proxy -u https_proxy -u all_proxy NO_PROXY="*" no_proxy="*" skopeo copy --src-authfile "$DOCKER_CONFIG/config.json" "docker://$image" "docker-daemon:$image"
+  done
 else
   docker pull "$APP_IMAGE"
   docker pull "$TOOL_IMAGE"
