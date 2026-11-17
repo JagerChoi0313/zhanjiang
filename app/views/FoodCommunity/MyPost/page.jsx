@@ -5,6 +5,8 @@ import PostCard from './components/PostCard';
 import PaginationPost from './components/PaginationPost';
 import Link from "next/link"
 import { useSearchParams } from 'next/navigation';
+import { Modal } from 'antd';
+import { csrfFetch } from '../../../../lib/csrf-client';
 
 function MyPostContent() {
   const searchParams = useSearchParams();
@@ -13,6 +15,33 @@ function MyPostContent() {
   const [posts, setPosts] = useState([]);
   const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1 }); 
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [notice, setNotice] = useState('');
+  const deletingRef = useRef(false);
+
+  const deletePost = async () => {
+    if (!deleteTarget || deletingRef.current) return;
+    deletingRef.current = true;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const response = await csrfFetch(`/API/MyPost/${deleteTarget.id}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.message || '删除失败，请稍后重试');
+      setDeleteTarget(null);
+      setNotice('帖子已删除');
+      const page = posts.length === 1 ? Math.max(1, pagination.currentPage - 1) : pagination.currentPage;
+      if (page !== pagination.currentPage) setPagination(prev => ({ ...prev, currentPage: page }));
+      else await fetchList(page, searchQuery);
+    } catch (error) {
+      setDeleteError(error.message || '删除失败，请稍后重试');
+    } finally {
+      deletingRef.current = false;
+      setDeleting(false);
+    }
+  };
 
   const [isAuthorized,setIsAuthorized] = useState(true)
 
@@ -100,13 +129,23 @@ function MyPostContent() {
       <h1 className="text-[20px] font-bold text-gray-900 mb-5">我的帖子</h1>
 
       <PostFilter counts={counts} />
+      {notice && <p role="status" className="mb-3 text-sm text-green-700">{notice}</p>}
+      <Modal title="删除帖子" open={!!deleteTarget} onOk={deletePost}
+        onCancel={() => { if (!deleting) setDeleteTarget(null); }}
+        okText="确认删除" cancelText="取消" confirmLoading={deleting}
+        okButtonProps={{ danger: true }} cancelButtonProps={{ disabled: deleting }}
+        closable={!deleting} maskClosable={!deleting} keyboard={!deleting}>
+        <p>确定删除“{deleteTarget?.title}”吗？删除后将不再公开展示，页面不提供恢复操作。</p>
+        {deleteError && <p role="alert" className="mt-3 text-red-600">{deleteError}</p>}
+      </Modal>
 
       <div className="flex flex-col">
         {loading ? (
           <div className="flex justify-center items-center h-40 text-gray-400 text-sm font-light">加载中...</div>
         ) : posts.length > 0 ? (
           posts.map((item) => (
-            <PostCard key={item.id} data={item} />
+            <PostCard key={item.id} data={item} deleting={deleting}
+              onDelete={(post) => { setDeleteError(''); setNotice(''); setDeleteTarget(post); }} />
           ))
         ) : (
           <div className="flex justify-center items-center h-40 text-gray-400 text-sm font-light">暂无发布的帖子</div>

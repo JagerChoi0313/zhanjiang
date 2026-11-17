@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
 
-export default function PostCard({ data = {} }) {
+export default function PostCard({ data = {}, onDelete, deleting = false }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return "2026-04-29";
     return dateStr.split('T')[0];
@@ -60,7 +60,7 @@ export default function PostCard({ data = {} }) {
           {/* 右下角操作按钮 */}
           <div className="flex items-center gap-2">
             <button className="px-3 py-1 text-[12px] text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors">编辑</button>
-            <button className="px-3 py-1 text-[12px] text-[#FF4D4F] bg-[#FFF1F0] hover:bg-[#FFCCC7] rounded-md transition-colors">删除</button>
+            <button type="button" disabled={deleting} onClick={() => onDelete(data)} className="px-3 py-1 text-[12px] text-[#FF4D4F] bg-[#FFF1F0] hover:bg-[#FFCCC7] disabled:opacity-50 rounded-md transition-colors">{deleting ? '删除中...' : '删除'}</button>
           </div>
         </div>
       </div>
